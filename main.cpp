@@ -6,6 +6,8 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <streambuf>
 #include "parser.h"
 
 //
@@ -16,8 +18,8 @@ const std::string appVersion = "0.1b";
 
 void usage()
 {
-	std::cout << "Laiason v" << appVersion << std::endl;
-	std::cout << "Usage: laiason <sourcefile.lia>" << std::endl;
+	std::cout << "liaison v" << appVersion << std::endl;
+	std::cout << "Usage: liaison <sourcefile.lia>" << std::endl;
 }
 
 int main(int argc,char** argv)
@@ -28,7 +30,14 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
+	std::ifstream t("d:\\prova\\prog2.lia");
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+
+	std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
+
 	liaParser theLiaParser;
+	theLiaParser.parseCode(buffer.str());
 
 	return 0;
 }

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#pragma warning( disable : 4566)
+
 /*
  * Configuration
  */
