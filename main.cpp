@@ -9,6 +9,7 @@
 #include <fstream>
 #include <streambuf>
 #include "parser.h"
+#include "interpreter.h"
 
 //
 //
@@ -37,7 +38,12 @@ int main(int argc,char** argv)
 	std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
 
 	liaParser theLiaParser;
-	theLiaParser.parseCode(buffer.str());
+	liaInterpreter theLiaInterpreter;
+
+	if (theLiaParser.parseCode(buffer.str()) == 0)
+	{
+		theLiaInterpreter.validateAst(theLiaParser.theAst);
+	}
 
 	return 0;
 }
