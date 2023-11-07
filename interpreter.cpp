@@ -25,7 +25,7 @@ int liaInterpreter::validateAst(std::shared_ptr<peg::Ast> theAst)
 
 	// check1: check that the provided code has a main function
 	// with the correct "params" parameter
-
+	
 	for (auto node : theAst->nodes)
 	{
 		if (node->name == "TopLevelStmt")

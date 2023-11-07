@@ -43,14 +43,16 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
-	Expression <- IntegerNumber / VariableName
+	Expression <- IntegerNumber / StringLiteral / VariableName
+	
 	IntegerNumber <- < [0-9]+ >
+	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 
 	FuncCallStatement <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
 	ArgList <- Expression ( ',' Expression )*
 
-	EndLine <- [\r\n]
+	EndLine <- [ \t]* [\r\n]
 	%whitespace <- [ \t]*
 	)");
 
