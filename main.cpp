@@ -42,7 +42,9 @@ int main(int argc,char** argv)
 
 	if (theLiaParser.parseCode(buffer.str()) == 0)
 	{
-		theLiaInterpreter.validateAst(theLiaParser.theAst);
+		if (theLiaInterpreter.validateAst(theLiaParser.theAst) != 0) return 1;
+		theLiaInterpreter.getFunctions(theLiaParser.theAst);
+		//theLiaInterpreter.dumpFunctions();
 	}
 
 	return 0;
