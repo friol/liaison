@@ -84,7 +84,8 @@ int liaInterpreter::validateAst(std::shared_ptr<peg::Ast> theAst)
 	// check1: check that the provided code has a main function
 	// with the correct "params" parameter
 	
-	if (!validateMainFunction(theAst))
+	auto retcode = validateMainFunction(theAst);
+	if (retcode!=0)
 	{
 		return 1;
 	}
@@ -110,6 +111,7 @@ void liaInterpreter::getFunctions(std::shared_ptr<peg::Ast> theAst)
 						if (funcNode->is_token)
 						{
 							aFun.name = funcNode->token;
+							aFun.functionCodeBlockAst = innerNode->nodes[2];
 						}
 						else
 						{
@@ -147,10 +149,92 @@ void liaInterpreter::dumpFunctions()
 		{
 			std::cout << " - " << fp.name << std::endl;
 		}
+		//std::cout << peg::ast_to_s(f.functionCodeBlockAst);
+	}
+}
+
+void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst)
+{
+	//std::cout << peg::ast_to_s(theAst);
+	assert(theAst->name == "ArgList");
+	assert(theAst->nodes[0]->name == "Expression");
+
+	// TODO: parse expression and print it properly
+
+	if (theAst->nodes[0]->nodes[0]->name == "StringLiteral")
+	{
+		std::string s2print = "";
+		s2print+=theAst->nodes[0]->nodes[0]->token;
+		std::regex quote_re("\"");
+		std::cout << std::regex_replace(s2print, quote_re, "") << std::endl;
+	}
+}
+
+void liaInterpreter::exeCuteStatement(std::shared_ptr<peg::Ast> theAst)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "FuncName")
+			{
+				if (ch->token == "print")
+				{
+					exeCuteLibFunctionPrint(theAst->nodes[1]);
+				}
+			}
+		}
+	}
+
+}
+
+void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst)
+{
+	for (auto stmt : theAst->nodes)
+	{
+		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
+		
+		if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "EndLine"))
+		{
+			// ignoring endline
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "SingleLineCommentStmt"))
+		{
+			// ignoring so meaningful comment
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "FuncCallStmt"))
+		{
+			// user function or library function call
+			exeCuteStatement(stmt->nodes[0]);
+		}
+
+		
+	}
+}
+
+// where the Cuteness starts
+void liaInterpreter::exeCute(std::shared_ptr<peg::Ast> theAst)
+{
+	// basically, we have to find the "main" codeblock and exeCute it
+	// in the mean time, we can create "scopes", that is list of variables, with types and values
+	// there should be a global scope, I guess. Even if global variables suck
+
+	for (liaFunction f : functionList)
+	{
+		if (f.name == "main")
+		{
+			//std::cout << "Executing main" << std::endl;
+			//std::cout << peg::ast_to_s(f.functionCodeBlockAst);
+			assert(f.functionCodeBlockAst->name == "CodeBlock");
+
+			// execute each statement in code block
+			exeCuteCodeBlock(f.functionCodeBlockAst);
+		}
 	}
 }
 
 liaInterpreter::~liaInterpreter()
 {
-
 }

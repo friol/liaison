@@ -31,11 +31,11 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStatement / EndLine
-
-	SingleLineCommentStmt <- '//' [^\r\n]* EndLine
+	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / EndLine
 
 	CodeBlock <- '{' (Stmt )* '}'
+
+	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
 
 	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n] CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
@@ -48,7 +48,7 @@ liaParser::liaParser()
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 
-	FuncCallStatement <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
+	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
 	ArgList <- Expression ( ',' Expression )*
 
@@ -73,7 +73,7 @@ int liaParser::parseCode(std::string c)
 	localCode = c;
 	if (!pegParser->parse(localCode.c_str(), theAst))
 	{
-		std::cout << "liaiason was unable to parse the provided code." << std::endl;
+		std::cout << "liaison was unable to parse the provided code." << std::endl;
 		return 1;
 	}
 

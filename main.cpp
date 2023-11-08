@@ -45,6 +45,7 @@ int main(int argc,char** argv)
 		if (theLiaInterpreter.validateAst(theLiaParser.theAst) != 0) return 1;
 		theLiaInterpreter.getFunctions(theLiaParser.theAst);
 		//theLiaInterpreter.dumpFunctions();
+		theLiaInterpreter.exeCute(theLiaParser.theAst);
 	}
 
 	return 0;
