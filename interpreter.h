@@ -6,7 +6,30 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <variant>
+#include <stdlib.h>
 #include "include/peglib.h"
+
+enum liaVariableType
+{
+	boolean,
+	integer,
+	string,
+	array,
+	floatingPoint
+};
+
+struct liaVariable
+{
+	std::string name;
+	liaVariableType type;
+	std::variant<bool, int, std::string> value;
+};
+
+struct liaEnvironment
+{
+	std::vector<liaVariable> varList;
+};
 
 struct liaFunctionParam
 {
@@ -28,9 +51,14 @@ private:
 
 	int validateMainFunction(std::shared_ptr<peg::Ast> theAst);
 	void exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst);
-	void exeCuteStatement(std::shared_ptr<peg::Ast> theAst);
+	void exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 
-	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst);
+	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
+
+	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env);
+
+	void fatalError(std::string err);
 
 public:
 

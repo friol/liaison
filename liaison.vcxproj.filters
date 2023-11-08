@@ -25,9 +25,4 @@
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="interpreter.h">
-      <Filter>File di origine</Filter>
-    </ClInclude>
-  </ItemGroup>
 </Project>
