@@ -184,17 +184,35 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 	{
 		std::string varName = "";
 		varName+=theAst->nodes[0]->nodes[0]->token;
-		
+
+		bool varFound = false;
 		for (auto v : env->varList)
 		{
 			if (v.name == varName)
 			{
+				varFound = true;
+
+				// TODO: handle all the types
 				if (v.type == liaVariableType::integer)
 				{
 					int val2print = std::get<int>(v.value);
 					std::cout << val2print << std::endl;
 				}
+				else if (v.type == liaVariableType::string)
+				{
+					std::string s2print = std::get<std::string>(v.value);
+					std::cout << s2print << std::endl;
+				}
 			}
+		}
+
+		if (!varFound)
+		{
+			// variable name not found
+			std::string err = "";
+			err += "Variable name ["+varName+"] not found";
+			err += "Terminating.";
+			fatalError(err);
 		}
 	}
 }
@@ -231,6 +249,8 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 			{
 				theVar.name += ch->token;
 				//std::cout << ch->token << std::endl;
+				int lineNum = ch->line;
+				theVar.line = (int)lineNum;
 			}
 		}
 		else
@@ -244,6 +264,15 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 					tmp += ch->nodes[0]->token;
 					theVar.value = std::stoi(tmp);
 				}
+				else if (ch->nodes[0]->name == "StringLiteral")
+				{
+					theVar.type = liaVariableType::string;
+					std::regex quote_re("\"");
+					std::string tmp = "";
+					tmp+= ch->nodes[0]->token;
+					tmp = std::regex_replace(tmp, quote_re, "");
+					theVar.value = tmp;
+				}
 
 				// TODO: handle other types
 
@@ -251,11 +280,70 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 		}
 	}
 
-	// now, if variable is not in env, create it
-	// otherwise, update it
-
+	// now, if variable is not in env, create it. otherwise, update it
 	addvarOrUpdateEnvironment(&theVar, env);
+}
 
+void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	int iIncrement = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				int lineNum = ch->line;
+				theVar.line = (int)lineNum;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				if (ch->nodes[0]->name == "IntegerNumber")
+				{
+					theVar.type = liaVariableType::integer;
+					std::string tmp = "";
+					tmp += ch->nodes[0]->token;
+					iIncrement = std::stoi(tmp);
+				}
+
+				// TODO: handle other types
+
+			}
+		}
+	}
+
+	if (iIncrement != 0)
+	{
+		for (int i = 0;i < env->varList.size();i++)
+		{
+			liaVariable variable = env->varList[i];
+			if (variable.name == theVar.name)
+			{
+				if (variable.type == liaVariableType::integer)
+				{
+					int vv = std::get<int>(env->varList[i].value);
+					env->varList[i].value = vv+iIncrement;
+				}
+				else
+				{
+					std::string err = "";
+					err += "Trying to increment numerically a variable of other type";
+					err += " at line " + std::to_string(theVar.line) + ".";
+					err += "Terminating.";
+					fatalError(err);
+				}
+			}
+		}
+	}
+	// TODO: handle other types
 }
 
 void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env)
@@ -275,7 +363,11 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 			}
 			else
 			{
-				fatalError("Trying to assign a different type to a variable is forbidden. Terminating.");
+				std::string err="";
+				err += "Trying to assign a different type to variable ";
+				err += "at line " + std::to_string(v->line)+".";
+				err+="Terminating.";
+				fatalError(err);
 			}
 
 			return;
@@ -286,10 +378,35 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 	env->varList.push_back(*v);
 }
 
-void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst)
+bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
-	liaEnvironment curEnv;
 
+
+	return false;
+}
+
+void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	std::shared_ptr<peg::Ast> pCond;
+	std::shared_ptr<peg::Ast> pBlock;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->name == "Condition")
+		{
+			pCond = ch;
+		}
+		else if (ch->name == "CodeBlock")
+		{
+			pBlock = ch;
+		}
+	}
+
+	exeCuteCodeBlock(pBlock,env);
+}
+
+void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
+{
 	for (auto stmt : theAst->nodes)
 	{
 		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
@@ -305,16 +422,24 @@ void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst)
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "FuncCallStmt"))
 		{
 			// user function or library function call
-			exeCuteFuncCallStatement(stmt->nodes[0],&curEnv);
+			exeCuteFuncCallStatement(stmt->nodes[0],env);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "VarDeclStmt"))
 		{
 			// variable declaration/assignment
 			//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
-			exeCuteVarDeclStatement(stmt->nodes[0],&curEnv);
+			exeCuteVarDeclStatement(stmt->nodes[0],env);
 		}
-
-		
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "IncrementStmt"))
+		{
+			exeCuteIncrementStatement(stmt->nodes[0],env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "WhileStmt"))
+		{
+			// while statement, the cradle of all infinite loops
+			std::cout << peg::ast_to_s(stmt->nodes[0]);
+			exeCuteWhileStatement(stmt->nodes[0],env);
+		}
 	}
 }
 
@@ -322,8 +447,10 @@ void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst)
 void liaInterpreter::exeCute(std::shared_ptr<peg::Ast> theAst)
 {
 	// basically, we have to find the "main" codeblock and exeCute it
-	// in the mean time, we can create "scopes", that is list of variables, with types and values
+	// in the mean time, we can create "environments", that is list of variables, with types and values
 	// there should be a global scope, I guess. Even if global variables suck
+
+	liaEnvironment curEnv;
 
 	for (liaFunction f : functionList)
 	{
@@ -334,7 +461,7 @@ void liaInterpreter::exeCute(std::shared_ptr<peg::Ast> theAst)
 			assert(f.functionCodeBlockAst->name == "CodeBlock");
 
 			// execute each statement in code block
-			exeCuteCodeBlock(f.functionCodeBlockAst);
+			exeCuteCodeBlock(f.functionCodeBlockAst,&curEnv);
 		}
 	}
 }

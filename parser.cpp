@@ -4,21 +4,24 @@
 // (c) friol 2023
 //
 // will have to support the following:
-// liaiason is typeless (will check if a variable can change type or not, probably not)
-// one-line comments //
+// liaison is typeless (and variables can't change type)
+// one-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // strings will have default properties/functions like s.length
-// main function declaration, in the form of fn start(params)
-// general function declaration, in the form of fn funName(p1,p2,p3)
-// print function included by default
+// main function declaration, in the form of fn main(params) // DONE
+// general function declaration, in the form of fn funName(p1,p2,p3) // DONE
+// print function included by default // DONE
 // function call
-// if/else if/else statement 
+// if/else statement 
+// while statement
 // for cycle
 // for v in array
 // file open/read commands
+// variable increment // DONE
+// variable decrement
+// the ability to solve AOC problems, at least up to day 14
 // many other things that don't come to mind at the moment
 //
-
 
 #include "parser.h"
 
@@ -31,11 +34,19 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / EndLine
+	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / IncrementStmt / WhileStmt / EndLine
 
-	CodeBlock <- '{' (Stmt )* '}'
+	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
+
+	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
+
+	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
+
+	Condition <- Expression Relop Expression
+
+	Relop <- '==' / '<' / '>' / '<=' / '>=' / '!='
 
 	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n] CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
