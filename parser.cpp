@@ -7,7 +7,7 @@
 // liaison is typeless (and variables can't change type)
 // one-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
-// strings will have default properties/functions like s.length
+// strings will have default properties/functions like s.length // DONE
 // main function declaration, in the form of fn main(params) // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
@@ -16,7 +16,7 @@
 // while statement // DONE
 // for cycle
 // for v in array
-// readTextFileLineByLine command
+// readTextFileLineByLine function (returns an array of strings)
 // variable increment // DONE
 // variable decrement
 // the ability to solve AOC problems, at least up to day 14
@@ -54,10 +54,13 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
-	Expression <- IntegerNumber / StringLiteral / VariableName
+	Expression <- IntegerNumber / StringLiteral / VariableProperty / VariableName
 	
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
+
+	VariableProperty <- VariableName '.' Property
+	Property <- 'length'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >

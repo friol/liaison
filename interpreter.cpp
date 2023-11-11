@@ -180,6 +180,43 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 		std::regex quote_re("\"");
 		std::cout << std::regex_replace(s2print, quote_re, "") << std::endl;
 	}
+	else if (theAst->nodes[0]->nodes[0]->name == "VariableProperty")
+	{
+		//std::cout << peg::ast_to_s(theAst->nodes[0]->nodes[0]);
+		std::string varName = "";
+		varName+=theAst->nodes[0]->nodes[0]->nodes[0]->token;
+		std::string varProp = "";
+		varProp += theAst->nodes[0]->nodes[0]->nodes[1]->token;
+
+		assert(varProp == "length");
+
+		bool varFound = false;
+		for (auto v : env->varList)
+		{
+			if (v.name == varName)
+			{
+				varFound = true;
+
+				// TODO: handle all the types
+				if (v.type == liaVariableType::string)
+				{
+					std::string s2print = std::get<std::string>(v.value);
+					auto len = s2print.size();
+					std::cout << len << std::endl;
+				}
+			}
+		}
+
+		if (!varFound)
+		{
+			// variable name not found
+			std::string err = "";
+			err += "Variable name [" + varName + "] not found";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
+	}
 	else if (theAst->nodes[0]->nodes[0]->name == "VariableName")
 	{
 		std::string varName = "";
@@ -241,6 +278,7 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
+	size_t curLine;
 	for (auto ch : theAst->nodes)
 	{
 		if (ch->is_token)
@@ -248,9 +286,7 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 			if (ch->name == "VariableName")
 			{
 				theVar.name += ch->token;
-				//std::cout << ch->token << std::endl;
-				int lineNum = ch->line;
-				theVar.line = (int)lineNum;
+				curLine = ch->line;
 			}
 		}
 		else
@@ -281,7 +317,7 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 	}
 
 	// now, if variable is not in env, create it. otherwise, update it
-	addvarOrUpdateEnvironment(&theVar, env);
+	addvarOrUpdateEnvironment(&theVar, env, curLine);
 }
 
 void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
@@ -289,6 +325,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
+	size_t curLine;
 	int iIncrement = 0;
 
 	for (auto ch : theAst->nodes)
@@ -298,8 +335,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 			if (ch->name == "VariableName")
 			{
 				theVar.name += ch->token;
-				int lineNum = ch->line;
-				theVar.line = (int)lineNum;
+				curLine = ch->line;
 			}
 		}
 		else
@@ -336,7 +372,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 				{
 					std::string err = "";
 					err += "Trying to increment numerically a variable of other type";
-					err += " at line " + std::to_string(theVar.line) + ".";
+					err += " at line " + std::to_string(curLine) + ".";
 					err += "Terminating.";
 					fatalError(err);
 				}
@@ -346,7 +382,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	// TODO: handle other types
 }
 
-void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env)
+void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine)
 {
 	for (int i=0;i<env->varList.size();i++)
 	{
@@ -365,7 +401,7 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 			{
 				std::string err="";
 				err += "Trying to assign a different type to variable ";
-				err += "at line " + std::to_string(v->line)+".";
+				err += "at line " + std::to_string(curLine)+".";
 				err+="Terminating.";
 				fatalError(err);
 			}

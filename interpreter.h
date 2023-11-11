@@ -21,7 +21,6 @@ enum liaVariableType
 
 struct liaVariable
 {
-	int line; // oh gosh, please fix this
 	std::string name;
 	liaVariableType type;
 	std::variant<bool, int, std::string> value;
@@ -63,7 +62,7 @@ private:
 	void exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 
-	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env);
+	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine);
 
 	void fatalError(std::string err);
 
