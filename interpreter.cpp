@@ -378,8 +378,71 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 	env->varList.push_back(*v);
 }
 
+template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T rightop, std::string relOp)
+{
+	// TODO: other relops
+
+	if (relOp == "<")
+	{
+		if (leftop < rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == ">")
+	{
+		if (leftop > rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == "==")
+	{
+		if (leftop == rightop)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+template bool liaInterpreter::primitiveComparison<int>(int leftop,int rightop,std::string relOp);
+
 bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
+	// a condition is Expression Relop Expression
+
+	assert(theAst->nodes[0]->nodes[0]->name == "VariableName");
+	assert(theAst->nodes[1]->is_token);
+
+	std::string relOp = "";
+	relOp+=theAst->nodes[1]->token;
+
+	// TODO: handle expressions in the right way
+
+	for (auto v : env->varList)
+	{
+		if (v.name == theAst->nodes[0]->nodes[0]->token)
+		{
+			if (v.type == liaVariableType::integer)
+			{
+				if (theAst->nodes[2]->nodes[0]->name == "IntegerNumber")
+				{
+					std::string tmp = "";
+					tmp += theAst->nodes[2]->nodes[0]->token;
+					int iValue = std::stoi(tmp);
+					int varValue = std::get<int>(v.value);
+
+					return primitiveComparison(varValue, iValue, relOp);
+				}
+				else
+				{
+					// TODO error: comparison expressions should be of the same type
+				}
+			}
+		}
+	}
 
 
 	return false;
@@ -401,8 +464,11 @@ void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, lia
 			pBlock = ch;
 		}
 	}
-
-	exeCuteCodeBlock(pBlock,env);
+	
+	while (evaluateCondition(pCond, env) == true)
+	{
+		exeCuteCodeBlock(pBlock, env);
+	}
 }
 
 void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
@@ -437,7 +503,7 @@ void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnviro
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "WhileStmt"))
 		{
 			// while statement, the cradle of all infinite loops
-			std::cout << peg::ast_to_s(stmt->nodes[0]);
+			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			exeCuteWhileStatement(stmt->nodes[0],env);
 		}
 	}

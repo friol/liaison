@@ -13,10 +13,10 @@
 // print function included by default // DONE
 // function call
 // if/else statement 
-// while statement
+// while statement // DONE
 // for cycle
 // for v in array
-// file open/read commands
+// readTextFileLineByLine command
 // variable increment // DONE
 // variable decrement
 // the ability to solve AOC problems, at least up to day 14
