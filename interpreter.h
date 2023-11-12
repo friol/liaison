@@ -24,6 +24,7 @@ struct liaVariable
 	std::string name;
 	liaVariableType type;
 	std::variant<bool, int, std::string> value;
+	std::vector<liaVariable> vlist;
 };
 
 struct liaEnvironment

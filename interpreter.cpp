@@ -180,7 +180,7 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 		std::regex quote_re("\"");
 		std::cout << std::regex_replace(s2print, quote_re, "") << std::endl;
 	}
-	else if (theAst->nodes[0]->nodes[0]->name == "VariableProperty")
+	else if (theAst->nodes[0]->nodes[0]->name == "VariableWithProperty")
 	{
 		//std::cout << peg::ast_to_s(theAst->nodes[0]->nodes[0]);
 		std::string varName = "";
@@ -203,6 +203,10 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 					std::string s2print = std::get<std::string>(v.value);
 					auto len = s2print.size();
 					std::cout << len << std::endl;
+				}
+				else if (v.type == liaVariableType::array)
+				{
+					std::cout << v.vlist.size() << std::endl;
 				}
 			}
 		}
@@ -239,6 +243,18 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 				{
 					std::string s2print = std::get<std::string>(v.value);
 					std::cout << s2print << std::endl;
+				}
+				else if (v.type == liaVariableType::array)
+				{
+					bool first = true;
+					std::cout << "[";
+					for (auto el : v.vlist)
+					{
+						if (!first) std::cout << ",";
+						if (el.type==liaVariableType::integer) std::cout << std::get<int>(el.value);
+						first = false;
+					}
+					std::cout << "]" << std::endl;
 				}
 			}
 		}
@@ -308,6 +324,28 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 					tmp+= ch->nodes[0]->token;
 					tmp = std::regex_replace(tmp, quote_re, "");
 					theVar.value = tmp;
+				}
+				if (ch->nodes[0]->name == "ArrayInitializer")
+				{
+					theVar.type = liaVariableType::array;
+					if (ch->nodes[0]->nodes.size() != 0)
+					{
+						assert(ch->nodes[0]->nodes[0]->name == "ArrayList");
+						if (ch->nodes[0]->nodes[0]->nodes[0]->name == "IntegerList")
+						{
+							for (auto t : ch->nodes[0]->nodes[0]->nodes[0]->nodes)
+							{
+								assert(t->is_token);
+								liaVariable varel;
+								varel.name = "varWithNoName";
+								varel.type = liaVariableType::integer;
+								std::string tmp = "";
+								tmp += t->token;
+								varel.value= std::stoi(tmp);
+								theVar.vlist.push_back(varel);
+							}
+						}
+					}
 				}
 
 				// TODO: handle other types

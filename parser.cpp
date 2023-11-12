@@ -56,10 +56,15 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
-	Expression <- IntegerNumber / StringLiteral / VariableWithProperty / VariableName
+	Expression <- IntegerNumber / StringLiteral / VariableWithProperty / VariableName / ArrayInitializer
 	
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
+	ArrayInitializer <- '[' (ArrayList)* ']'
+
+	ArrayList <- IntegerList / StringList
+	IntegerList <- IntegerNumber (',' IntegerNumber)*
+	StringList <- StringLiteral (',' StringLiteral)*
 
 	VariableWithProperty <- VariableName '.' Property
 	Property <- 'length'
