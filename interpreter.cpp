@@ -416,8 +416,6 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 
 template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T rightop, std::string relOp)
 {
-	// TODO: other relops
-
 	if (relOp == "<")
 	{
 		if (leftop < rightop)
@@ -435,6 +433,27 @@ template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T right
 	else if (relOp == "==")
 	{
 		if (leftop == rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == "<=")
+	{
+		if (leftop <= rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == ">=")
+	{
+		if (leftop >= rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == "!=")
+	{
+		if (leftop != rightop)
 		{
 			return true;
 		}
@@ -507,6 +526,29 @@ void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, lia
 	}
 }
 
+void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	std::shared_ptr<peg::Ast> pCond;
+	std::shared_ptr<peg::Ast> pBlock;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->name == "Condition")
+		{
+			pCond = ch;
+		}
+		else if (ch->name == "CodeBlock")
+		{
+			pBlock = ch;
+		}
+	}
+
+	if (evaluateCondition(pCond, env) == true)
+	{
+		exeCuteCodeBlock(pBlock, env);
+	}
+}
+
 void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
 {
 	for (auto stmt : theAst->nodes)
@@ -541,6 +583,11 @@ void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnviro
 			// while statement, the cradle of all infinite loops
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			exeCuteWhileStatement(stmt->nodes[0],env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "IfStmt"))
+		{
+			//std::cout << peg::ast_to_s(stmt->nodes[0]);
+			exeCuteIfStatement(stmt->nodes[0], env);
 		}
 	}
 }

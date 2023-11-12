@@ -12,7 +12,7 @@
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
 // function call
-// if/else statement 
+// if/else statement // else doesn't work
 // while statement // DONE
 // for cycle
 // for v in array
@@ -34,11 +34,13 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / IncrementStmt / WhileStmt / EndLine
+	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / IncrementStmt / IfStmt / WhileStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
+
+	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock ('else' '\n' CodeBlock)?
 
 	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
 
@@ -46,7 +48,7 @@ liaParser::liaParser()
 
 	Condition <- Expression Relop Expression
 
-	Relop <- '==' / '<' / '>' / '<=' / '>=' / '!='
+	Relop <- '==' / '<=' / '<' / '>=' / '>' / '!='
 
 	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n] CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
@@ -54,12 +56,12 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
-	Expression <- IntegerNumber / StringLiteral / VariableProperty / VariableName
+	Expression <- IntegerNumber / StringLiteral / VariableWithProperty / VariableName
 	
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 
-	VariableProperty <- VariableName '.' Property
+	VariableWithProperty <- VariableName '.' Property
 	Property <- 'length'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
