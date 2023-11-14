@@ -55,6 +55,8 @@ private:
 	bool evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	template <typename T> bool primitiveComparison(T leftop, T rightop, std::string relOp);
 
+	liaVariable evaluateExpression(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
+
 	void exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 
 	void exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);

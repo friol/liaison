@@ -165,28 +165,78 @@ void liaInterpreter::dumpFunctions()
 	}
 }
 
-void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
+liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
 {
-	//std::cout << peg::ast_to_s(theAst);
-	assert(theAst->name == "ArgList");
-	assert(theAst->nodes[0]->name == "Expression");
+	liaVariable retVar;
 
-	// TODO: parse expression and print it properly
-
-	if (theAst->nodes[0]->nodes[0]->name == "StringLiteral")
+	if (theAst->nodes[0]->name == "StringLiteral")
 	{
-		std::string s2print = "";
-		s2print+=theAst->nodes[0]->nodes[0]->token;
+		std::string stringVal = "";
+		stringVal += theAst->nodes[0]->token;
 		std::regex quote_re("\"");
-		std::cout << std::regex_replace(s2print, quote_re, "") << std::endl;
+
+		retVar.type = liaVariableType::string;
+		retVar.value = std::regex_replace(stringVal, quote_re, "");
 	}
-	else if (theAst->nodes[0]->nodes[0]->name == "VariableWithProperty")
+	else if (theAst->nodes[0]->name == "IntegerNumber")
 	{
-		//std::cout << peg::ast_to_s(theAst->nodes[0]->nodes[0]);
+		std::string tmp = "";
+		tmp += theAst->nodes[0]->token;
+		retVar.type = liaVariableType::integer;
+		retVar.value = std::stoi(tmp);
+	}
+	else if (theAst->nodes[0]->name == "VariableName")
+	{
 		std::string varName = "";
-		varName+=theAst->nodes[0]->nodes[0]->nodes[0]->token;
+		varName += theAst->nodes[0]->token;
+
+		bool varFound = false;
+		for (auto v : env->varList)
+		{
+			if (v.name == varName)
+			{
+				varFound = true;
+
+				// TODO: handle all the types
+				if (v.type == liaVariableType::integer)
+				{
+					int val2print = std::get<int>(v.value);
+					retVar.type = liaVariableType::integer;
+					retVar.value=val2print;
+				}
+				else if (v.type == liaVariableType::string)
+				{
+					std::string s2print = std::get<std::string>(v.value);
+					retVar.type = liaVariableType::string;
+					retVar.value = s2print;
+				}
+				else if (v.type == liaVariableType::array)
+				{
+					retVar.type = liaVariableType::array;
+					for (auto el : v.vlist)
+					{
+						retVar.vlist.push_back(el);
+						//if (el.type == liaVariableType::integer) std::cout << std::get<int>(el.value);
+					}
+				}
+			}
+		}
+
+		if (!varFound)
+		{
+			// variable name not found
+			std::string err = "";
+			err += "Variable name [" + varName + "] not found";
+			err += "Terminating.";
+			fatalError(err);
+		}
+	}
+	else if (theAst->nodes[0]->name == "VariableWithProperty")
+	{
+		std::string varName = "";
+		varName += theAst->nodes[0]->nodes[0]->token;
 		std::string varProp = "";
-		varProp += theAst->nodes[0]->nodes[0]->nodes[1]->token;
+		varProp += theAst->nodes[0]->nodes[1]->token;
 
 		assert(varProp == "length");
 
@@ -202,11 +252,13 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 				{
 					std::string s2print = std::get<std::string>(v.value);
 					auto len = s2print.size();
-					std::cout << len << std::endl;
+					retVar.type = liaVariableType::integer;
+					retVar.value = (int)len;
 				}
 				else if (v.type == liaVariableType::array)
 				{
-					std::cout << v.vlist.size() << std::endl;
+					retVar.type = liaVariableType::integer;
+					retVar.value = (int)v.vlist.size();
 				}
 			}
 		}
@@ -221,52 +273,94 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 		}
 
 	}
-	else if (theAst->nodes[0]->nodes[0]->name == "VariableName")
+	else if (theAst->nodes[0]->name == "ArrayInitializer")
 	{
-		std::string varName = "";
-		varName+=theAst->nodes[0]->nodes[0]->token;
-
-		bool varFound = false;
-		for (auto v : env->varList)
+		if (theAst->nodes[0]->nodes.size() != 0)
 		{
-			if (v.name == varName)
-			{
-				varFound = true;
+			assert(theAst->nodes[0]->nodes[0]->name == "ArrayList");
+			retVar.type = liaVariableType::array;
 
-				// TODO: handle all the types
-				if (v.type == liaVariableType::integer)
+			if (theAst->nodes[0]->nodes[0]->nodes[0]->name == "IntegerList")
+			{
+				for (auto t : theAst->nodes[0]->nodes[0]->nodes[0]->nodes)
 				{
-					int val2print = std::get<int>(v.value);
-					std::cout << val2print << std::endl;
-				}
-				else if (v.type == liaVariableType::string)
-				{
-					std::string s2print = std::get<std::string>(v.value);
-					std::cout << s2print << std::endl;
-				}
-				else if (v.type == liaVariableType::array)
-				{
-					bool first = true;
-					std::cout << "[";
-					for (auto el : v.vlist)
-					{
-						if (!first) std::cout << ",";
-						if (el.type==liaVariableType::integer) std::cout << std::get<int>(el.value);
-						first = false;
-					}
-					std::cout << "]" << std::endl;
+					assert(t->is_token);
+					liaVariable varel;
+					varel.name = "varWithNoName";
+					varel.type = liaVariableType::integer;
+					std::string tmp = "";
+					tmp += t->token;
+					varel.value = std::stoi(tmp);
+					retVar.vlist.push_back(varel);
 				}
 			}
 		}
+	}
+	else if (theAst->nodes[0]->name == "ArraySubscript")
+	{
+		//std::cout << peg::ast_to_s(ch);
+		std::string arrName = "";
+		arrName += theAst->nodes[0]->nodes[0]->token;
 
-		if (!varFound)
+		assert(theAst->nodes[0]->nodes[1]->name == "Expression");
+		assert(theAst->nodes[0]->nodes[1]->nodes[0]->name == "IntegerNumber");
+
+		std::string tmp = "";
+		tmp += theAst->nodes[0]->nodes[1]->nodes[0]->token;
+		int arrIdx = std::stoi(tmp);
+
+		// check for array out of bounds
+		for (auto v : env->varList)
 		{
-			// variable name not found
-			std::string err = "";
-			err += "Variable name ["+varName+"] not found";
-			err += "Terminating.";
-			fatalError(err);
+			if (v.name == arrName)
+			{
+				if (v.type == liaVariableType::array)
+				{
+					assert(arrIdx < v.vlist.size());
+					retVar.type = v.vlist[0].type;
+					retVar.value = v.vlist[arrIdx].value;
+				}
+				else if (v.type == liaVariableType::string)
+				{
+					std::string tmp = std::get<std::string>(v.value);
+					assert(arrIdx < tmp.size());
+					retVar.type = liaVariableType::string;
+					char c = tmp.at(arrIdx);
+					std::string sc = "";
+					sc += c;
+					retVar.value = sc;
+				}
+			}
 		}
+	}
+
+	return retVar;
+}
+
+void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+	assert(theAst->name == "ArgList");
+	assert(theAst->nodes[0]->name == "Expression");
+
+	liaVariable retVar = evaluateExpression(theAst->nodes[0], env);
+
+	if (retVar.type != liaVariableType::array)
+	{
+		std::visit([](const auto& x) { std::cout << x; }, retVar.value);
+		std::cout << "\n";
+	}
+	else
+	{
+		bool first = true;
+		std::cout << "[";
+		for (auto el : retVar.vlist)
+		{
+			if (!first) std::cout << ",";
+			std::visit([](const auto& x) { std::cout << x; }, el.value);
+			first = false;
+		}
+		std::cout << "]" << std::endl;
 	}
 }
 
@@ -309,128 +403,10 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 		{
 			if (ch->name == "Expression")
 			{
-				if (ch->nodes[0]->name == "IntegerNumber")
-				{
-					theVar.type = liaVariableType::integer;
-					std::string tmp = "";
-					tmp += ch->nodes[0]->token;
-					theVar.value = std::stoi(tmp);
-				}
-				else if (ch->nodes[0]->name == "StringLiteral")
-				{
-					theVar.type = liaVariableType::string;
-					std::regex quote_re("\"");
-					std::string tmp = "";
-					tmp+= ch->nodes[0]->token;
-					tmp = std::regex_replace(tmp, quote_re, "");
-					theVar.value = tmp;
-				}
-				if (ch->nodes[0]->name == "ArrayInitializer")
-				{
-					theVar.type = liaVariableType::array;
-					if (ch->nodes[0]->nodes.size() != 0)
-					{
-						assert(ch->nodes[0]->nodes[0]->name == "ArrayList");
-						if (ch->nodes[0]->nodes[0]->nodes[0]->name == "IntegerList")
-						{
-							for (auto t : ch->nodes[0]->nodes[0]->nodes[0]->nodes)
-							{
-								assert(t->is_token);
-								liaVariable varel;
-								varel.name = "varWithNoName";
-								varel.type = liaVariableType::integer;
-								std::string tmp = "";
-								tmp += t->token;
-								varel.value= std::stoi(tmp);
-								theVar.vlist.push_back(varel);
-							}
-						}
-					}
-				}
-				else if (ch->nodes[0]->name == "ArraySubscript")
-				{
-					//std::cout << peg::ast_to_s(ch);
-					std::string arrName = "";
-					arrName += ch->nodes[0]->nodes[0]->token;
-
-					assert(ch->nodes[0]->nodes[1]->name == "Expression");
-					assert(ch->nodes[0]->nodes[1]->nodes[0]->name == "IntegerNumber");
-
-					std::string tmp = "";
-					tmp += ch->nodes[0]->nodes[1]->nodes[0]->token;
-					int arrIdx = std::stoi(tmp);
-
-					// check for array out of bounds
-					for (auto v : env->varList)
-					{
-						if (v.name == arrName)
-						{
-							if (v.type == liaVariableType::array)
-							{
-								assert(arrIdx < v.vlist.size());
-								theVar.type = v.vlist[0].type;
-								theVar.value = v.vlist[arrIdx].value;
-							}
-							else if (v.type == liaVariableType::string)
-							{
-								std::string tmp = std::get<std::string>(v.value);
-								assert(arrIdx < tmp.size());
-								theVar.type = liaVariableType::string;
-								char c= tmp.at(arrIdx);
-								std::string sc = "";
-								sc += c;
-								theVar.value = sc;
-							}
-						}
-					}
-				}
-				else if (ch->nodes[0]->name == "VariableWithProperty")
-				{
-					//std::cout << peg::ast_to_s(ch);
-
-					std::string varName = "";
-					varName += ch->nodes[0]->nodes[0]->token;
-					std::string varProp = "";
-					varProp += ch->nodes[0]->nodes[1]->token;
-
-					assert(varProp == "length");
-					
-					bool varFound = false;
-					for (auto v : env->varList)
-					{
-						if (v.name == varName)
-						{
-							varFound = true;
-							theVar.type = liaVariableType::integer;
-
-							// TODO: handle all the types
-							if (v.type == liaVariableType::string)
-							{
-								std::string s2print = std::get<std::string>(v.value);
-								auto len = s2print.size();
-								theVar.value=(int)len;
-							}
-							else if (v.type == liaVariableType::array)
-							{
-								theVar.value=(int)v.vlist.size();
-							}
-						}
-					}
-
-					if (!varFound)
-					{
-						// variable name not found
-						std::string err = "";
-						err += "Variable name [" + varName + "] not found";
-						err += "Terminating.";
-						fatalError(err);
-					}
-
-
-				}
-
-
-				// TODO: handle other types
+				liaVariable retVar = evaluateExpression(ch, env);
+				theVar.type = retVar.type;
+				theVar.value = retVar.value;
+				theVar.vlist = retVar.vlist;
 			}
 		}
 	}
