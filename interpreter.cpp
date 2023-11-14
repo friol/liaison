@@ -347,9 +347,90 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 						}
 					}
 				}
+				else if (ch->nodes[0]->name == "ArraySubscript")
+				{
+					//std::cout << peg::ast_to_s(ch);
+					std::string arrName = "";
+					arrName += ch->nodes[0]->nodes[0]->token;
+
+					assert(ch->nodes[0]->nodes[1]->name == "Expression");
+					assert(ch->nodes[0]->nodes[1]->nodes[0]->name == "IntegerNumber");
+
+					std::string tmp = "";
+					tmp += ch->nodes[0]->nodes[1]->nodes[0]->token;
+					int arrIdx = std::stoi(tmp);
+
+					// check for array out of bounds
+					for (auto v : env->varList)
+					{
+						if (v.name == arrName)
+						{
+							if (v.type == liaVariableType::array)
+							{
+								assert(arrIdx < v.vlist.size());
+								theVar.type = v.vlist[0].type;
+								theVar.value = v.vlist[arrIdx].value;
+							}
+							else if (v.type == liaVariableType::string)
+							{
+								std::string tmp = std::get<std::string>(v.value);
+								assert(arrIdx < tmp.size());
+								theVar.type = liaVariableType::string;
+								char c= tmp.at(arrIdx);
+								std::string sc = "";
+								sc += c;
+								theVar.value = sc;
+							}
+						}
+					}
+				}
+				else if (ch->nodes[0]->name == "VariableWithProperty")
+				{
+					//std::cout << peg::ast_to_s(ch);
+
+					std::string varName = "";
+					varName += ch->nodes[0]->nodes[0]->token;
+					std::string varProp = "";
+					varProp += ch->nodes[0]->nodes[1]->token;
+
+					assert(varProp == "length");
+					
+					bool varFound = false;
+					for (auto v : env->varList)
+					{
+						if (v.name == varName)
+						{
+							varFound = true;
+							theVar.type = liaVariableType::integer;
+
+							// TODO: handle all the types
+							if (v.type == liaVariableType::string)
+							{
+								std::string s2print = std::get<std::string>(v.value);
+								auto len = s2print.size();
+								theVar.value=(int)len;
+							}
+							else if (v.type == liaVariableType::array)
+							{
+								theVar.value=(int)v.vlist.size();
+							}
+						}
+					}
+
+					if (!varFound)
+					{
+						// variable name not found
+						std::string err = "";
+						err += "Variable name [" + varName + "] not found";
+						err += "Terminating.";
+						fatalError(err);
+					}
+
+
+				}
+
 
 				// TODO: handle other types
-
 			}
 		}
 	}
