@@ -294,6 +294,23 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 					retVar.vlist.push_back(varel);
 				}
 			}
+			else if (theAst->nodes[0]->nodes[0]->nodes[0]->name == "StringList")
+			{
+				//std::cout << peg::ast_to_s(theAst);
+				for (auto t : theAst->nodes[0]->nodes[0]->nodes[0]->nodes)
+				{
+					assert(t->is_token);
+					liaVariable varel;
+					varel.name = "varWithNoNameS";
+					varel.type = liaVariableType::string;
+					std::string tmp = "";
+					tmp += t->token;
+
+					std::regex quote_re("\"");
+					varel.value = std::regex_replace(tmp, quote_re, "");
+					retVar.vlist.push_back(varel);
+				}
+			}
 		}
 	}
 	else if (theAst->nodes[0]->name == "ArraySubscript")
