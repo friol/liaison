@@ -7,6 +7,8 @@
 #include <vector>
 #include <regex>
 #include <variant>
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include "include/peglib.h"
 
@@ -59,12 +61,14 @@ private:
 
 	void exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 
-	void exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
+	liaVariable exeCuteLibFunctionReadFile(std::string fname);
 
 	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine);
 

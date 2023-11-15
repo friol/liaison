@@ -275,10 +275,10 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 	}
 	else if (theAst->nodes[0]->name == "ArrayInitializer")
 	{
+		retVar.type = liaVariableType::array;
 		if (theAst->nodes[0]->nodes.size() != 0)
 		{
 			assert(theAst->nodes[0]->nodes[0]->name == "ArrayList");
-			retVar.type = liaVariableType::array;
 
 			if (theAst->nodes[0]->nodes[0]->nodes[0]->name == "IntegerList")
 			{
@@ -350,6 +350,12 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 			}
 		}
 	}
+	else if (theAst->nodes[0]->name == "RFuncCall")
+	{
+		//std::cout << "funCall" << std::endl;
+		//std::cout << peg::ast_to_s(theAst);
+		retVar=exeCuteFuncCallStatement(theAst->nodes[0], env);
+	}
 
 	return retVar;
 }
@@ -381,9 +387,37 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 	}
 }
 
-void liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname)
+{
+	liaVariable retVar;
+	retVar.type = liaVariableType::array;
+
+	std::string line;
+	std::ifstream file(fname);
+	if (file.is_open()) 
+	{
+		while (std::getline(file, line)) 
+		{
+			liaVariable l;
+			l.type = liaVariableType::string;
+			l.value = "\""+line + "\"";
+			retVar.vlist.push_back(l);
+		}
+		file.close();
+	}
+	else
+	{
+		throw("Exception: could not open file");
+	}
+
+	return retVar;
+}
+
+liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable retVal;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -395,9 +429,20 @@ void liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, 
 				{
 					exeCuteLibFunctionPrint(theAst->nodes[1],env);
 				}
+				else if (ch->token == "readTextFileLineByLine")
+				{
+					//std::cout << "the powa of LIA" << std::endl;
+					assert(theAst->nodes[1]->name == "ArgList");
+					assert(theAst->nodes[1]->nodes[0]->name == "Expression");
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0],env);
+					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
+					retVal=exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
+				}
 			}
 		}
 	}
+
+	return retVal;
 }
 
 void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)

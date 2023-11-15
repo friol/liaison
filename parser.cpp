@@ -16,7 +16,7 @@
 // while statement // DONE
 // for cycle
 // for v in array
-// readTextFileLineByLine function (returns an array of strings)
+// readTextFileLineByLine function (returns an array of strings) // DONE
 // variable increment // DONE
 // variable decrement
 // the ability to solve AOC problems, at least up to day 14
@@ -34,7 +34,7 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- VarDeclStmt / SingleLineCommentStmt / FuncCallStmt / IncrementStmt / IfStmt / WhileStmt / EndLine
+	Stmt <- FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / IfStmt / WhileStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -56,7 +56,7 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
-	Expression <- IntegerNumber / StringLiteral / ArraySubscript / VariableWithProperty / VariableName / ArrayInitializer
+	Expression <- IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / ArraySubscript / VariableWithProperty / VariableName
 	
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
@@ -72,6 +72,7 @@ liaParser::liaParser()
 	Property <- 'length'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
+	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
 	ArgList <- Expression ( ',' Expression )*
 
