@@ -59,7 +59,7 @@ private:
 
 	liaVariable evaluateExpression(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 
-	void exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	liaVariable exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 
 	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
@@ -69,6 +69,8 @@ private:
 	
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 	liaVariable exeCuteLibFunctionReadFile(std::string fname);
+
+	liaVariable customFunctionCall(std::string fname, std::vector<liaVariable>* parameters, liaEnvironment* env);
 
 	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine);
 

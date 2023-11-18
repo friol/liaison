@@ -226,7 +226,7 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		{
 			// variable name not found
 			std::string err = "";
-			err += "Variable name [" + varName + "] not found";
+			err += "Variable name [" + varName + "] not found. ";
 			err += "Terminating.";
 			fatalError(err);
 		}
@@ -365,25 +365,30 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 	assert(theAst->name == "ArgList");
 	assert(theAst->nodes[0]->name == "Expression");
 
-	liaVariable retVar = evaluateExpression(theAst->nodes[0], env);
+	for (auto node : theAst->nodes)
+	{
+		liaVariable retVar = evaluateExpression(node, env);
 
-	if (retVar.type != liaVariableType::array)
-	{
-		std::visit([](const auto& x) { std::cout << x; }, retVar.value);
-		std::cout << "\n";
-	}
-	else
-	{
-		bool first = true;
-		std::cout << "[";
-		for (auto el : retVar.vlist)
+		if (retVar.type != liaVariableType::array)
 		{
-			if (!first) std::cout << ",";
-			std::visit([](const auto& x) { std::cout << x; }, el.value);
-			first = false;
+			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
+			std::cout << " ";
 		}
-		std::cout << "]" << std::endl;
+		else
+		{
+			bool first = true;
+			std::cout << "[";
+			for (auto el : retVar.vlist)
+			{
+				if (!first) std::cout << ",";
+				std::visit([](const auto& x) { std::cout << x; }, el.value);
+				first = false;
+			}
+			std::cout << "]";
+		}
 	}
+
+	std::cout << std::endl;
 }
 
 liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname)
@@ -412,11 +417,86 @@ liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname)
 	return retVar;
 }
 
+liaVariable liaInterpreter::customFunctionCall(std::string fname, std::vector<liaVariable>* parameters, liaEnvironment* env)
+{
+	liaVariable retVal;
+
+	// check if function name exists
+	bool funFound = false;
+	std::shared_ptr<peg::Ast> pBlock;
+
+	for (auto f : functionList)
+	{
+		if (fname == f.name)
+		{
+			funFound = true;
+			pBlock = f.functionCodeBlockAst;
+
+			// check that number of parameters is the same of function call
+
+			if (f.parameters.size() != parameters->size())
+			{
+				std::string err = "";
+				err += "Function " + fname + " called with wrong number of parameters. "+std::to_string(parameters->size())+" parameter(s) passed ";
+				err += "instead of "+std::to_string(f.parameters.size()) + ".";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			for (int p = 0;p < parameters->size();p++)
+			{
+				(*parameters)[p].name = f.parameters[p].name;
+			}
+		}
+	}
+
+	if (funFound != true)
+	{
+		std::string err = "";
+		err += "Unknown function name "+fname+".";
+		err += "Terminating.";
+		fatalError(err);
+	}
+
+	// execute code block
+	// what stays in the function code block stays in the function code block
+
+	liaEnvironment funEvn;
+
+	// add to the local function environment the function parameters
+	for (auto parm : *parameters)
+	{
+		//std::cout << parm.name << std::endl;
+		addvarOrUpdateEnvironment(&parm, &funEvn, 0);
+	}
+
+	retVal=exeCuteCodeBlock(pBlock, &funEvn);
+
+	return retVal;
+}
+
 liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable retVal;
+	std::vector<liaVariable> parameters;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (!ch->is_token)
+		{
+			if (ch->name == "ArgList")
+			{
+				for (auto expr : ch->nodes)
+				{
+					assert(expr->name == "Expression");
+					liaVariable arg = evaluateExpression(expr, env);
+					parameters.push_back(arg);
+				}
+			}
+		}
+	}
 
 	for (auto ch : theAst->nodes)
 	{
@@ -452,6 +532,13 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 
 					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
 					//retVal = exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
+				}
+				else
+				{
+					// should be a custom function
+					std::string funname = "";
+					funname += ch->token;
+					retVal = customFunctionCall(funname,&parameters,env);
 				}
 			}
 		}
@@ -748,8 +835,10 @@ void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnv
 	}
 }
 
-void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
+liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
 {
+	liaVariable retVal;
+
 	for (auto stmt : theAst->nodes)
 	{
 		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
@@ -788,7 +877,14 @@ void liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnviro
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			exeCuteIfStatement(stmt->nodes[0], env);
 		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "ReturnStmt"))
+		{
+			//std::cout << peg::ast_to_s(stmt->nodes[0]);
+			retVal = evaluateExpression(stmt->nodes[0]->nodes[0], env);
+		}
 	}
+
+	return retVal;
 }
 
 // where the Cuteness starts

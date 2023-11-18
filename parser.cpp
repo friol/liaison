@@ -12,13 +12,15 @@
 // main function declaration, in the form of fn main(params) // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
-// function call
+// variadic print function // DONE
+// function call with parameters // DONE
 // if/else statement // DONE
+// return statement // DONE
 // while statement // DONE
 // for cycle
 // for v in array
 // readTextFileLineByLine function (returns an array of strings) // DONE
-// toInteger function (converts a string to an int) 
+// toInteger function (converts a string to an int) // DONE
 // variable increment // DONE
 // variable decrement
 // the ability to solve AOC problems, at least up to day 14
@@ -43,7 +45,7 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / WhileStmt / EndLine
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / WhileStmt / ReturnStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -85,6 +87,8 @@ liaParser::liaParser()
 	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
 	ArgList <- Expression ( ',' Expression )*
+
+	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine
 
 	EndLine <- [ \t]* [\r\n]
 	%whitespace <- [ \t]*

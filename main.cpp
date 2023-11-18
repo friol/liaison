@@ -31,7 +31,7 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
-	std::ifstream t("d:\\prova\\prog2.lia");
+	std::ifstream t("d:\\prova\\lia01.lia");
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 
