@@ -320,11 +320,10 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		arrName += theAst->nodes[0]->nodes[0]->token;
 
 		assert(theAst->nodes[0]->nodes[1]->name == "Expression");
-		assert(theAst->nodes[0]->nodes[1]->nodes[0]->name == "IntegerNumber");
 
-		std::string tmp = "";
-		tmp += theAst->nodes[0]->nodes[1]->nodes[0]->token;
-		int arrIdx = std::stoi(tmp);
+		liaVariable vIdx = evaluateExpression(theAst->nodes[0]->nodes[1], env);
+		assert(vIdx.type == liaVariableType::integer);
+		int arrIdx = std::get<int>(vIdx.value);
 
 		// check for array out of bounds
 		for (auto v : env->varList)
@@ -400,7 +399,7 @@ liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname)
 		{
 			liaVariable l;
 			l.type = liaVariableType::string;
-			l.value = "\""+line + "\"";
+			l.value = line;
 			retVar.vlist.push_back(l);
 		}
 		file.close();
@@ -437,6 +436,22 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0],env);
 					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
 					retVal=exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
+				}
+				else if (ch->token == "toInteger")
+				{
+					assert(theAst->nodes[1]->name == "ArgList");
+					assert(theAst->nodes[1]->nodes[0]->name == "Expression");
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+					
+					// parameter to convert must be a string
+					assert(p0.type == liaVariableType::string);
+
+					retVal.type = liaVariableType::integer;
+					std::string sVal = std::get<std::string>(p0.value);
+					retVal.value = std::stoi(sVal);
+
+					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
+					//retVal = exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
 				}
 			}
 		}
@@ -499,16 +514,17 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		{
 			if (ch->name == "Expression")
 			{
+				liaVariable vInc = evaluateExpression(ch,env);
+				assert(vInc.type == liaVariableType::integer);
+				iIncrement = std::get<int>(vInc.value);
+/*
 				if (ch->nodes[0]->name == "IntegerNumber")
 				{
 					theVar.type = liaVariableType::integer;
 					std::string tmp = "";
 					tmp += ch->nodes[0]->token;
 					iIncrement = std::stoi(tmp);
-				}
-
-				// TODO: handle other types
-
+				}*/
 			}
 		}
 	}
@@ -550,6 +566,10 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 			{
 				// TODO handle other types
 				if (v->type == liaVariableType::integer)
+				{
+					env->varList[i].value = v->value;
+				}
+				else if (v->type == liaVariableType::string)
 				{
 					env->varList[i].value = v->value;
 				}
@@ -624,15 +644,26 @@ template bool liaInterpreter::primitiveComparison<int>(int leftop,int rightop,st
 bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	// a condition is Expression Relop Expression
-
-	assert(theAst->nodes[0]->nodes[0]->name == "VariableName");
-	assert(theAst->nodes[1]->is_token);
+	//std::cout << peg::ast_to_s(theAst);
 
 	std::string relOp = "";
 	relOp+=theAst->nodes[1]->token;
 
-	// TODO: handle expressions in the right way
+	liaVariable lExpr = evaluateExpression(theAst->nodes[0], env);
+	liaVariable rExpr = evaluateExpression(theAst->nodes[2], env);
 
+	if (lExpr.type != rExpr.type)
+	{
+		std::string err = "";
+		err += "Comparing variables of different types is forbidden. ";
+		err += "Terminating.";
+		fatalError(err);
+		return false;
+	}
+
+	return primitiveComparison(lExpr.value, rExpr.value, relOp);
+
+/*
 	for (auto v : env->varList)
 	{
 		if (v.name == theAst->nodes[0]->nodes[0]->token)
@@ -656,8 +687,9 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 		}
 	}
 
-
 	return false;
+*/
+
 }
 
 void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
@@ -687,22 +719,32 @@ void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnv
 {
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
+	std::shared_ptr<peg::Ast> pBlock2;
 
-	for (auto ch : theAst->nodes)
+	pCond = theAst->nodes[0];
+
+	if (theAst->nodes.size() == 2)
 	{
-		if (ch->name == "Condition")
+		pBlock = theAst->nodes[1];
+
+		if (evaluateCondition(pCond, env) == true)
 		{
-			pCond = ch;
-		}
-		else if (ch->name == "CodeBlock")
-		{
-			pBlock = ch;
+			exeCuteCodeBlock(pBlock, env);
 		}
 	}
-
-	if (evaluateCondition(pCond, env) == true)
+	else if (theAst->nodes.size() == 3)
 	{
-		exeCuteCodeBlock(pBlock, env);
+		pBlock = theAst->nodes[1];
+		pBlock2 = theAst->nodes[2];
+
+		if (evaluateCondition(pCond, env) == true)
+		{
+			exeCuteCodeBlock(pBlock, env);
+		}
+		else
+		{
+			exeCuteCodeBlock(pBlock2, env);
+		}
 	}
 }
 

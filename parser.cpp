@@ -7,16 +7,18 @@
 // liaison is typeless (and variables can't change type)
 // one-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
+// complex expressions (mathematical)
 // strings will have default properties/functions like s.length // DONE
 // main function declaration, in the form of fn main(params) // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
 // function call
-// if/else statement // else doesn't work
+// if/else statement // DONE
 // while statement // DONE
 // for cycle
 // for v in array
 // readTextFileLineByLine function (returns an array of strings) // DONE
+// toInteger function (converts a string to an int) 
 // variable increment // DONE
 // variable decrement
 // the ability to solve AOC problems, at least up to day 14
@@ -24,6 +26,13 @@
 //
 
 #include "parser.h"
+/*
+Expression < -Term(TERM_OPERATOR Term) *
+	Term < -Factor(FACTOR_OPERATOR Factor) *
+	Factor < -IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / ArraySubscript / VariableWithProperty / VariableName / '(' Expression ')'
+	TERM_OPERATOR < -<[-+] >
+	FACTOR_OPERATOR < -< [/*] >
+*/
 
 liaParser::liaParser()
 {
@@ -34,13 +43,13 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / IfStmt / WhileStmt / EndLine
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / WhileStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
 
-	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock ('else' '\n' CodeBlock)?
+	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock '\n' ('else' '\n' CodeBlock)?
 
 	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
 
@@ -56,8 +65,9 @@ liaParser::liaParser()
 
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
+
 	Expression <- IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / ArraySubscript / VariableWithProperty / VariableName
-	
+
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 	ArrayInitializer <- '[' (ArrayList)* ']'
