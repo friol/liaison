@@ -61,15 +61,17 @@ private:
 
 	liaVariable exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 
+	liaVariable exeCuteMethodCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,std::string varName);
 	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc);
 	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
-	liaVariable exeCuteLibFunctionReadFile(std::string fname);
+	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);
 
 	liaVariable customFunctionCall(std::string fname, std::vector<liaVariable>* parameters, liaEnvironment* env);
 

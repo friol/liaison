@@ -31,12 +31,20 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
-	//std::ifstream t("d:\\prova\\lia01.lia");
-	std::ifstream t("d:\\prova\\aoc01.2015.lia");
+	std::ifstream infile("d:\\prova\\liaPrograms\\aoc02.2015.lia");
+	if (!infile)
+	{
+		std::cout << "Error opening source file." << std::endl;
+		return 1;
+	}
+
 	std::stringstream buffer;
-	buffer << t.rdbuf();
+	buffer << infile.rdbuf();
+
 
 	std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
+
+	//
 
 	liaParser theLiaParser;
 	liaInterpreter theLiaInterpreter;

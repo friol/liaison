@@ -8,6 +8,7 @@
 // one-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // complex expressions (mathematical)
+// logical expressions (and, or, etc.)
 // strings will have default properties/functions like s.length // DONE
 // main function declaration, in the form of fn main(params) // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
@@ -22,8 +23,9 @@
 // readTextFileLineByLine function (returns an array of strings) // DONE
 // toInteger function (converts a string to an int) // DONE
 // variable increment // DONE
-// variable decrement
-// >>= operator (integer division by 2)
+// variable decrement // DONE
+// variable *= // DONE
+// >>= operator (integer division by 2 AKA right shift) // DONE
 // the ability to solve AOC problems, at least up to day 14
 // many other things that don't come to mind at the moment
 //
@@ -46,7 +48,8 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / RshiftStmt / WhileStmt / ReturnStmt / EndLine
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / 
+			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -57,6 +60,7 @@ liaParser::liaParser()
 	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
 	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine
 	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
+	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine 
 
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
 
@@ -71,7 +75,8 @@ liaParser::liaParser()
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
-	Expression <- IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / ArraySubscript / VariableWithProperty / VariableName
+	Expression <- IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / 
+				  ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
 
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
@@ -85,6 +90,8 @@ liaParser::liaParser()
 
 	VariableWithProperty <- VariableName '.' Property
 	Property <- 'length'
+	
+	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
