@@ -23,6 +23,7 @@
 // toInteger function (converts a string to an int) // DONE
 // variable increment // DONE
 // variable decrement
+// >>= operator (integer division by 2)
 // the ability to solve AOC problems, at least up to day 14
 // many other things that don't come to mind at the moment
 //
@@ -45,7 +46,7 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / WhileStmt / ReturnStmt / EndLine
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / RshiftStmt / WhileStmt / ReturnStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -54,6 +55,8 @@ liaParser::liaParser()
 	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock '\n' ('else' '\n' CodeBlock)?
 
 	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
+	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine
+	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
 
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
 

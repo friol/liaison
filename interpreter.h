@@ -63,7 +63,8 @@ private:
 
 	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
-	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc);
+	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	

@@ -579,7 +579,62 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 	addvarOrUpdateEnvironment(&theVar, env, curLine);
 }
 
-void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+void liaInterpreter::exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine;
+	int rshiftAmount = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				curLine = ch->line;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable vInc = evaluateExpression(ch, env);
+				assert(vInc.type == liaVariableType::integer);
+				rshiftAmount = std::get<int>(vInc.value);
+			}
+		}
+	}
+
+	if (rshiftAmount != 0)
+	{
+		for (int i = 0;i < env->varList.size();i++)
+		{
+			liaVariable variable = env->varList[i];
+			if (variable.name == theVar.name)
+			{
+				if (variable.type == liaVariableType::integer)
+				{
+					int vv = std::get<int>(env->varList[i].value);
+					env->varList[i].value = vv>>rshiftAmount;
+				}
+				else
+				{
+					std::string err = "";
+					err += "Trying to increment numerically a variable of other type";
+					err += " at line " + std::to_string(curLine) + ".";
+					err += "Terminating.";
+					fatalError(err);
+				}
+			}
+		}
+	}
+	// TODO: handle other types
+}
+
+void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc)
 {
 	//std::cout << peg::ast_to_s(theAst);
 
@@ -604,14 +659,6 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 				liaVariable vInc = evaluateExpression(ch,env);
 				assert(vInc.type == liaVariableType::integer);
 				iIncrement = std::get<int>(vInc.value);
-/*
-				if (ch->nodes[0]->name == "IntegerNumber")
-				{
-					theVar.type = liaVariableType::integer;
-					std::string tmp = "";
-					tmp += ch->nodes[0]->token;
-					iIncrement = std::stoi(tmp);
-				}*/
 			}
 		}
 	}
@@ -626,7 +673,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 				if (variable.type == liaVariableType::integer)
 				{
 					int vv = std::get<int>(env->varList[i].value);
-					env->varList[i].value = vv+iIncrement;
+					env->varList[i].value = vv+(iIncrement*inc);
 				}
 				else
 				{
@@ -862,9 +909,15 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 			//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
 			exeCuteVarDeclStatement(stmt->nodes[0],env);
 		}
-		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "IncrementStmt"))
+		else if ((stmt->nodes.size() == 1) && ( (stmt->nodes[0]->name == "IncrementStmt") || (stmt->nodes[0]->name == "DecrementStmt")) )
 		{
-			exeCuteIncrementStatement(stmt->nodes[0],env);
+			int inc = 1;
+			if (stmt->nodes[0]->name == "DecrementStmt") inc = -1;
+			exeCuteIncrementStatement(stmt->nodes[0],env,inc);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "RshiftStmt"))
+		{
+			exeCuteRshiftStatement(stmt->nodes[0], env);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "WhileStmt"))
 		{
@@ -881,6 +934,7 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			retVal = evaluateExpression(stmt->nodes[0]->nodes[0], env);
+			return retVal;
 		}
 	}
 
@@ -893,6 +947,7 @@ void liaInterpreter::exeCute(std::shared_ptr<peg::Ast> theAst)
 	// basically, we have to find the "main" codeblock and exeCute it
 	// in the mean time, we can create "environments", that is list of variables, with types and values
 	// there should be a global scope, I guess. Even if global variables suck
+	// UPDATE: at the moment we don't handle a global scope
 
 	liaEnvironment curEnv;
 
