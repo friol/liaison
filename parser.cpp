@@ -48,7 +48,7 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / 
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
 			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
@@ -72,12 +72,15 @@ liaParser::liaParser()
 	FuncParamList <- FuncParam ( ',' FuncParam )*
 	FuncParam <- < [a-zA-Z][0-9a-zA-Z]* >
 
+	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine
+
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
-	Expression <- IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / 
+	Expression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / 
 				  ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
 
+	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < [0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 	ArrayInitializer <- '[' (ArrayList)* ']'
@@ -90,7 +93,6 @@ liaParser::liaParser()
 
 	VariableWithProperty <- VariableName '.' Property
 	Property <- 'length'
-	
 	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine

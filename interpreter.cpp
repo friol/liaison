@@ -232,6 +232,23 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 					varEl.value = token;
 					retVal.vlist.push_back(varEl);
 				}
+				else if (ch->token == "add")
+				{
+					// add element to an array
+					assert(varValue.type == liaVariableType::array);
+					assert(parameters.size() == 1);
+
+					int idx = 0;
+					for (auto v : env->varList)
+					{
+						if (v.name == varName)
+						{
+							env->varList[idx].vlist.push_back(parameters[0]);
+						}
+						idx += 1;
+					}
+
+				}
 			}
 		}
 	}
@@ -258,6 +275,14 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		tmp += theAst->nodes[0]->token;
 		retVar.type = liaVariableType::integer;
 		retVar.value = std::stoi(tmp);
+	}
+	else if (theAst->nodes[0]->name == "BooleanConst")
+	{
+		std::string tmp = "";
+		tmp += theAst->nodes[0]->token;
+		retVar.type = liaVariableType::boolean;
+		if (tmp=="true") retVar.value = true;
+		else retVar.value = false;
 	}
 	else if (theAst->nodes[0]->name == "VariableName")
 	{
@@ -292,6 +317,13 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 						retVar.vlist.push_back(el);
 						//if (el.type == liaVariableType::integer) std::cout << std::get<int>(el.value);
 					}
+				}
+				else if (v.type == liaVariableType::boolean)
+				{
+					bool sval = std::get<bool>(v.value);
+					retVar.type = liaVariableType::boolean;
+					if (sval==true) retVar.value = true;
+					else retVar.value = false;
 				}
 			}
 		}
@@ -469,12 +501,7 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 	{
 		liaVariable retVar = evaluateExpression(node, env);
 
-		if (retVar.type != liaVariableType::array)
-		{
-			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
-			std::cout << " ";
-		}
-		else
+		if (retVar.type == liaVariableType::array)
 		{
 			bool first = true;
 			std::cout << "[";
@@ -492,6 +519,16 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 				first = false;
 			}
 			std::cout << "]";
+		}
+		else if (retVar.type == liaVariableType::boolean)
+		{
+			if (std::get<bool>(retVar.value) == true) std::cout << "true";
+			else std::cout << "false";
+		}
+		else
+		{
+			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
+			std::cout << " ";
 		}
 	}
 
@@ -868,6 +905,10 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 				{
 					env->varList[i].value = v->value;
 				}
+				else if (v->type == liaVariableType::boolean)
+				{
+					env->varList[i].value = v->value;
+				}
 				else if (v->type == liaVariableType::array)
 				{
 					env->varList[i].vlist.clear();
@@ -947,7 +988,7 @@ template bool liaInterpreter::primitiveComparison<int>(int leftop,int rightop,st
 bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	// a condition is Expression Relop Expression
-	//std::cout << peg::ast_to_s(theAst);
+	// std::cout << peg::ast_to_s(theAst);
 
 	std::string relOp = "";
 	relOp+=theAst->nodes[1]->token;
@@ -1071,6 +1112,13 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		{
 			// user function or library function call
 			exeCuteFuncCallStatement(stmt->nodes[0],env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "VarFuncCallStmt"))
+		{
+			//std::cout << peg::ast_to_s(stmt->nodes[0]);
+			std::string variableName = "";
+			variableName += stmt->nodes[0]->nodes[0]->token;
+			exeCuteMethodCallStatement(stmt->nodes[0], env, variableName);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "VarDeclStmt"))
 		{
