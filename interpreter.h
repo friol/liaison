@@ -67,8 +67,8 @@ private:
 	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc);
 	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
-	void exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
-	void exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	liaVariable exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	liaVariable exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);

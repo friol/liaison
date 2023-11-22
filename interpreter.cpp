@@ -171,13 +171,12 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 	std::vector<liaVariable> parameters;
 
 	// get variable value
-	liaVariable varValue;
-	for (auto v : env->varList)
+	liaVariable* pvarValue=NULL;
+	for (int idx=0;idx<env->varList.size();idx++)
 	{
-		if (varName == v.name)
+		if (varName == env->varList[idx].name)
 		{
-			varValue.type = v.type;
-			varValue.value = v.value;
+			pvarValue = &env->varList[idx];
 		}
 	}
 
@@ -210,7 +209,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 
 					retVal.type = liaVariableType::array;
 
-					std::string string2split = std::get<std::string>(varValue.value);
+					std::string string2split = std::get<std::string>(pvarValue->value);
 					std::string delimiter = std::get<std::string>(parameters[0].value);
 					//std::cout << delimiter << std::endl;
 
@@ -235,7 +234,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 				else if (ch->token == "add")
 				{
 					// add element to an array
-					assert(varValue.type == liaVariableType::array);
+					assert(pvarValue->type == liaVariableType::array);
 					assert(parameters.size() == 1);
 
 					int idx = 0;
@@ -247,8 +246,34 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 						}
 						idx += 1;
 					}
+				}
+				else if (ch->token == "find")
+				{
+					// s.find("value"), returns idx of found element, or -1 if not found
+					assert(pvarValue->type == liaVariableType::array);
+					assert(parameters.size() == 1);
+
+					retVal.type = liaVariableType::integer;
+					retVal.value = -1;
+
+					if (parameters[0].type == liaVariableType::string)
+					{
+						std::string val2find = "";
+						val2find += std::get<std::string>(parameters[0].value);
+						int idx = 0;
+						for (auto v : pvarValue->vlist)
+						{
+							if (std::get<std::string>(v.value) == val2find)
+							{
+								retVal.value = idx;
+								return retVal;
+							}
+							idx += 1;
+						}
+					}
 
 				}
+
 			}
 		}
 	}
@@ -527,6 +552,16 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 		}
 		else
 		{
+			if (retVar.type == liaVariableType::string)
+			{
+				std::string vv = "";
+				vv += std::get<std::string>(retVar.value);
+				if (vv == "circuit breaking")
+				{
+					int i = 0;
+				}
+			}
+
 			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
 			std::cout << " ";
 		}
@@ -677,6 +712,19 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 
 					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
 					//retVal = exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
+				}
+				else if (ch->token == "toString")
+				{
+					assert(theAst->nodes[1]->name == "ArgList");
+					assert(theAst->nodes[1]->nodes[0]->name == "Expression");
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+
+					// parameter to convert must be an integer
+					assert(p0.type == liaVariableType::integer);
+
+					retVal.type = liaVariableType::string;
+					int sVal = std::get<int>(p0.value);
+					retVal.value = std::to_string(sVal);
 				}
 				else
 				{
@@ -838,7 +886,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 
 	liaVariable theVar;
 	size_t curLine;
-	int iIncrement = 0;
+	liaVariable theInc;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -854,36 +902,39 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		{
 			if (ch->name == "Expression")
 			{
-				liaVariable vInc = evaluateExpression(ch,env);
-				assert(vInc.type == liaVariableType::integer);
-				iIncrement = std::get<int>(vInc.value);
+				theInc = evaluateExpression(ch,env);
 			}
 		}
 	}
 
-	if (iIncrement != 0)
+	for (int i = 0;i < env->varList.size();i++)
 	{
-		for (int i = 0;i < env->varList.size();i++)
+		liaVariable variable = env->varList[i];
+		if (variable.name == theVar.name)
 		{
-			liaVariable variable = env->varList[i];
-			if (variable.name == theVar.name)
+			if (variable.type == liaVariableType::integer)
 			{
-				if (variable.type == liaVariableType::integer)
-				{
-					int vv = std::get<int>(env->varList[i].value);
-					env->varList[i].value = vv+(iIncrement*inc);
-				}
-				else
-				{
-					std::string err = "";
-					err += "Trying to increment numerically a variable of other type";
-					err += " at line " + std::to_string(curLine) + ".";
-					err += "Terminating.";
-					fatalError(err);
-				}
+				int vv = std::get<int>(env->varList[i].value);
+				int iInc = std::get<int>(theInc.value);
+				env->varList[i].value = vv+(iInc*inc);
+			}
+			else if (variable.type == liaVariableType::string)
+			{
+				std::string vv = std::get<std::string>(env->varList[i].value);
+				std::string appendix = std::get<std::string>(theInc.value);
+				env->varList[i].value = vv + appendix;
+			}
+			else
+			{
+				std::string err = "";
+				err += "Trying to increment numerically a variable of other type";
+				err += " at line " + std::to_string(curLine) + ".";
+				err += "Terminating.";
+				fatalError(err);
 			}
 		}
 	}
+
 	// TODO: handle other types
 }
 
@@ -1036,7 +1087,7 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 
 }
 
-void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+liaVariable liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
@@ -1053,14 +1104,23 @@ void liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, lia
 		}
 	}
 	
+	liaVariable retVal;
 	while (evaluateCondition(pCond, env) == true)
 	{
-		exeCuteCodeBlock(pBlock, env);
+		retVal=exeCuteCodeBlock(pBlock, env);
+		if (retVal.name == "lia-ret-val")
+		{
+			return retVal;
+		}
 	}
+
+	return retVal;
 }
 
-void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+liaVariable liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
+	liaVariable retVar;
+
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
 	std::shared_ptr<peg::Ast> pBlock2;
@@ -1073,7 +1133,11 @@ void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnv
 
 		if (evaluateCondition(pCond, env) == true)
 		{
-			exeCuteCodeBlock(pBlock, env);
+			retVar=exeCuteCodeBlock(pBlock, env);
+			if (retVar.name == "lia-ret-val")
+			{
+				return retVar;
+			}
 		}
 	}
 	else if (theAst->nodes.size() == 3)
@@ -1083,13 +1147,23 @@ void liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnv
 
 		if (evaluateCondition(pCond, env) == true)
 		{
-			exeCuteCodeBlock(pBlock, env);
+			retVar=exeCuteCodeBlock(pBlock, env);
+			if (retVar.name == "lia-ret-val")
+			{
+				return retVar;
+			}
 		}
 		else
 		{
-			exeCuteCodeBlock(pBlock2, env);
+			retVar=exeCuteCodeBlock(pBlock2, env);
+			if (retVar.name == "lia-ret-val")
+			{
+				return retVar;
+			}
 		}
 	}
+
+	return retVar;
 }
 
 liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
@@ -1144,17 +1218,26 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		{
 			// while statement, the cradle of all infinite loops
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
-			exeCuteWhileStatement(stmt->nodes[0],env);
+			retVal=exeCuteWhileStatement(stmt->nodes[0],env);
+			if (retVal.name == "lia-ret-val")
+			{
+				return retVal;
+			}
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "IfStmt"))
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
-			exeCuteIfStatement(stmt->nodes[0], env);
+			retVal=exeCuteIfStatement(stmt->nodes[0], env);
+			if (retVal.name == "lia-ret-val")
+			{
+				return retVal;
+			}
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "ReturnStmt"))
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			retVal = evaluateExpression(stmt->nodes[0]->nodes[0], env);
+			retVal.name = "lia-ret-val"; // gah
 			return retVal;
 		}
 	}
