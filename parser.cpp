@@ -14,6 +14,9 @@
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
 // variadic print function // DONE
+// add (add element to array) function // DONE
+// find (find in array) function // DONE
+// split function // DONE
 // function call with parameters // DONE
 // if/else statement // DONE
 // return statement // DONE
@@ -81,7 +84,7 @@ liaParser::liaParser()
 				  ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
 
 	BooleanConst <- < 'true' > / < 'false' >
-	IntegerNumber <- < [0-9]+ >
+	IntegerNumber <- < ('-')?[0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 	ArrayInitializer <- '[' (ArrayList)* ']'
 

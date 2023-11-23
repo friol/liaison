@@ -204,7 +204,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 			{
 				if (ch->token == "split")
 				{
-					assert(varValue.type == liaVariableType::string);
+					assert(pvarValue->type == liaVariableType::string);
 					assert(parameters.size() == 1);
 
 					retVal.type = liaVariableType::array;
@@ -260,20 +260,23 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 					{
 						std::string val2find = "";
 						val2find += std::get<std::string>(parameters[0].value);
-						int idx = 0;
-						for (auto v : pvarValue->vlist)
+
+						for (int idx=0;idx<pvarValue->vlist.size();idx++)
 						{
-							if (std::get<std::string>(v.value) == val2find)
+							if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
 							{
 								retVal.value = idx;
 								return retVal;
 							}
-							idx += 1;
 						}
+						/*
+						liaVariable l2f;
+						l2f.value = val2find;
+						auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
+						//std::cout << pvarValue->vlist.end()-df << std::endl;
+						retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
 					}
-
 				}
-
 			}
 		}
 	}
@@ -726,6 +729,12 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					int sVal = std::get<int>(p0.value);
 					retVal.value = std::to_string(sVal);
 				}
+				else if (ch->token == "getMillisecondsSinceEpoch")
+				{
+					// another function with an infinite name
+					long long now =(long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					std::cout << now << std::endl;
+				}
 				else
 				{
 					// should be a custom function
@@ -1174,15 +1183,7 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 	{
 		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
 		
-		if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "EndLine"))
-		{
-			// ignoring endline
-		}
-		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "SingleLineCommentStmt"))
-		{
-			// ignoring (so meaningful) comment
-		}
-		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "FuncCallStmt"))
+		if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "FuncCallStmt"))
 		{
 			// user function or library function call
 			exeCuteFuncCallStatement(stmt->nodes[0],env);

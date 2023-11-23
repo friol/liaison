@@ -3,6 +3,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include <regex>
@@ -27,6 +28,11 @@ struct liaVariable
 	liaVariableType type;
 	std::variant<bool, int, std::string> value;
 	std::vector<liaVariable> vlist;
+
+	bool operator== (const liaVariable& n1)
+	{
+		return n1.value== this->value;
+	};
 };
 
 struct liaEnvironment
