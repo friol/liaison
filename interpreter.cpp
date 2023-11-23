@@ -916,32 +916,36 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		}
 	}
 
+	liaVariable* pvar=NULL;
 	for (int i = 0;i < env->varList.size();i++)
 	{
-		liaVariable variable = env->varList[i];
-		if (variable.name == theVar.name)
+		if (env->varList[i].name == theVar.name)
 		{
-			if (variable.type == liaVariableType::integer)
-			{
-				int vv = std::get<int>(env->varList[i].value);
-				int iInc = std::get<int>(theInc.value);
-				env->varList[i].value = vv+(iInc*inc);
-			}
-			else if (variable.type == liaVariableType::string)
-			{
-				std::string vv = std::get<std::string>(env->varList[i].value);
-				std::string appendix = std::get<std::string>(theInc.value);
-				env->varList[i].value = vv + appendix;
-			}
-			else
-			{
-				std::string err = "";
-				err += "Trying to increment numerically a variable of other type";
-				err += " at line " + std::to_string(curLine) + ".";
-				err += "Terminating.";
-				fatalError(err);
-			}
+			pvar = &env->varList[i];
 		}
+	}
+
+	assert(pvar != NULL);
+
+	if (pvar->type == liaVariableType::integer)
+	{
+		int vv = std::get<int>(pvar->value);
+		int iInc = std::get<int>(theInc.value);
+		pvar->value = vv+(iInc*inc);
+	}
+	else if (pvar->type == liaVariableType::string)
+	{
+		std::string vv = std::get<std::string>(pvar->value);
+		std::string appendix = std::get<std::string>(theInc.value);
+		pvar->value = vv + appendix;
+	}
+	else
+	{
+		std::string err = "";
+		err += "Trying to increment numerically a variable of other type";
+		err += " at line " + std::to_string(curLine) + ".";
+		err += "Terminating.";
+		fatalError(err);
 	}
 
 	// TODO: handle other types
@@ -997,7 +1001,14 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 
 template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T rightop, std::string relOp)
 {
-	if (relOp == "<")
+	if (relOp == "==")
+	{
+		if (leftop == rightop)
+		{
+			return true;
+		}
+	}
+	else if (relOp == "<")
 	{
 		if (leftop < rightop)
 		{
@@ -1007,13 +1018,6 @@ template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T right
 	else if (relOp == ">")
 	{
 		if (leftop > rightop)
-		{
-			return true;
-		}
-	}
-	else if (relOp == "==")
-	{
-		if (leftop == rightop)
 		{
 			return true;
 		}
@@ -1135,11 +1139,11 @@ liaVariable liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst,
 	std::shared_ptr<peg::Ast> pBlock2;
 
 	pCond = theAst->nodes[0];
+	pBlock = theAst->nodes[1];
 
 	if (theAst->nodes.size() == 2)
 	{
-		pBlock = theAst->nodes[1];
-
+		// simple if
 		if (evaluateCondition(pCond, env) == true)
 		{
 			retVar=exeCuteCodeBlock(pBlock, env);
@@ -1151,7 +1155,7 @@ liaVariable liaInterpreter::exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst,
 	}
 	else if (theAst->nodes.size() == 3)
 	{
-		pBlock = theAst->nodes[1];
+		// if/else
 		pBlock2 = theAst->nodes[2];
 
 		if (evaluateCondition(pCond, env) == true)
