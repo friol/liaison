@@ -31,7 +31,7 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
-	std::ifstream infile("d:\\prova\\liaPrograms\\aoc03.2015.lia");
+	std::ifstream infile("d:\\prova\\liaPrograms\\aoc05.2015.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\testing.lia");
 	if (!infile)
 	{
