@@ -53,7 +53,7 @@ liaParser::liaParser()
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
 
 	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
-			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / EndLine
+			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / ArrayAssignmentStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -78,6 +78,7 @@ liaParser::liaParser()
 
 	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine
 
+	ArrayAssignmentStmt <- [ \t]* ArraySubscript '=' Expression ';' EndLine
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
@@ -102,7 +103,7 @@ liaParser::liaParser()
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
-	ArgList <- Expression ( ',' Expression )*
+	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
 	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine
 

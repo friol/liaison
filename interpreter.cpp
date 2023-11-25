@@ -506,30 +506,21 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		assert(vIdx.type == liaVariableType::integer);
 		int arrIdx = std::get<int>(vIdx.value);
 
-		// check for array out of bounds
-		//for (auto v : env->varList)
+		if (env->varMap[arrName].type == liaVariableType::array)
 		{
-			//if (v.name == arrName)
-			{
-				liaVariable v = env->varMap[arrName];
-
-				if (v.type == liaVariableType::array)
-				{
-					assert(arrIdx < v.vlist.size());
-					retVar.type = v.vlist[0].type;
-					retVar.value = v.vlist[arrIdx].value;
-				}
-				else if (v.type == liaVariableType::string)
-				{
-					std::string tmp = std::get<std::string>(v.value);
-					assert(arrIdx < tmp.size());
-					retVar.type = liaVariableType::string;
-					char c = tmp.at(arrIdx);
-					std::string sc = "";
-					sc += c;
-					retVar.value = sc;
-				}
-			}
+			assert(arrIdx < env->varMap[arrName].vlist.size());
+			retVar.type = env->varMap[arrName].vlist[0].type;
+			retVar.value = env->varMap[arrName].vlist[arrIdx].value;
+		}
+		else if (env->varMap[arrName].type == liaVariableType::string)
+		{
+			std::string tmp = std::get<std::string>(env->varMap[arrName].value);
+			assert(arrIdx < tmp.size());
+			retVar.type = liaVariableType::string;
+			char c = tmp.at(arrIdx);
+			std::string sc = "";
+			sc += c;
+			retVar.value = sc;
 		}
 	}
 	else if (theAst->nodes[0]->name == "RFuncCall")
@@ -801,6 +792,33 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 
 	// now, if variable is not in env, create it. otherwise, update it
 	addvarOrUpdateEnvironment(&theVar, env, curLine);
+}
+
+void liaInterpreter::exeCuteArrayAssignmentStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	assert(theAst->nodes[0]->name=="ArraySubscript");
+	assert(theAst->nodes[1]->name=="Expression");
+
+	liaVariable value2assign = evaluateExpression(theAst->nodes[1], env);
+	std::string arrayName = "";
+	arrayName+=theAst->nodes[0]->nodes[0]->token;
+
+	if (env->varMap.find(arrayName) == env->varMap.end())
+	{
+		// variable not found
+		std::string err = "";
+		err += "Array name [" + arrayName + "] not found. ";
+		err += "Terminating.";
+		fatalError(err);
+	}
+
+	liaVariable arrayIndex= evaluateExpression(theAst->nodes[0]->nodes[1], env);
+	assert(arrayIndex.type == liaVariableType::integer);
+	assert(std::get<int>(arrayIndex.value) < env->varMap[arrayName].vlist.size());
+
+	env->varMap[arrayName].vlist[std::get<int>(arrayIndex.value)] = value2assign;
 }
 
 void liaInterpreter::exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
@@ -1232,6 +1250,11 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 			//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
 			exeCuteVarDeclStatement(stmt->nodes[0],env);
 		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "ArrayAssignmentStmt"))
+		{
+			// assignment to array element
+			exeCuteArrayAssignmentStatement(stmt->nodes[0], env);
+		}
 		else if ((stmt->nodes.size() == 1) && ( (stmt->nodes[0]->name == "IncrementStmt") || (stmt->nodes[0]->name == "DecrementStmt")) )
 		{
 			int inc = 1;
@@ -1281,9 +1304,9 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 void liaInterpreter::exeCute(std::shared_ptr<peg::Ast> theAst)
 {
 	// basically, we have to find the "main" codeblock and exeCute it
-	// in the mean time, we can create "environments", that is list of variables, with types and values
+	// in the mean time, we can create "environments" (scopes), that is list of variables, with types and values
 	// there should be a global scope, I guess. Even if global variables suck
-	// UPDATE: at the moment we don't handle a global scope
+	// UPDATE: at the moment we don't handle the global scope
 
 	liaEnvironment curEnv;
 

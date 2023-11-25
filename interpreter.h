@@ -39,7 +39,7 @@ struct liaVariable
 
 struct liaEnvironment
 {
-	// a map in this context is like 30x faster than a vector
+	// a map is like 30x faster than a vector here
 	std::map<std::string, liaVariable> varMap;
 };
 
@@ -73,6 +73,7 @@ private:
 	liaVariable exeCuteMethodCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,std::string varName);
 	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteArrayAssignmentStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc);
 	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
