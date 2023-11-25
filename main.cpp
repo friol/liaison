@@ -15,7 +15,7 @@
 //
 //
 
-const std::string appVersion = "0.2a";
+const std::string appVersion = "0.3a";
 
 void usage()
 {
@@ -31,9 +31,10 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
+	std::ifstream infile("d:\\prova\\liaPrograms\\aoc01.2015.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc05.2015.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\test.lia");
-	std::ifstream infile("d:\\prova\\liaPrograms\\aoc03.2015.lia");
+	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc03.2015.lia");
 	if (!infile)
 	{
 		std::cout << "Error opening source file." << std::endl;

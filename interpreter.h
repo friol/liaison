@@ -39,8 +39,8 @@ struct liaVariable
 
 struct liaEnvironment
 {
-	std::vector<liaVariable> varList;
-	std::map<std::string, liaVariable> varMap; // will replace varList soon...
+	// a map in this context is like 30x faster than a vector
+	std::map<std::string, liaVariable> varMap;
 };
 
 struct liaFunctionParam
