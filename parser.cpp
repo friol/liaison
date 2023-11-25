@@ -5,6 +5,7 @@
 //
 // will have to support the following:
 // liaison is typeless (and variables can't change type)
+// we have implicit variable declaration, despite what "crafting interpreters" says
 // one-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // complex expressions (mathematical)

@@ -3,6 +3,7 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include <map>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -17,6 +18,7 @@ enum liaVariableType
 {
 	boolean,
 	integer,
+	longint,
 	string,
 	array,
 	floatingPoint
@@ -26,7 +28,7 @@ struct liaVariable
 {
 	std::string name;
 	liaVariableType type;
-	std::variant<bool, int, std::string> value;
+	std::variant<bool, int, long long, std::string> value;
 	std::vector<liaVariable> vlist;
 
 	bool operator== (const liaVariable& n1)
@@ -38,6 +40,7 @@ struct liaVariable
 struct liaEnvironment
 {
 	std::vector<liaVariable> varList;
+	std::map<std::string, liaVariable> varMap; // will replace varList soon...
 };
 
 struct liaFunctionParam

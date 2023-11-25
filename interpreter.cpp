@@ -331,6 +331,12 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 					retVar.type = liaVariableType::integer;
 					retVar.value=val2print;
 				}
+				else if (v.type == liaVariableType::longint)
+				{
+					long long val2print = std::get<long long>(v.value);
+					retVar.type = liaVariableType::longint;
+					retVar.value = val2print;
+				}
 				else if (v.type == liaVariableType::string)
 				{
 					std::string s2print = std::get<std::string>(v.value);
@@ -559,10 +565,6 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 			{
 				std::string vv = "";
 				vv += std::get<std::string>(retVar.value);
-				if (vv == "circuit breaking")
-				{
-					int i = 0;
-				}
 			}
 
 			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
@@ -733,7 +735,10 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 				{
 					// another function with an infinite name
 					long long now =(long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-					std::cout << now << std::endl;
+					//std::cout << now << std::endl;
+
+					retVal.type = liaVariableType::longint;
+					retVal.value = now;
 				}
 				else
 				{
@@ -932,6 +937,14 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		int vv = std::get<int>(pvar->value);
 		int iInc = std::get<int>(theInc.value);
 		pvar->value = vv+(iInc*inc);
+	}
+	else if (pvar->type == liaVariableType::longint)
+	{
+		assert(pvar->type == theInc.type);
+
+		long long vv = std::get<long long>(pvar->value);
+		long long iInc = std::get<long long>(theInc.value);
+		pvar->value = vv + (iInc * inc);
 	}
 	else if (pvar->type == liaVariableType::string)
 	{
