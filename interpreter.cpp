@@ -944,17 +944,16 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		}
 	}
 
-	liaVariable* pvar=NULL;
-	/*for (int i = 0;i < env->varList.size();i++)
+	if (env->varMap.find(theVar.name) == env->varMap.end())
 	{
-		if (env->varList[i].name == theVar.name)
-		{
-			pvar = &env->varList[i];
-		}
-	}*/
-	pvar = &env->varMap[theVar.name];
+		std::string err = "";
+		err += "Variable "+theVar.name+" not found.";
+		err += "Terminating.";
+		fatalError(err);
+	}
 
-	assert(pvar != NULL);
+	liaVariable* pvar = NULL;
+	pvar = &env->varMap[theVar.name];
 
 	if (pvar->type == liaVariableType::integer)
 	{
@@ -1101,34 +1100,6 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 	}
 
 	return primitiveComparison(lExpr.value, rExpr.value, relOp);
-
-/*
-	for (auto v : env->varList)
-	{
-		if (v.name == theAst->nodes[0]->nodes[0]->token)
-		{
-			if (v.type == liaVariableType::integer)
-			{
-				if (theAst->nodes[2]->nodes[0]->name == "IntegerNumber")
-				{
-					std::string tmp = "";
-					tmp += theAst->nodes[2]->nodes[0]->token;
-					int iValue = std::stoi(tmp);
-					int varValue = std::get<int>(v.value);
-
-					return primitiveComparison(varValue, iValue, relOp);
-				}
-				else
-				{
-					// TODO error: comparison expressions should be of the same type
-				}
-			}
-		}
-	}
-
-	return false;
-*/
-
 }
 
 liaVariable liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
@@ -1155,6 +1126,95 @@ liaVariable liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theA
 		if (retVal.name == "lia-ret-val")
 		{
 			return retVal;
+		}
+	}
+
+	return retVal;
+}
+
+liaVariable liaInterpreter::exeCuteForeachStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	liaVariable retVal;
+	//std::cout << peg::ast_to_s(theAst);
+
+	assert(theAst->nodes.size() == 3);
+
+	std::shared_ptr<peg::Ast> pBlock;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->name == "CodeBlock")
+		{
+			pBlock = ch;
+		}
+	}
+
+	std::string tmpVarname = "";
+	tmpVarname = theAst->nodes[0]->token;
+
+	std::string arrVarname = ""; // array or string
+	arrVarname = theAst->nodes[1]->token;
+
+	if (env->varMap.find(arrVarname) == env->varMap.end())
+	{
+		std::string err = "";
+		err += "Variable named "+arrVarname+" not found.";
+		err += "Terminating.";
+		fatalError(err);
+	}
+
+	liaVariable* pArr = &env->varMap[arrVarname];
+
+	if (pArr->type == liaVariableType::array)
+	{
+		if (pArr->vlist.size() > 0)
+		{
+			liaVariable tmpVar;
+			tmpVar.type = pArr->vlist[0].type;
+
+			for (int idx = 0;idx < pArr->vlist.size();idx++)
+			{
+				tmpVar.value = pArr->vlist[idx].value;
+
+				env->varMap[tmpVarname] = tmpVar;
+
+				retVal = exeCuteCodeBlock(pBlock, env);
+				if (retVal.name == "lia-ret-val")
+				{
+					env->varMap.erase(tmpVarname);
+					return retVal;
+				}
+
+				// remove temporary variable from scope
+				env->varMap.erase(tmpVarname);
+			}
+		}
+	}
+	else if (pArr->type == liaVariableType::string)
+	{
+		std::string s = "";
+		s = std::get<std::string>(pArr->value);
+		if (s.size() > 0)
+		{
+			liaVariable tmpVar;
+			tmpVar.type = liaVariableType::string;
+
+			for (int idx = 0;idx < s.size();idx++)
+			{
+				char curchar=s.at(idx);
+				tmpVar.value = std::string(1,curchar);
+				env->varMap[tmpVarname] = tmpVar;
+
+				retVal = exeCuteCodeBlock(pBlock, env);
+				if (retVal.name == "lia-ret-val")
+				{
+					env->varMap.erase(tmpVarname);
+					return retVal;
+				}
+
+				// remove temporary variable from scope
+				env->varMap.erase(tmpVarname);
+			}
 		}
 	}
 
@@ -1260,6 +1320,14 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 			// while statement, the cradle of all infinite loops
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			retVal=exeCuteWhileStatement(stmt->nodes[0],env);
+			if (retVal.name == "lia-ret-val")
+			{
+				return retVal;
+			}
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "ForeachStmt"))
+		{
+			retVal = exeCuteForeachStatement(stmt->nodes[0], env);
 			if (retVal.name == "lia-ret-val")
 			{
 				return retVal;

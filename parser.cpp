@@ -4,7 +4,7 @@
 // (c) friol 2023
 //
 // will have to support the following:
-// liaison is typeless (and variables can't change type)
+// liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // one-line comments // DONE
 // multi-line comments // DONE
@@ -24,7 +24,7 @@
 // return statement // DONE
 // while statement // DONE
 // for cycle
-// for v in array
+// foreach v in array (with arrays and strings) // DONE
 // readTextFileLineByLine function (returns an array of strings) // DONE
 // toInteger function (converts a string to an int) // DONE
 // variable increment // DONE
@@ -54,7 +54,7 @@ liaParser::liaParser()
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / EndLine
 
 	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
-			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / ArrayAssignmentStmt / EndLine
+			RshiftStmt / MultiplyStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -69,6 +69,7 @@ liaParser::liaParser()
 	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine 
 
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
+	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n] CodeBlock
 
 	Condition <- Expression Relop Expression
 
