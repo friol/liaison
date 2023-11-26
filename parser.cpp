@@ -7,6 +7,7 @@
 // liaison is typeless (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // one-line comments // DONE
+// multi-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // complex expressions (mathematical)
 // logical expressions (and, or, etc.)
@@ -50,14 +51,15 @@ liaParser::liaParser()
 	auto grammar=(R"(
 	LiaProgram <- ( TopLevelStmt )*
 
-	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / EndLine
+	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
+	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
 			RshiftStmt / MultiplyStmt / WhileStmt / ReturnStmt / ArrayAssignmentStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
+	MultiLineCommentStmt <- [ \t]* '/*' [^*/]* '*/' EndLine
 
 	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock '\n' ('else' '\n' CodeBlock)?
 
@@ -119,6 +121,10 @@ liaParser::liaParser()
 	});
 
 	auto grammarIsOk = pegParser->load_grammar(grammar);
+	if (!grammarIsOk)
+	{
+		std::cout << "Error: grammar loading failed." << std::endl;
+	}
 	assert(grammarIsOk);
 }
 

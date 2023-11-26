@@ -172,13 +172,6 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 
 	// get variable value
 	liaVariable* pvarValue=NULL;
-	/*for (int idx = 0;idx<env->varList.size();idx++)
-	{
-		if (varName == env->varList[idx].name)
-		{
-			pvarValue = &env->varList[idx];
-		}
-	}*/
 
 	if (env->varMap.find(varName) == env->varMap.end())
 	{
@@ -248,15 +241,6 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 					assert(pvarValue->type == liaVariableType::array);
 					assert(parameters.size() == 1);
 
-					/*int idx = 0;
-					for (auto v : env->varList)
-					{
-						if (v.name == varName)
-						{
-							env->varList[idx].vlist.push_back(parameters[0]);
-						}
-						idx += 1;
-					}*/
 					env->varMap[varName].vlist.push_back(parameters[0]);
 				}
 				else if (ch->token == "find")
@@ -287,6 +271,18 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 						auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
 						//std::cout << pvarValue->vlist.end()-df << std::endl;
 						retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
+					}
+					else if (parameters[0].type == liaVariableType::integer)
+					{
+						int val2find = std::get<int>(parameters[0].value);
+						for (int idx = 0;idx < pvarValue->vlist.size();idx++)
+						{
+							if (std::get<int>(pvarValue->vlist[idx].value) == val2find)
+							{
+								retVal.value = idx;
+								return retVal;
+							}
+						}
 					}
 				}
 			}
@@ -329,59 +325,49 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		std::string varName = "";
 		varName += theAst->nodes[0]->token;
 
-		bool varFound = false;
-		//for (auto v : env->varList)
-		{
-			//if (v.name == varName)
-			{
-				varFound = true;
-				liaVariable v = env->varMap[varName];
-
-				// TODO: handle all the types
-				if (v.type == liaVariableType::integer)
-				{
-					int val2print = std::get<int>(v.value);
-					retVar.type = liaVariableType::integer;
-					retVar.value=val2print;
-				}
-				else if (v.type == liaVariableType::longint)
-				{
-					long long val2print = std::get<long long>(v.value);
-					retVar.type = liaVariableType::longint;
-					retVar.value = val2print;
-				}
-				else if (v.type == liaVariableType::string)
-				{
-					std::string s2print = std::get<std::string>(v.value);
-					retVar.type = liaVariableType::string;
-					retVar.value = s2print;
-				}
-				else if (v.type == liaVariableType::array)
-				{
-					retVar.type = liaVariableType::array;
-					for (auto el : v.vlist)
-					{
-						retVar.vlist.push_back(el);
-						//if (el.type == liaVariableType::integer) std::cout << std::get<int>(el.value);
-					}
-				}
-				else if (v.type == liaVariableType::boolean)
-				{
-					bool sval = std::get<bool>(v.value);
-					retVar.type = liaVariableType::boolean;
-					if (sval==true) retVar.value = true;
-					else retVar.value = false;
-				}
-			}
-		}
-
-		if (!varFound)
+		if (env->varMap.find(varName) == env->varMap.end()) 
 		{
 			// variable name not found
 			std::string err = "";
 			err += "Variable name [" + varName + "] not found. ";
 			err += "Terminating.";
 			fatalError(err);
+		}
+
+		liaVariable* v = &env->varMap[varName];
+
+		if (v->type == liaVariableType::integer)
+		{
+			int val2print = std::get<int>(v->value);
+			retVar.type = liaVariableType::integer;
+			retVar.value=val2print;
+		}
+		else if (v->type == liaVariableType::longint)
+		{
+			long long val2print = std::get<long long>(v->value);
+			retVar.type = liaVariableType::longint;
+			retVar.value = val2print;
+		}
+		else if (v->type == liaVariableType::string)
+		{
+			std::string s2print = std::get<std::string>(v->value);
+			retVar.type = liaVariableType::string;
+			retVar.value = s2print;
+		}
+		else if (v->type == liaVariableType::boolean)
+		{
+			bool sval = std::get<bool>(v->value);
+			retVar.type = liaVariableType::boolean;
+			if (sval == true) retVar.value = true;
+			else retVar.value = false;
+		}
+		else if (v->type == liaVariableType::array)
+		{
+			retVar.type = liaVariableType::array;
+			for (auto el : v->vlist)
+			{
+				retVar.vlist.push_back(el);
+			}
 		}
 	}
 	else if (theAst->nodes[0]->name == "VariableWithFunction")
@@ -560,7 +546,7 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 				}
 				first = false;
 			}
-			std::cout << "]";
+			std::cout << "] ";
 		}
 		else if (retVar.type == liaVariableType::boolean)
 		{
