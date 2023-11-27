@@ -320,6 +320,19 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		if (tmp=="true") retVar.value = true;
 		else retVar.value = false;
 	}
+	else if (theAst->nodes[0]->name == "BitwiseNot")
+	{
+		//std::cout << "NOT/RJ" << peg::ast_to_s(theAst);
+
+		assert(theAst->nodes[0]->nodes.size() == 1);
+		assert(theAst->nodes[0]->nodes[0]->name == "Expression");
+
+		liaVariable expr = evaluateExpression(theAst->nodes[0]->nodes[0], env);
+		assert(expr.type == liaVariableType::integer);
+
+		retVar.type = liaVariableType::integer;
+		retVar.value = ~std::get<int>(expr.value);
+	}
 	else if (theAst->nodes[0]->name == "VariableName")
 	{
 		std::string varName = "";
@@ -369,6 +382,15 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 				retVar.vlist.push_back(el);
 			}
 		}
+		else if (v->type == liaVariableType::dictionary)
+		{
+			retVar.type = liaVariableType::dictionary;
+			for (std::map<std::string, liaVariable>::iterator it = v->vMap.begin(); it != v->vMap.end(); ++it)
+			{
+				std::string key = it->first;
+				retVar.vMap[key] = v->vMap[key];
+			}
+		}
 	}
 	else if (theAst->nodes[0]->name == "VariableWithFunction")
 	{
@@ -377,16 +399,6 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		std::string varName = "";
 		varName += theAst->nodes[0]->nodes[0]->token;
 
-		/*bool varFound = false;
-		for (auto v : env->varList)
-		{
-			if (v.name == varName)
-			{
-				varFound = true;
-			}
-		}
-
-		if (!varFound)*/
 		if (env->varMap.find(varName) == env->varMap.end())
 		{
 			// variable name not found
@@ -405,33 +417,9 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		std::string varProp = "";
 		varProp += theAst->nodes[0]->nodes[1]->token;
 
-		assert(varProp == "length");
+		//assert(varProp == "length");
 
-		bool varFound = false;
-		//for (auto v : env->varList)
-		{
-			//if (v.name == varName)
-			{
-				varFound = true;
-				liaVariable v = env->varMap[varName];
-
-				// TODO: handle all the types
-				if (v.type == liaVariableType::string)
-				{
-					std::string s2print = std::get<std::string>(v.value);
-					auto len = s2print.size();
-					retVar.type = liaVariableType::integer;
-					retVar.value = (int)len;
-				}
-				else if (v.type == liaVariableType::array)
-				{
-					retVar.type = liaVariableType::integer;
-					retVar.value = (int)v.vlist.size();
-				}
-			}
-		}
-
-		if (!varFound)
+		if (env->varMap.find(varName) == env->varMap.end())
 		{
 			// variable name not found
 			std::string err = "";
@@ -439,6 +427,49 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 			err += "Terminating.";
 			fatalError(err);
 		}
+
+		liaVariable* v = &env->varMap[varName];
+
+		if (varProp == "length")
+		{
+			// TODO: handle all the types
+			if (v->type == liaVariableType::string)
+			{
+				std::string s2print = std::get<std::string>(v->value);
+				auto len = s2print.size();
+				retVar.type = liaVariableType::integer;
+				retVar.value = (int)len;
+			}
+			else if (v->type == liaVariableType::array)
+			{
+				retVar.type = liaVariableType::integer;
+				retVar.value = (int)v->vlist.size();
+			}
+		}
+		else if (varProp == "keys")
+		{
+			assert(v->type == liaVariableType::dictionary);
+
+			retVar.type = liaVariableType::array;
+
+			for (std::map<std::string,liaVariable>::iterator it = v->vMap.begin(); it != v->vMap.end(); ++it) 
+			{
+				std::string key = it->first;
+				liaVariable s;
+				s.type = liaVariableType::string;
+				s.value = key;
+				retVar.vlist.push_back(s);
+			}
+		}
+		else
+		{
+			// property name not found
+			std::string err = "";
+			err += "Property name [" + varProp + "] not found";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
 	}
 	else if (theAst->nodes[0]->name == "ArrayInitializer")
 	{
@@ -489,17 +520,26 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		assert(theAst->nodes[0]->nodes[1]->name == "Expression");
 
 		liaVariable vIdx = evaluateExpression(theAst->nodes[0]->nodes[1], env);
-		assert(vIdx.type == liaVariableType::integer);
-		int arrIdx = std::get<int>(vIdx.value);
+		
+		// can be a string too, for dictionaries
+		//assert(vIdx.type == liaVariableType::integer);
 
 		if (env->varMap[arrName].type == liaVariableType::array)
 		{
+			int arrIdx = std::get<int>(vIdx.value);
 			assert(arrIdx < env->varMap[arrName].vlist.size());
 			retVar.type = env->varMap[arrName].vlist[0].type;
 			retVar.value = env->varMap[arrName].vlist[arrIdx].value;
 		}
+		else if (env->varMap[arrName].type == liaVariableType::dictionary)
+		{
+			std::string key = std::get<std::string>(vIdx.value);
+			retVar.type = env->varMap[arrName].vMap[key].type;
+			retVar.value = env->varMap[arrName].vMap[key].value;
+		}
 		else if (env->varMap[arrName].type == liaVariableType::string)
 		{
+			int arrIdx = std::get<int>(vIdx.value);
 			std::string tmp = std::get<std::string>(env->varMap[arrName].value);
 			assert(arrIdx < tmp.size());
 			retVar.type = liaVariableType::string;
@@ -514,6 +554,36 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		//std::cout << "funCall" << std::endl;
 		//std::cout << peg::ast_to_s(theAst);
 		retVar=exeCuteFuncCallStatement(theAst->nodes[0], env);
+	}
+	else if (theAst->nodes[0]->name == "DictInitializer")
+	{
+		//std::cout << peg::ast_to_s(theAst);
+		retVar.type = liaVariableType::dictionary;
+
+		if (theAst->nodes[0]->nodes.size() != 0)
+		{
+			assert(theAst->nodes[0]->nodes[0]->name == "DictList");
+			assert(theAst->nodes[0]->nodes[0]->nodes[0]->name == "KeyValueList");
+			assert((theAst->nodes[0]->nodes[0]->nodes[0]->nodes.size() % 2) == 0);
+
+			std::string curKey = "";
+			liaVariable curVar;
+			for (auto kv : theAst->nodes[0]->nodes[0]->nodes[0]->nodes)
+			{
+				if (kv->is_token)
+				{
+					curKey = "";
+					curKey += kv->token;
+					std::regex quote_re("\"");
+					curKey = std::regex_replace(curKey, quote_re, "");
+				}
+				else
+				{
+					curVar = evaluateExpression(kv, env);
+					retVar.vMap[curKey] = curVar;
+				}
+			}
+		}
 	}
 
 	return retVar;
@@ -707,7 +777,19 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 
 					retVal.type = liaVariableType::integer;
 					std::string sVal = std::get<std::string>(p0.value);
-					retVal.value = std::stoi(sVal);
+
+					try
+					{
+						retVal.value = std::stoi(sVal);
+					}
+					catch (...)
+					{
+						// unable to convert to integer
+						std::string err = "";
+						err += "Can't convert [" + sVal + "] to integer. ";
+						err += "Terminating.";
+						fatalError(err);
+					}
 
 					//std::visit([](const auto& x) { std::cout << x; }, p0.value);
 					//retVal = exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
@@ -772,6 +854,7 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 				theVar.type = retVar.type;
 				theVar.value = retVar.value;
 				theVar.vlist = retVar.vlist;
+				theVar.vMap = retVar.vMap;
 			}
 		}
 	}
@@ -801,10 +884,20 @@ void liaInterpreter::exeCuteArrayAssignmentStatement(std::shared_ptr<peg::Ast> t
 	}
 
 	liaVariable arrayIndex= evaluateExpression(theAst->nodes[0]->nodes[1], env);
-	assert(arrayIndex.type == liaVariableType::integer);
-	assert(std::get<int>(arrayIndex.value) < env->varMap[arrayName].vlist.size());
 
-	env->varMap[arrayName].vlist[std::get<int>(arrayIndex.value)] = value2assign;
+	if (env->varMap[arrayName].type == liaVariableType::array)
+	{
+		assert(arrayIndex.type == liaVariableType::integer);
+		assert(std::get<int>(arrayIndex.value) < env->varMap[arrayName].vlist.size());
+
+		env->varMap[arrayName].vlist[std::get<int>(arrayIndex.value)] = value2assign;
+	}
+	else if (env->varMap[arrayName].type == liaVariableType::dictionary)
+	{
+		assert(arrayIndex.type == liaVariableType::string);
+
+		env->varMap[arrayName].vMap[std::get<std::string>(arrayIndex.value)] = value2assign;
+	}
 }
 
 void liaInterpreter::exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
@@ -862,6 +955,94 @@ void liaInterpreter::exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, 
 
 }
 
+void liaInterpreter::exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine;
+	int rExpr = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				curLine = ch->line;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable andVal = evaluateExpression(ch, env);
+				assert(andVal.type == liaVariableType::integer);
+				rExpr = std::get<int>(andVal.value);
+			}
+		}
+	}
+
+	if (env->varMap[theVar.name].type == liaVariableType::integer)
+	{
+		int vv = std::get<int>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv & rExpr;
+	}
+	else
+	{
+		std::string err = "";
+		err += "Logical and is valid only between integers";
+		err += " at line " + std::to_string(curLine) + ".";
+		err += "Terminating.";
+		fatalError(err);
+	}
+}
+
+void liaInterpreter::exeCuteLogicalOrStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine;
+	int rExpr = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				curLine = ch->line;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable andVal = evaluateExpression(ch, env);
+				assert(andVal.type == liaVariableType::integer);
+				rExpr = std::get<int>(andVal.value);
+			}
+		}
+	}
+
+	if (env->varMap[theVar.name].type == liaVariableType::integer)
+	{
+		int vv = std::get<int>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv | rExpr;
+	}
+	else
+	{
+		std::string err = "";
+		err += "Logical or is valid only between integers";
+		err += " at line " + std::to_string(curLine) + ".";
+		err += "Terminating.";
+		fatalError(err);
+	}
+}
+
 void liaInterpreter::exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
@@ -893,25 +1074,66 @@ void liaInterpreter::exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, li
 
 	if (rshiftAmount != 0)
 	{
-		//for (int i = 0;i < env->varList.size();i++)
+		if (env->varMap[theVar.name].type == liaVariableType::integer)
 		{
-			//liaVariable variable = env->varList[i];
-			//if (variable.name == theVar.name)
+			int vv = std::get<int>(env->varMap[theVar.name].value);
+			env->varMap[theVar.name].value = vv>>rshiftAmount;
+		}
+		else
+		{
+			std::string err = "";
+			err += "Trying to increment numerically a variable of other type";
+			err += " at line " + std::to_string(curLine) + ".";
+			err += "Terminating.";
+			fatalError(err);
+		}
+	}
+	// TODO: handle other types
+}
+
+void liaInterpreter::exeCuteLshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine;
+	int lshiftAmount = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
 			{
-				if (env->varMap[theVar.name].type == liaVariableType::integer)
-				{
-					int vv = std::get<int>(env->varMap[theVar.name].value);
-					env->varMap[theVar.name].value = vv>>rshiftAmount;
-				}
-				else
-				{
-					std::string err = "";
-					err += "Trying to increment numerically a variable of other type";
-					err += " at line " + std::to_string(curLine) + ".";
-					err += "Terminating.";
-					fatalError(err);
-				}
+				theVar.name += ch->token;
+				curLine = ch->line;
 			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable vInc = evaluateExpression(ch, env);
+				assert(vInc.type == liaVariableType::integer);
+				lshiftAmount = std::get<int>(vInc.value);
+			}
+		}
+	}
+
+	if (lshiftAmount != 0)
+	{
+		if (env->varMap[theVar.name].type == liaVariableType::integer)
+		{
+			int vv = std::get<int>(env->varMap[theVar.name].value);
+			env->varMap[theVar.name].value = vv << lshiftAmount;
+		}
+		else
+		{
+			std::string err = "";
+			err += "Trying to increment numerically a variable of other type";
+			err += " at line " + std::to_string(curLine) + ".";
+			err += "Terminating.";
+			fatalError(err);
 		}
 	}
 	// TODO: handle other types
@@ -1310,6 +1532,18 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "RshiftStmt"))
 		{
 			exeCuteRshiftStatement(stmt->nodes[0], env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "LshiftStmt"))
+		{
+			exeCuteLshiftStatement(stmt->nodes[0], env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "LogicalAndStmt"))
+		{
+			exeCuteLogicalAndStatement(stmt->nodes[0], env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "LogicalOrStmt"))
+		{
+			exeCuteLogicalOrStatement(stmt->nodes[0], env);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "MultiplyStmt"))
 		{

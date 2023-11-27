@@ -9,9 +9,11 @@
 // one-line comments // DONE
 // multi-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
+// dictionaries // DONE
 // complex expressions (mathematical)
 // logical expressions (and, or, etc.)
 // strings will have default properties/functions like s.length // DONE
+// d.keys for dictionaries // DONE
 // main function declaration, in the form of fn main(params) // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
@@ -54,7 +56,8 @@ liaParser::liaParser()
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / EndLine
 
 	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
-			RshiftStmt / MultiplyStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / EndLine
+			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / 
+			EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -66,7 +69,10 @@ liaParser::liaParser()
 	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
 	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine
 	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
+	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine 
 	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine 
+	LogicalAndStmt <- [ \t]* VariableName '&=' Expression ';' EndLine 
+	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine 
 
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
 	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n] CodeBlock
@@ -85,22 +91,26 @@ liaParser::liaParser()
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
-	Expression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / 
-				  ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
+	Expression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
+				  BitwiseNot / ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
 
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
 	ArrayInitializer <- '[' (ArrayList)* ']'
+	DictInitializer <- '{' (DictList)* '}'
+	BitwiseNot <- '~' Expression
 
+	DictList <- KeyValueList
 	ArrayList <- IntegerList / StringList
+	KeyValueList <- StringLiteral ':' Expression (',' StringLiteral ':' Expression)*
 	IntegerList <- IntegerNumber (',' IntegerNumber)*
 	StringList <- StringLiteral (',' StringLiteral)*
 
 	ArraySubscript <- VariableName '[' Expression ']'
 
 	VariableWithProperty <- VariableName '.' Property
-	Property <- 'length'
+	Property <- 'length' / 'keys'
 	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine

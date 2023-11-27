@@ -33,7 +33,8 @@ int main(int argc,char** argv)
 
 	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc01.2015.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc05.2015.lia");
-	std::ifstream infile("d:\\prova\\liaPrograms\\test.lia");
+	std::ifstream infile("d:\\prova\\liaPrograms\\aoc07.2015.lia");
+	//std::ifstream infile("d:\\prova\\liaPrograms\\test.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\lia01.lia");
 	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc03.2015.lia");
 	if (!infile)

@@ -21,6 +21,7 @@ enum liaVariableType
 	longint,
 	string,
 	array,
+	dictionary,
 	floatingPoint
 };
 
@@ -30,9 +31,11 @@ struct liaVariable
 	liaVariableType type;
 	std::variant<bool, int, long long, std::string> value;
 	std::vector<liaVariable> vlist;
+	std::map<std::string,liaVariable> vMap;
 
 	bool operator== (const liaVariable& n1)
 	{
+		// TODO: fix this
 		return n1.value== this->value;
 	};
 };
@@ -74,9 +77,14 @@ private:
 	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteArrayAssignmentStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	
 	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env,int inc);
 	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteLshiftStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteLogicalOrStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	
 	liaVariable exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	liaVariable exeCuteForeachStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	liaVariable exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
