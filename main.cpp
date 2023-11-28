@@ -15,7 +15,7 @@
 //
 //
 
-const std::string appVersion = "0.3a";
+const std::string appVersion = "0.4a";
 
 void usage()
 {
@@ -31,12 +31,20 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
-	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc01.2015.lia");
-	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc05.2015.lia");
-	std::ifstream infile("d:\\prova\\liaPrograms\\aoc07.2015.lia");
-	//std::ifstream infile("d:\\prova\\liaPrograms\\test.lia");
-	//std::ifstream infile("d:\\prova\\liaPrograms\\lia01.lia");
-	//std::ifstream infile("d:\\prova\\liaPrograms\\aoc03.2015.lia");
+	std::string sourceFileName = "";
+	if (argc == 2)
+	{
+		sourceFileName = argv[1];
+		std::cout << sourceFileName << std::endl;
+	}
+	else
+	{
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc01.2015.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\lia01.lia";
+	}
+
+	std::ifstream infile(sourceFileName);
 	if (!infile)
 	{
 		std::cout << "Error opening source file." << std::endl;
@@ -45,7 +53,6 @@ int main(int argc,char** argv)
 
 	std::stringstream buffer;
 	buffer << infile.rdbuf();
-
 
 	std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
 
