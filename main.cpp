@@ -39,8 +39,8 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc01.2015.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc08.2015.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\lia01.lia";
 	}
 

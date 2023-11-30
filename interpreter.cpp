@@ -807,6 +807,30 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					int sVal = std::get<int>(p0.value);
 					retVal.value = std::to_string(sVal);
 				}
+				else if (ch->token == "ord")
+				{
+					// char to its ascii code
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+					// parameter to convert must be a string
+					assert(p0.type == liaVariableType::string);
+
+					retVal.type = liaVariableType::integer;
+					std::string sVal = std::get<std::string>(p0.value);
+					retVal.value = (int)sVal.at(0);
+				}
+				else if (ch->token == "chr")
+				{
+					// the opposite
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+					// parameter to convert must be an integer
+					assert(p0.type == liaVariableType::integer);
+
+					retVal.type = liaVariableType::string;
+					char sVal = (char)std::get<int>(p0.value);
+					std::string ss = "";
+					ss = (char)sVal;
+					retVal.value = ss;
+				}
 				else if (ch->token == "getMillisecondsSinceEpoch")
 				{
 					// another function with an infinite name
