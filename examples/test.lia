@@ -1,0 +1,246 @@
+/*
+    the official lia test suite
+    (c) friol 2k23
+*/    
+
+fn fun1(p)
+{
+    p+=1;
+    return p;
+}
+
+fn fun2(p)
+{
+    p*=10;
+    return p;
+}
+
+fn test1()
+{
+    v=42;
+    v+=42;
+    if (v==84)
+    {
+        print("Test 1 passed.");
+    }
+    else
+    {
+        print("Test 1 failed.");
+    }
+}
+
+fn test2()
+{
+    arr=[1,2,5,7,9,11];
+    arr.add(13);
+    l=arr.length;
+
+    if (l==7)
+    {
+        print("Test 2 passed.");
+    }
+    else
+    {
+        print("Test 2 failed.");
+    }
+}
+
+fn test3()
+{
+    n=2;
+    res=fun2(fun1(n));
+    if (res==30)
+    {
+        print("Test 3 passed.");
+    }
+    else
+    {
+        print("Test 3 failed.");
+    }
+}
+
+fn test4()
+{
+    s="precipitevolissimevolmente";
+    if (s.length==26)
+    {
+        print("Test 4 passed.");
+    }
+    else
+    {
+        print("Test 4 failed.");
+    }
+}
+
+fn test5()
+{
+    s="this is a test of the split function";
+    arr=s.split(" ");
+    if (arr[6]=="split")
+    {
+        print("Test 5 passed.");
+    }
+    else
+    {
+        print("Test 5 failed.");
+    }
+}
+
+fn test6()
+{
+    idx=0;
+    while (idx<10)
+    {
+        idx+=1;
+    }
+
+    if (idx==10)
+    {
+        print("Test 6 passed.");
+    }
+    else
+    {
+        print("Test 6 failed.");
+    }
+}
+
+fn test7()
+{
+    arr=[1,2,3,4,5];
+    pos=arr.find(5);
+    if (pos==4)
+    {
+        print("Test 7 passed.");
+    }
+    else
+    {
+        print("Test 7 failed.");
+    }
+}
+
+fn test8(a,b,c)
+{
+    res=a;
+    res*=b;
+    res*=c;
+    if (res==24)
+    {
+        print("Test 8 passed.");
+    }
+    else
+    {
+        print("Test 8 failed.");
+    }
+}
+
+fn test9()
+{
+    s="42";
+    i=toInteger(s);
+    if (i==42)
+    {
+        print("Test 9 passed.");
+    }
+    else
+    {
+        print("Test 9 failed.");
+    }
+}
+
+fn test10()
+{
+    n=4096;
+    n>>=2;
+    if (n==1024)
+    {
+        print("Test 10 passed.");
+    }
+    else
+    {
+        print("Test 10 failed.");
+    }
+}
+
+fn test11()
+{
+    s="";
+    s2="compose me";
+    foreach(c in s2)
+    {
+        s+=c;
+    }
+
+    if (s=="compose me")
+    {
+        print("Test 11 passed.");
+    }
+    else
+    {
+        print("Test 11 failed.");
+    }
+}
+
+fn test12()
+{
+    myDict={};
+    myDict["keyOne"]=40;
+    myDict["keyTwo"]=2;
+
+    res=0;
+    res+=myDict["keyOne"];
+    res+=myDict["keyTwo"];
+    
+    if (res==42)
+    {
+        print("Test 12 passed.");
+    }
+    else
+    {
+        print("Test 12 failed.");
+    }
+}
+
+fn test13()
+{
+    k=42;
+    sk=toString(k);
+    if (sk=="42")
+    {
+        print("Test 13 passed.");
+    }
+    else
+    {
+        print("Test 13 failed.");
+    }
+}
+
+fn main(params)
+{
+    print("Lia test suite v0.1");
+    /* test variable assignment and increment */
+    test1();
+    /* tests array 'add' function and length */
+    test2();
+    /* tests nested functions */
+    test3();
+    /* test 4 tests string variables and length */
+    test4();
+    /* test 5 tests split function */
+    test5();
+    /* test 6 tests the while statement */
+    test6();
+    /* test 7 tests the find function for arrays */
+    test7();
+    /* passing multiple parameters to a function */
+    test8(2,3,4);
+    /* tests the toInteger function */
+    test9();
+    /* tests the right shift operator */
+    test10();
+    /* tests foreach cycles */
+    test11();
+    /* test 12 - dictionaries */
+    test12();
+    /* test 13 - toString */
+    test13();
+}
