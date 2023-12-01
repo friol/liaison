@@ -246,8 +246,8 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 				else if (ch->token == "find")
 				{
 					// s.find("value"), returns idx of found element, or -1 if not found
-					assert(pvarValue->type == liaVariableType::array);
-					assert(parameters.size() == 1);
+					//assert(pvarValue->type == liaVariableType::array);
+					//assert(parameters.size() == 1);
 
 					retVal.type = liaVariableType::integer;
 					retVal.value = -1;
@@ -257,20 +257,38 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 						std::string val2find = "";
 						val2find += std::get<std::string>(parameters[0].value);
 
-						for (int idx=0;idx<pvarValue->vlist.size();idx++)
+						if (pvarValue->type == liaVariableType::array)
 						{
-							if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
+							for (int idx = 0;idx < pvarValue->vlist.size();idx++)
 							{
-								retVal.value = idx;
-								return retVal;
+								if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
+								{
+									retVal.value = idx;
+									return retVal;
+								}
 							}
+							/*liaVariable l2f;
+							l2f.value = val2find;
+							auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
+							//std::cout << pvarValue->vlist.end()-df << std::endl;
+							retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
 						}
-						/*
-						liaVariable l2f;
-						l2f.value = val2find;
-						auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
-						//std::cout << pvarValue->vlist.end()-df << std::endl;
-						retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
+						else if (pvarValue->type == liaVariableType::string)
+						{
+							std::string s = std::get<std::string>(pvarValue->value);
+							const char* ptr = strstr(s.c_str(), val2find.c_str());
+							if (ptr == NULL)
+							{
+								retVal.value = -1;
+							}
+							else
+							{
+								const char* ptrbeg = s.c_str();
+								retVal.value = (int)(ptr-ptrbeg);
+							}
+
+							return retVal;
+						}
 					}
 					else if (parameters[0].type == liaVariableType::integer)
 					{
