@@ -24,8 +24,7 @@ fn main(params)
 Liaison also has some "advanced" (let's call them this way) features, like booleans, arrays (but not arrays of arrays, at the moment), dictionaries, methods and properties for "objects" (like s.lenght or arr.split("x")) and circuit breaking (returns break a while cycle or such).<br/>
 An [example program](https://github.com/friol/liaison/blob/master/examples/test.lia) (which by the way is the official Liaison test suite) is included, among other examples.<br/><br/>
 
-Unfortunately, at the moment, Liaison hasn't some "basic" functionalities like "complex" arithmetic and logic expressions.<br/>
-So you cannot write ```a=(a+1)*2;``` but you can always write ```a+=1; a*=2;``` (in more steps).
+Unfortunately, at the moment, Liaison hasn't some "basic" functionalities like "complex" arithmetic and logic expressions. So you cannot write ```a=(a+1)*2;``` but you can always write ```a+=1; a*=2;``` (in more steps).
 <br/><br/>
 ### Compiling
 You should be able to compile the interpreter with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
