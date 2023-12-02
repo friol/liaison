@@ -27,7 +27,7 @@ An [example program](https://github.com/friol/liaison/blob/master/examples/test.
 Unfortunately, at the moment, Liaison hasn't some "basic" functionalities like "complex" arithmetic and logic expressions. So you cannot write ```a=(a+1)*2;``` but you can always write ```a+=1; a*=2;``` (in more steps).
 <br/><br/>
 ### Compiling
-You should be able to compile the interpreter with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
+The Liaison interpreter is written in C++17. You should be able to compile the interpreter with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
 <br/><br/>
 ### My thoughts on the experience of developing Liaison
 As of this writing, we are at day 2 of Advent of Code, and I managed to solve both of the days with Liaison (making small additions/fixes, like implementing the "find" function for strings and not only for arrays, and so on).<br/><br/>
