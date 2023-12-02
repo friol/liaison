@@ -69,6 +69,10 @@ private:
 	bool evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	template <typename T> bool primitiveComparison(T leftop, T rightop, std::string relOp);
 
+	bool arrayComparison(std::vector<liaVariable> leftop, std::vector<liaVariable> rightop, std::string relOp);
+
+	void replaceAll(std::string& str, const std::string& from, const std::string& to);
+
 	liaVariable evaluateExpression(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 
 	liaVariable exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
@@ -104,7 +108,7 @@ public:
 	int validateAst(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
 	void dumpFunctions();
-	void exeCute(std::shared_ptr<peg::Ast> theAst);
+	void exeCute(std::shared_ptr<peg::Ast> theAst,std::vector<std::string> params);
 	~liaInterpreter();
 
 };

@@ -15,7 +15,7 @@
 //
 //
 
-const std::string appVersion = "0.4a";
+const std::string appVersion = "0.5a";
 
 void usage()
 {
@@ -39,9 +39,9 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		sourceFileName = "d:\\prova\\liaPrograms\\aoc02.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2023.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\lia01.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
@@ -66,7 +66,18 @@ int main(int argc,char** argv)
 		if (theLiaInterpreter.validateAst(theLiaParser.theAst) != 0) return 1;
 		theLiaInterpreter.getFunctions(theLiaParser.theAst);
 		//theLiaInterpreter.dumpFunctions();
-		theLiaInterpreter.exeCute(theLiaParser.theAst);
+
+		std::vector<std::string> params;
+		if (argc > 2)
+		{
+			for (int p = 2;p < argc;p++)
+			{
+				std::string prm = argv[p];
+				params.push_back(prm);
+			}
+		}
+
+		theLiaInterpreter.exeCute(theLiaParser.theAst,params);
 	}
 
 	return 0;

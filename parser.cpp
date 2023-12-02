@@ -15,6 +15,7 @@
 // strings will have default properties/functions like s.length // DONE
 // d.keys for dictionaries // DONE
 // main function declaration, in the form of fn main(params) // DONE
+// input parameters to main // DONE
 // general function declaration, in the form of fn funName(p1,p2,p3) // DONE
 // print function included by default // DONE
 // variadic print function // DONE
