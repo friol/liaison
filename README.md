@@ -30,6 +30,8 @@ Unfortunately, at the moment, Liaison hasn't some "basic" functionalities like "
 You should be able to compile the interpreter with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
 <br/><br/>
 ### My thoughts on the experience of developing Liaison
-As of this writing, we are at day 2 of Advent of Code, and I managed to solve both of the days with Liaison (making small additions/fixes, like implementing the "find" function for strings and not only for arrays, and so on).
-I think that this language absorbed my attention and thoughts quite a lot in the past weeks. At the end, writing a "serious" program like this is like being caught in a kind of trance, not just for minutes or hours, but for days or weeks.
-Writing code in Liaison is not an easy task, since the language is quite verbose and it's unfortunately missing the arithmetic/logic features of above. It's also, obviously, not enough tested against serious number crunching, so, at the end, doing Advent of Code with a recently born language is like going through a vast cave with only a small candle in your hand.
+As of this writing, we are at day 2 of Advent of Code, and I managed to solve both of the days with Liaison (making small additions/fixes, like implementing the "find" function for strings and not only for arrays, and so on).<br/><br/>
+I think that this project absorbed my attention and thoughts quite a lot in the past weeks. At the end, writing a "serious" program like this is like being caught in a kind of trance, not just for minutes or hours, but for days or weeks.
+<br/><br/>
+Writing code in Liaison is not an easy task, since the language is quite verbose and it's unfortunately missing some features. It's also, obviously, not enough tested against massive number crunching, so, at the end, doing Advent of Code with a recently born language is like going through a vast cave with only a small candle in your hand. But we'll see what kind of monsters AOC brings on.
+
