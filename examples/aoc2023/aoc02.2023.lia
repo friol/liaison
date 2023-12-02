@@ -1,0 +1,176 @@
+/* aoc02 2023 */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc02.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc02.2023.test.txt");
+    return sarr;
+}
+
+fn isValidGame(game,maxRed,maxGreen,maxBlue)
+{
+    elArr=game.split(" ");
+    //print(elArr);
+
+    idx=0;
+    lm1=elArr.length;
+    lm1-=1;
+    while (idx<lm1)
+    {
+        idxp1=idx;
+        idxp1+=1;
+        if (elArr[idxp1]=="red")
+        {
+            numRed=toInteger(elArr[idx]);
+            if (numRed>maxRed)
+            {
+                return false;
+            }
+        }
+        if (elArr[idxp1]=="green")
+        {
+            numGreen=toInteger(elArr[idx]);
+            if (numGreen>maxGreen)
+            {
+                return false;
+            }
+        }
+        if (elArr[idxp1]=="blue")
+        {
+            numBlue=toInteger(elArr[idx]);
+            if (numBlue>maxBlue)
+            {
+                return false;
+            }
+        }
+
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn isPossible(roundArr,maxRed,maxGreen,maxBlue)
+{
+    foreach (round in roundArr)
+    {
+        gameArr=round.split(",");
+        
+        foreach (game in gameArr)
+        {
+            truth=isValidGame(game,maxRed,maxGreen,maxBlue);
+            if (truth==false)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+fn part1(sceneArr)
+{
+    maxRed=12;    
+    maxGreen=13;    
+    maxBlue=14;    
+
+    sumPossGames=0;
+    gameNum=1;
+
+    foreach (s in sceneArr)
+    {
+        roundArr=s.split(";");
+        
+        truth=isPossible(roundArr,maxRed,maxGreen,maxBlue);
+        if (truth==true)
+        {
+            sumPossGames+=gameNum;
+        }
+
+        gameNum+=1;
+    }
+
+    print(sumPossGames);
+}
+
+fn findPower(roundArr)
+{
+    maxRed=-1;
+    maxGreen=-1;
+    maxBlue=-1;
+
+    foreach (round in roundArr)
+    {
+        rArr=round.split(",");
+        
+        foreach (rnd in rArr)
+        {
+            elArr=rnd.split(" ");
+            idx=0;
+            lm1=elArr.length;
+            lm1-=1;
+            while (idx<lm1)
+            {
+                idxp1=idx;
+                idxp1+=1;
+                if (elArr[idxp1]=="red")
+                {
+                    numRed=toInteger(elArr[idx]);
+                    if (numRed>maxRed)
+                    {
+                        maxRed=numRed;
+                    }
+                }
+                if (elArr[idxp1]=="green")
+                {
+                    numGreen=toInteger(elArr[idx]);
+                    if (numGreen>maxGreen)
+                    {
+                        maxGreen=numGreen;
+                    }
+                }
+                if (elArr[idxp1]=="blue")
+                {
+                    numBlue=toInteger(elArr[idx]);
+                    if (numBlue>maxBlue)
+                    {
+                        maxBlue=numBlue;
+                    }
+                }
+
+                idx+=1;
+            }
+        }
+    }
+
+    print(maxRed,maxGreen,maxBlue);
+
+    prod=maxRed;
+    prod*=maxGreen;
+    prod*=maxBlue;
+    
+    return prod;
+}
+
+fn part2(sceneArr)
+{
+    sumPowers=0;
+
+    foreach (s in sceneArr)
+    {
+        roundArr=s.split(";");
+        
+        power=findPower(roundArr);
+        sumPowers+=power;
+    }
+
+    print(sumPowers);
+}
+
+fn main(params)
+{
+    sceneArr=readInput();
+    //part1(sceneArr);
+    part2(sceneArr);
+}

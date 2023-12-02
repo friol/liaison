@@ -1,0 +1,177 @@
+/* aoc 01 2023 solved with liaison */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2023.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2023.test2.txt");
+    return sarr;
+}
+
+fn getFirstLast(a)
+{
+    if (a.length>1)
+    {
+        d0=a[0];
+        am1=a.length;
+        am1-=1;
+        d1=a[am1];
+        d0*=10;
+        d1+=d0;
+        return d1;
+    }
+    else
+    {
+        d0=a[0];
+        d1=a[0];
+        d0*=10;
+        d1+=d0;
+        return d1;
+    }
+}
+
+fn part1(sarr)
+{
+    digits=["0","1","2","3","4","5","6","7","8","9"];
+    totSum=0;
+
+    foreach (s in sarr)
+    {
+        idx=0;
+        digitsArr=[];
+        while (idx<s.length)
+        {
+            d=s[idx];
+            if (digits.find(d)>0)
+            {
+                digitsArr.add(toInteger(d));
+            }
+            idx+=1;
+        }
+
+        //print(digitsArr);
+        num=getFirstLast(digitsArr);
+
+        totSum+=num;
+    }
+
+    print(totSum);
+}
+
+fn word2digit(w)
+{
+    spokendigits=["zero","one","two","three","four","five","six","seven","eight","nine"];
+
+    idx=0;
+    foreach (sd in spokendigits)
+    {
+        if (sd==w)
+        {
+            return idx;
+        }
+
+        idx+=1;
+    }
+
+    return 0;
+}
+
+fn findLast(s,w)
+{
+    idx=s.length;
+    idx-=1;
+
+    tmps="";
+    while (idx>=0)
+    {
+        pos=tmps.find(w);
+        if (pos>=0)
+        {
+            idx+=1;
+            return idx;
+        }
+        t2=s[idx];
+        t2+=tmps;
+        tmps=t2;
+        idx-=1;
+    }
+}
+
+fn part2(sarr)
+{
+    digits=["0","1","2","3","4","5","6","7","8","9"];
+    spokendigits=["zero","one","two","three","four","five","six","seven","eight","nine"];
+    totSum=0;
+
+    foreach (s in sarr)
+    {
+        print(s);
+
+        idx=0;
+        digitsArr=[];
+
+        leftDigit=-1;
+        rightDigit=-1;
+
+        minidx=999;
+        maxidx=-1;
+
+        while (idx<s.length)
+        {
+            d=s[idx];
+            pos=digits.find(d);
+            if (pos>=0)
+            {
+                if (idx<minidx)
+                {
+                    minidx=idx;
+                    leftDigit=toInteger(d);
+                }
+                if (idx>maxidx)
+                {
+                    maxidx=idx;
+                    rightDigit=toInteger(d);
+                }
+            }
+            idx+=1;
+        }
+
+        foreach (sd in spokendigits)
+        {
+            pos=s.find(sd);
+            if (pos>=0)
+            {
+                if (pos<minidx)
+                {
+                    minidx=pos;
+                    leftDigit=word2digit(sd);
+                }
+
+                pos=findLast(s,sd);
+                if (pos>maxidx)
+                {
+                    maxidx=pos;
+                    rightDigit=word2digit(sd);
+                }
+            }
+        }
+
+        print(leftDigit,rightDigit);
+        ld=toString(leftDigit);
+        rd=toString(rightDigit);
+        finalS=ld;
+        finalS+=rd;
+        finalN=toInteger(finalS);
+
+        totSum+=finalN;
+    }
+
+    print(totSum);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    //part1(sarr);
+    part2(sarr);
+}
