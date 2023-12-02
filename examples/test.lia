@@ -214,6 +214,36 @@ fn test13()
     }
 }
 
+fn test14()
+{
+    a=[1,2,3];
+    b=[1,2,4];
+
+    if (a<=b)
+    {
+        print("Test 14 passed.");
+    }
+    else
+    {
+        print("Test 14 failed.");
+    }
+}
+
+fn test15()
+{
+    a1=[1,2,3];
+    a2=[4,5,6,7];
+    a1+=a2;
+    if (a1.length==7)
+    {
+        print("Test 15 passed.");
+    }
+    else
+    {
+        print("Test 15 failed.");
+    }
+}
+
 fn main(params)
 {
     print("Lia test suite v0.1");
@@ -243,4 +273,8 @@ fn main(params)
     test12();
     /* test 13 - toString */
     test13();
+    /* test 14 - array comparison */
+    test14();
+    /* array concatenation-'sum' */
+    test15();
 }

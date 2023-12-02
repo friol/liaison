@@ -219,7 +219,14 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 			{
 				if (ch->token == "split")
 				{
-					assert(pvarValue->type == liaVariableType::string);
+					if (pvarValue->type != liaVariableType::string)
+					{
+						std::string err = "";
+						err += "Split can be applied only to strings. ";
+						err += "Terminating.";
+						fatalError(err);
+					}
+					
 					assert(parameters.size() == 1);
 
 					retVal.type = liaVariableType::array;
@@ -1329,10 +1336,17 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		std::string appendix = std::get<std::string>(theInc.value);
 		pvar->value = vv + appendix;
 	}
+	else if (pvar->type == liaVariableType::array)
+	{
+		for (liaVariable v : theInc.vlist)
+		{
+			pvar->vlist.push_back(v);
+		}
+	}
 	else
 	{
 		std::string err = "";
-		err += "Trying to increment numerically a variable of other type";
+		err += "Unhandled increment type";
 		err += " at line " + std::to_string(curLine) + ".";
 		err += "Terminating.";
 		fatalError(err);
