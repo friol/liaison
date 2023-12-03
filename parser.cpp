@@ -58,7 +58,7 @@ liaParser::liaParser()
 
 	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
 			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / 
-			EndLine
+			DivideStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
 
@@ -72,6 +72,7 @@ liaParser::liaParser()
 	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
 	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine 
 	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine 
+	DivideStmt <- [ \t]* VariableName '/=' Expression ';' EndLine 
 	LogicalAndStmt <- [ \t]* VariableName '&=' Expression ';' EndLine 
 	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine 
 

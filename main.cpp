@@ -39,9 +39,10 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2023.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc02.2019.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
@@ -54,7 +55,7 @@ int main(int argc,char** argv)
 	std::stringstream buffer;
 	buffer << infile.rdbuf();
 
-	std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
+	//std::cout << "Program read from file: " << std::endl << buffer.str() << std::endl;
 
 	//
 

@@ -1,0 +1,385 @@
+/* aoc 03 2023 - engine parts */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc03.2023.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc03.2023.txt");
+    return sarr;
+}
+
+fn isAdjacentToMotorPart(number,arr)
+{
+    row=number[0];
+    xstart=number[1];
+    xend=number[2];
+
+    contour=[];
+
+    rowzero=arr[0];
+    rowLenm1=rowzero.length;
+    rowLenm1-=1;
+
+    gridHeightm1=arr.length;
+    gridHeightm1-=1;
+
+    if (xstart>0)
+    {
+        rm1=row;
+        rm1-=1;
+        xsm1=xstart;
+        xsm1-=1;
+
+        if (row>0)
+        {
+            // upper left
+            arow=arr[rm1];
+            contour.add(arow[xsm1]);
+        }
+
+        // left
+        arow=arr[row];
+        contour.add(arow[xsm1]);
+    }
+
+    if (row>0)
+    {
+        // upper
+        idx=xstart;
+        while (idx<=xend)
+        {
+            rm1=row;
+            rm1-=1;
+            arow=arr[rm1];
+            contour.add(arow[idx]);
+            idx+=1;
+        }
+    }
+
+    if (row<gridHeightm1)
+    {
+        // lower
+        idx=xstart;
+        while (idx<=xend)
+        {
+            rp1=row;
+            rp1+=1;
+            arow=arr[rp1];
+            contour.add(arow[idx]);
+            idx+=1;
+        }
+
+        // lower left
+        if (xstart>0)
+        {
+            rp1=row;
+            rp1+=1;
+            arow=arr[rp1];
+            xsm1=xstart;
+            xsm1-=1;
+            contour.add(arow[xsm1]);
+        }
+
+        // lower right
+        if (xend<rowLenm1)
+        {
+            rp1=row;
+            rp1+=1;
+            arow=arr[rp1];
+            xep1=xend;
+            xep1+=1;
+            contour.add(arow[xep1]);
+        }
+    }
+
+    if (xend<rowLenm1)
+    {
+        rm1=row;
+        rm1-=1;
+        xep1=xend;
+        xep1+=1;
+
+        if (row>0)
+        {
+            // upper right
+            arow=arr[rm1];
+            contour.add(arow[xep1]);
+        }
+
+        // right
+        arow=arr[row];
+        contour.add(arow[xep1]);
+    }
+    
+    //print(contour,contour.length);
+
+    foreach (el in contour)
+    {
+        if (el!=".")
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn identifyNumbers(row,line,numArray)
+{
+    digits=["0","1","2","3","4","5","6","7","8","9"];
+
+    charx0=-1;
+    charx1=-1;
+
+    inanumber=false;
+    idx=0;
+    foreach (c in line)
+    {
+        if (digits.find(c)>=0)        
+        {
+            if (inanumber==false)
+            {
+                inanumber=true;
+                charx0=idx;
+                charx1=idx;
+            }
+            else
+            {
+                charx1=idx;
+            }
+        }
+        else
+        {
+            if (inanumber==true)
+            {
+                inanumber=false;
+                numArray.add(row);
+                numArray.add(charx0);
+                numArray.add(charx1);
+            }
+        }
+
+        idx+=1;
+    }
+
+    // handle numbers that are adjacent to the right extreme of the grid
+    if (inanumber==true)
+    {
+        numArray.add(row);
+        numArray.add(charx0);
+        numArray.add(charx1);
+    }
+
+    return numArray;
+}
+
+fn getNumberVal(number,arr)
+{
+    rownum=number[0];
+    row=arr[rownum];
+
+    //print("Processing row",rownum,"start",number[1],"end",number[2]);
+
+    s="";
+    idx=number[1];
+    while (idx<=number[2])
+    {
+        n=row[idx];
+        s+=n;
+        idx+=1;
+    }
+
+    //print(s);
+
+    return toInteger(s);
+}
+
+fn part1(arr)
+{
+    numArray=[];
+    totSum=0;
+
+    row=0;
+    foreach (l in arr)
+    {
+        // identify numbers (row,xstart,xend)
+        numArray=identifyNumbers(row,l,numArray);
+        row+=1;
+    }
+
+    // now, for each number, check if it's adjacent to a motor part
+    idx=0;
+    while (idx<numArray.length)
+    {
+        number=[];
+        number.add(numArray[idx]);
+        idx+=1;
+        number.add(numArray[idx]);
+        idx+=1;
+        number.add(numArray[idx]);
+        idx+=1;
+
+        if (isAdjacentToMotorPart(number,arr)==true)
+        {
+            val=getNumberVal(number,arr);
+            totSum+=val;
+        }
+    }
+    
+    print(totSum);
+}
+
+fn identifyGears(row,l,garr)
+{
+    idx=0;
+    foreach (c in l)
+    {
+        if (c=="*")
+        {
+            garr.add(row);
+            garr.add(idx);
+        }
+
+        idx+=1;
+    }
+
+    return garr;
+}
+
+fn isAdjacent(gearx,geary,nrow,xstart,xend)
+{
+    if (geary==nrow)
+    {
+        xsm1=xstart;
+        xsm1-=1;
+        if (gearx==xsm1)
+        {
+            return true;
+        }
+        xep1=xend;
+        xep1+=1;
+        if (gearx==xep1)
+        {
+            return true;
+        }
+    }
+
+    nrm1=nrow;
+    nrm1-=1;
+
+    if (geary==nrm1)
+    {
+        xsm1=xstart;
+        xsm1-=1;
+        xep1=xend;
+        xep1+=1;
+        if (gearx>=xsm1)
+        {
+            if (gearx<=xep1)
+            {
+                return true;
+            }
+        }
+    }
+
+    nrp1=nrow;
+    nrp1+=1;
+
+    if (geary==nrp1)
+    {
+        xsm1=xstart;
+        xsm1-=1;
+        xep1=xend;
+        xep1+=1;
+        if (gearx>=xsm1)
+        {
+            if (gearx<=xep1)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+fn getAdjacencyList(gearx,geary,numArray)
+{
+    adjlist=[];
+
+    idx=0;
+    while (idx<numArray.length)
+    {
+        nrow=numArray[idx];
+        idx+=1;
+        xstart=numArray[idx];
+        idx+=1;
+        xend=numArray[idx];
+        idx+=1;
+
+        if (isAdjacent(gearx,geary,nrow,xstart,xend)==true)
+        {
+            adjlist.add(nrow);
+            adjlist.add(xstart);
+            adjlist.add(xend);
+        }
+    }
+
+    return adjlist;
+}
+
+fn part2(arr)
+{
+    numArray=[];
+    gearsArray=[];
+    sumOfGearRatios=0;
+
+    row=0;
+    foreach (l in arr)
+    {
+        // identify numbers (row,xstart,xend)
+        numArray=identifyNumbers(row,l,numArray);
+        // identify gears (row,xpos)
+        gearsArray=identifyGears(row,l,gearsArray);
+        row+=1;
+    }
+
+    idx=0;
+    while (idx<gearsArray.length)
+    {
+        geary=gearsArray[idx];
+        idx+=1;
+        gearx=gearsArray[idx];
+        idx+=1;
+
+        listOfAdjacents=getAdjacencyList(gearx,geary,numArray);
+        //print(listOfAdjacents);
+
+        if (listOfAdjacents.length==6)
+        {
+            // exactly 2 numbers are adjacent to this gear
+            n0triplet=[];
+            n0triplet.add(listOfAdjacents[0]);
+            n0triplet.add(listOfAdjacents[1]);
+            n0triplet.add(listOfAdjacents[2]);
+            num0=getNumberVal(n0triplet,arr);
+
+            n1triplet=[];
+            n1triplet.add(listOfAdjacents[3]);
+            n1triplet.add(listOfAdjacents[4]);
+            n1triplet.add(listOfAdjacents[5]);
+            num1=getNumberVal(n1triplet,arr);
+
+            num0*=num1;
+            sumOfGearRatios+=num0;
+        }
+    }
+
+    print(sumOfGearRatios);
+}
+
+fn main(params)
+{
+    arr=readInput();
+    part1(arr);
+    part2(arr);
+}

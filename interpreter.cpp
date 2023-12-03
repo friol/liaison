@@ -1088,6 +1088,60 @@ void liaInterpreter::exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, 
 	// TODO: handle other types
 }
 
+void liaInterpreter::exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine;
+	int mulAmount = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				curLine = ch->line;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable vInc = evaluateExpression(ch, env);
+				if (vInc.type != liaVariableType::integer)
+				{
+					std::string err = "";
+					err += "Divide term should be an integer. ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+				mulAmount = std::get<int>(vInc.value);
+			}
+		}
+	}
+
+	liaVariable variable = env->varMap[theVar.name];
+
+	if (variable.type == liaVariableType::integer)
+	{
+		int vv = std::get<int>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv /= mulAmount;
+	}
+	else
+	{
+		std::string err = "";
+		err += "Trying to divide numerically a variable of other type";
+		err += " at line " + std::to_string(curLine) + ".";
+		err += "Terminating.";
+		fatalError(err);
+	}
+
+	// TODO: handle other types
+}
+
 void liaInterpreter::exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
@@ -1716,6 +1770,10 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "MultiplyStmt"))
 		{
 			exeCuteMultiplyStatement(stmt->nodes[0], env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "DivideStmt"))
+		{
+			exeCuteDivideStatement(stmt->nodes[0], env);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "WhileStmt"))
 		{
