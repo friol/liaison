@@ -1520,30 +1520,71 @@ bool liaInterpreter::arrayComparison(std::vector<liaVariable> leftop, std::vecto
 
 bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
-	// a condition is Expression Relop Expression
-	// std::cout << peg::ast_to_s(theAst);
+	//std::cout << peg::ast_to_s(theAst);
 
-	std::string relOp = "";
-	relOp+=theAst->nodes[1]->token;
-
-	liaVariable lExpr = evaluateExpression(theAst->nodes[0], env);
-	liaVariable rExpr = evaluateExpression(theAst->nodes[2], env);
-
-	if (lExpr.type != rExpr.type)
+	//std::cout << "Parsing " << theAst->name << " ns: " << theAst->nodes.size() << std::endl;
+	if ((theAst->name == "Condition")|| (theAst->name == "InnerCondition"))
 	{
-		std::string err = "";
-		err += "Comparing variables of different types is forbidden. ";
-		err += "Terminating.";
-		fatalError(err);
-		return false;
+		if (theAst->nodes.size() == 1)
+		{
+			return evaluateCondition(theAst->nodes[0], env);
+		}
+		else if (theAst->nodes.size() == 3)
+		{
+			// [InnerCondition CondOperator Condition] or [Expression Relop Expression]
+			if ((theAst->nodes[0]->name == "InnerCondition")|| (theAst->nodes[0]->name == "Condition"))
+			{
+				std::string condOp = "";
+				condOp += theAst->nodes[1]->token;
+				//std::cout << condOp << std::endl;
+
+				bool lCond = evaluateCondition(theAst->nodes[0], env);
+				bool rCond = evaluateCondition(theAst->nodes[2], env);
+
+				if (condOp == "&&")	return  (lCond&&rCond);
+				else if (condOp=="||")	return (lCond||rCond);
+				else
+				{
+					std::string err = "";
+					err += "Unknown relational operator "+condOp+". ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+			}
+			else if (theAst->nodes[0]->name == "Expression")
+			{
+				std::string relOp = "";
+				relOp += theAst->nodes[1]->token;
+
+				liaVariable lExpr = evaluateExpression(theAst->nodes[0], env);
+				liaVariable rExpr = evaluateExpression(theAst->nodes[2], env);
+
+				if (lExpr.type != rExpr.type)
+				{
+					std::string err = "";
+					err += "Comparing variables of different types is forbidden. ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				if ((lExpr.type == liaVariableType::array) && (rExpr.type == liaVariableType::array))
+				{
+					return arrayComparison(lExpr.vlist, rExpr.vlist, relOp);
+				}
+
+				return primitiveComparison(lExpr.value, rExpr.value, relOp);
+			}
+		}
+		else
+		{
+			std::string err = "";
+			err += "Unhandled expression node scenario. ";
+			err += "Terminating.";
+			fatalError(err);
+		}
 	}
 
-	if ((lExpr.type == liaVariableType::array) && (rExpr.type == liaVariableType::array))
-	{
-		return arrayComparison(lExpr.vlist, rExpr.vlist, relOp);
-	}
-
-	return primitiveComparison(lExpr.value, rExpr.value, relOp);
+	return false;
 }
 
 liaVariable liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)

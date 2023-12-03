@@ -11,7 +11,7 @@
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // dictionaries // DONE
 // complex expressions (mathematical)
-// logical expressions (and, or, etc.)
+// logical expressions (and, or, etc.) // DONE
 // strings will have default properties/functions like s.length // DONE
 // d.keys for dictionaries // DONE
 // main function declaration, in the form of fn main(params) // DONE
@@ -79,7 +79,9 @@ liaParser::liaParser()
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
 	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n] CodeBlock
 
-	Condition <- Expression Relop Expression
+	Condition <- InnerCondition ( CondOperator Condition )*
+	InnerCondition <- Expression Relop Expression / '(' Condition ')'
+	CondOperator <- '&&' / '||'
 
 	Relop <- '==' / '<=' / '<' / '>=' / '>' / '!='
 
