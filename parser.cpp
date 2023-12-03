@@ -10,7 +10,7 @@
 // multi-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // dictionaries // DONE
-// complex expressions (mathematical)
+// complex expressions (mathematical) // DONE
 // logical expressions (and, or, etc.) // DONE
 // strings will have default properties/functions like s.length // DONE
 // d.keys for dictionaries // DONE
@@ -39,13 +39,6 @@
 //
 
 #include "parser.h"
-/*
-Expression < -Term(TERM_OPERATOR Term) *
-	Term < -Factor(FACTOR_OPERATOR Factor) *
-	Factor < -IntegerNumber / StringLiteral / ArrayInitializer / RFuncCall / ArraySubscript / VariableWithProperty / VariableName / '(' Expression ')'
-	TERM_OPERATOR < -<[-+] >
-	FACTOR_OPERATOR < -< [/*] >
-*/
 
 liaParser::liaParser()
 {
@@ -95,8 +88,10 @@ liaParser::liaParser()
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
-	Expression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
-				  BitwiseNot / ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName
+	Expression <- InnerExpression ( ExprOperator InnerExpression )*
+	InnerExpression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
+				  BitwiseNot / ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName / '(' Expression ')'
+	ExprOperator <- '+' / '-' / '*' / '/' 
 
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >

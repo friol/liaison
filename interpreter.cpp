@@ -359,6 +359,8 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>
 
 liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
 {
+	//std::cout << peg::ast_to_s(theAst);
+
 	liaVariable retVar;
 
 	if (theAst->nodes[0]->name == "StringLiteral")
@@ -597,7 +599,15 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		if (env->varMap[arrName].type == liaVariableType::array)
 		{
 			int arrIdx = std::get<int>(vIdx.value);
-			assert(arrIdx < env->varMap[arrName].vlist.size());
+			
+			if (arrIdx >= env->varMap[arrName].vlist.size())
+			{
+				std::string err = "";
+				err += "Array index out of range. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
 			retVar.type = env->varMap[arrName].vlist[0].type;
 			retVar.value = env->varMap[arrName].vlist[arrIdx].value;
 		}
@@ -611,7 +621,15 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 		{
 			int arrIdx = std::get<int>(vIdx.value);
 			std::string tmp = std::get<std::string>(env->varMap[arrName].value);
-			assert(arrIdx < tmp.size());
+
+			if (arrIdx >= tmp.size())
+			{
+				std::string err = "";
+				err += "String index out of range. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
 			retVar.type = liaVariableType::string;
 			char c = tmp.at(arrIdx);
 			std::string sc = "";
@@ -661,6 +679,38 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 				}
 			}
 		}
+	}
+	else if ( (theAst->name=="Expression") && ((theAst->nodes.size() % 2) == 1) && (theAst->nodes.size()>2))
+	{
+		int nodepos = 0;
+
+		liaVariable vResult = evaluateExpression(theAst->nodes[nodepos], env);
+		nodepos += 1;
+
+		while (nodepos < theAst->nodes.size())
+		{
+			std::string opz="";
+			opz += theAst->nodes[nodepos]->token;
+
+			liaVariable v1= evaluateExpression(theAst->nodes[nodepos+1], env);
+			int partialResult = std::get<int>(vResult.value);
+			int newVal = std::get<int>(v1.value);
+
+			if (opz == "+") partialResult += newVal;
+			else if (opz == "-") partialResult -= newVal;
+			else if (opz == "*") partialResult *= newVal;
+			else if (opz == "/") partialResult /= newVal;
+
+			vResult.value = partialResult;
+
+			nodepos += 2;
+		}
+
+		return vResult;
+	}
+	else if ((theAst->name == "InnerExpression")|| (theAst->name == "Expression"))
+	{
+		return evaluateExpression(theAst->nodes[0], env);
 	}
 
 	return retVar;
