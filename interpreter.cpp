@@ -762,6 +762,20 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 			}
 			std::cout << "] ";
 		}
+		else if (retVar.type == liaVariableType::dictionary)
+		{
+			bool first = true;
+			std::cout << "{";
+
+			for (const auto& myPair : retVar.vMap) 
+			{
+				if (!first) std::cout << ",";
+				std::cout << "\"" << myPair.first << "\"" << ":";
+				std::cout << std::get<int>(myPair.second.value);
+				first = false;
+			}
+			std::cout << "} ";
+		}
 		else if (retVar.type == liaVariableType::boolean)
 		{
 			if (std::get<bool>(retVar.value) == true) std::cout << "true";
@@ -1398,9 +1412,17 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	liaVariable theVar;
 	size_t curLine;
 	liaVariable theInc;
+	liaVariable dictKey;
 
 	for (auto ch : theAst->nodes)
 	{
+		if (ch->name == "ArraySubscript")
+		{
+			theVar.name += ch->nodes[0]->token;
+			dictKey = evaluateExpression(ch->nodes[1], env);
+			//std::cout << theVar.name << " " << std::get<std::string>(dictKey.value);
+		}
+
 		if (ch->is_token)
 		{
 			if (ch->name == "VariableName")
@@ -1429,12 +1451,15 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	liaVariable* pvar = NULL;
 	pvar = &env->varMap[theVar.name];
 
-	if (pvar->type != theInc.type)
+	if (pvar->type != liaVariableType::dictionary)
 	{
-		std::string err = "";
-		err += "Variables " + theVar.name + " and increment should be of the same type. ";
-		err += "Terminating.";
-		fatalError(err);
+		if (pvar->type != theInc.type)
+		{
+			std::string err = "";
+			err += "Variables " + theVar.name + " and increment should be of the same type. ";
+			err += "Terminating.";
+			fatalError(err);
+		}
 	}
 
 	if (pvar->type == liaVariableType::integer)
@@ -1459,10 +1484,18 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	}
 	else if (pvar->type == liaVariableType::array)
 	{
+		// TODO: review this code, doesn't seem to work. Or it doesn't seem to do anything meaningful
 		for (liaVariable v : theInc.vlist)
 		{
 			pvar->vlist.push_back(v);
 		}
+	}
+	else if (pvar->type == liaVariableType::dictionary)
+	{
+		int iInc = std::get<int>(theInc.value);
+		int vv = std::get<int>(pvar->vMap[std::get<std::string>(dictKey.value)].value);
+		vv += iInc * inc;
+		pvar->vMap[std::get<std::string>(dictKey.value)].value = vv;
 	}
 	else
 	{

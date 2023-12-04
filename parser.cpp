@@ -60,7 +60,7 @@ liaParser::liaParser()
 
 	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock '\n' ('else' '\n' CodeBlock)?
 
-	IncrementStmt <- [ \t]* VariableName '+=' Expression ';' EndLine
+	IncrementStmt <- [ \t]* (ArraySubscript / VariableName) '+=' Expression ';' EndLine
 	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine
 	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
 	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine 
@@ -114,7 +114,7 @@ liaParser::liaParser()
 
 	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
 	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
-	FuncName <- < [a-zA-Z][0-9a-zA-Z]* >
+	FuncName <- < [a-zA-Z_][0-9a-zA-Z_]* >
 	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
 	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine

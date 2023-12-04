@@ -2,8 +2,8 @@
 
 fn readInput()
 {
-    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.txt");
-    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.test.txt");
     return sarr;
 }
 
@@ -109,8 +109,60 @@ fn part1(arr)
     print(sumOfPowers);
 }
 
-// extremely unoptimized solution
+// better solution, but still quite slow
 fn part2(arr)
+{
+    cardArr=[];
+    newCardDict={};
+    nwins={};
+
+    idx=0;
+    foreach (sc in arr)
+    {
+        cardArr.add(idx);
+        newCardDict[toString(idx)]=1;
+
+        winningNumbers=getListOfWinningNumbers(arr[idx]);
+        yourNumbers=getListOfYourNumbers(arr[idx]);
+        numWins=calcNumWins(winningNumbers,yourNumbers);
+        ssc=toString(idx);
+        nwins[ssc]=numWins;
+
+        idx+=1;
+    }
+
+    foreach (sc in cardArr)
+    {
+        print("Processing scratchcard",sc);
+        numWins=nwins[toString(sc)];
+        
+        pos=0;
+        //print("Will update",newCardDict[toString(sc)],"entries");
+        while (pos<newCardDict[toString(sc)])
+        {
+            idx=0;
+            while (idx<numWins)
+            {
+                ts=toString(sc+idx+1);
+                //newCardDict[ts]=newCardDict[ts]+1;
+                newCardDict[ts]+=1;
+                idx+=1;
+            }
+            pos+=1;
+        }
+    }
+
+    sum=0;
+    cdk=newCardDict.keys;
+    foreach (k in cdk)
+    {
+        sum+=newCardDict[k];
+    }
+    print(sum);
+}
+
+// extremely unoptimized solution
+fn part2_unoptimized(arr)
 {
     cardArr=[];
     newCardArr=[];
