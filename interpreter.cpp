@@ -693,6 +693,23 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 			opz += theAst->nodes[nodepos]->token;
 
 			liaVariable v1= evaluateExpression(theAst->nodes[nodepos+1], env);
+
+			if (vResult.type != v1.type)
+			{
+				std::string err = "";
+				err += "Only expressions of elements with the same type are supported at the moment. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			if (vResult.type != liaVariableType::integer)
+			{
+				std::string err = "";
+				err += "Only expressions of elements with type integer are supported at the moment. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
 			int partialResult = std::get<int>(vResult.value);
 			int newVal = std::get<int>(v1.value);
 

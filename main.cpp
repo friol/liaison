@@ -39,10 +39,11 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2023.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc04.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc01.2020.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc02.2019.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
