@@ -1,0 +1,164 @@
+/* aoc 04 2023 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc04.2023.test.txt");
+    return sarr;
+}
+
+fn getListOfWinningNumbers(l)
+{
+    retArr=[];
+    arrs=l.split("|");
+
+    numOnly="";
+
+    idx=l.find(":")+2;
+    win=arrs[0];
+    while (idx<win.length)
+    {
+        numOnly+=win[idx];
+        idx+=1;
+    }
+
+    ra=numOnly.split(" ");
+    foreach (el in ra)
+    {
+        if (el.length>0)
+        {
+            i=toInteger(el);
+            retArr.add(i);
+        }
+    }
+
+    return retArr;
+}
+
+fn getListOfYourNumbers(l)
+{
+    retArr=[];
+
+    arrs=l.split("|");
+    numOnly=arrs[1];
+
+    ra=numOnly.split(" ");
+    foreach (el in ra)
+    {
+        if (el.length>0)
+        {
+            i=toInteger(el);
+            retArr.add(i);
+        }
+    }
+
+    //print(retArr);
+
+    return retArr;
+}
+
+fn calcNumWins(winningNumbers,yourNumbers)
+{
+    nw=0;
+
+    foreach (wn in winningNumbers)
+    {
+        foreach (yn in yourNumbers)
+        {
+            if (wn==yn)
+            {
+                nw+=1;
+            }
+        }
+    }
+
+    return nw;
+}
+
+fn calcPow(n)
+{
+    if (n==0)
+    {
+        return 0;
+    }
+
+    if ((n-1)==0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 2*calcPow(n-1);
+    }
+}
+
+fn part1(arr)
+{
+    sumOfPowers=0;
+
+    foreach (line in arr)
+    {
+        winningNumbers=getListOfWinningNumbers(line);
+        yourNumbers=getListOfYourNumbers(line);
+        numWins=calcNumWins(winningNumbers,yourNumbers);
+        
+        pow=calcPow(numWins);
+        sumOfPowers+=pow;
+    }
+
+    print(sumOfPowers);
+}
+
+// extremely unoptimized solution
+fn part2(arr)
+{
+    cardArr=[];
+    newCardArr=[];
+    nwins={};
+
+    idx=0;
+    foreach (sc in arr)
+    {
+        cardArr.add(idx);
+        newCardArr.add(idx);
+
+        winningNumbers=getListOfWinningNumbers(arr[idx]);
+        yourNumbers=getListOfYourNumbers(arr[idx]);
+        numWins=calcNumWins(winningNumbers,yourNumbers);
+        ssc=toString(idx);
+        nwins[ssc]=numWins;
+
+        idx+=1;
+    }
+
+    foreach (sc in cardArr)
+    {
+        print("Processing card",sc,"resulting card arr length",newCardArr.length);
+        pos=0;
+        while (pos<newCardArr.length)
+        {
+            if (newCardArr[pos]==sc)
+            {
+                numWins=nwins[toString(sc)];
+                
+                idx=0;
+                while (idx<numWins)
+                {
+                    newCardArr.add(sc+idx+1);
+                    idx+=1;
+                }
+            }
+
+            pos+=1;
+        }
+    }
+
+    print(newCardArr.length);
+}
+
+fn main(params)
+{
+    scratchArr=readInput();
+    //part1(scratchArr);
+    part2(scratchArr);
+}
