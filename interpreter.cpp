@@ -702,23 +702,38 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 				fatalError(err);
 			}
 
-			if (vResult.type != liaVariableType::integer)
+			if ((vResult.type != liaVariableType::integer)&& (vResult.type != liaVariableType::longint))
 			{
 				std::string err = "";
-				err += "Only expressions of elements with type integer are supported at the moment. ";
+				err += "Only expressions of elements with type integer/long are supported at the moment. ";
 				err += "Terminating.";
 				fatalError(err);
 			}
 
-			int partialResult = std::get<int>(vResult.value);
-			int newVal = std::get<int>(v1.value);
+			if (vResult.type == liaVariableType::integer)
+			{
+				int partialResult = std::get<int>(vResult.value);
+				int newVal = std::get<int>(v1.value);
 
-			if (opz == "+") partialResult += newVal;
-			else if (opz == "-") partialResult -= newVal;
-			else if (opz == "*") partialResult *= newVal;
-			else if (opz == "/") partialResult /= newVal;
+				if (opz == "+") partialResult += newVal;
+				else if (opz == "-") partialResult -= newVal;
+				else if (opz == "*") partialResult *= newVal;
+				else if (opz == "/") partialResult /= newVal;
 
-			vResult.value = partialResult;
+				vResult.value = partialResult;
+			}
+			else if (vResult.type == liaVariableType::longint)
+			{
+				long long partialResult = std::get<long long>(vResult.value);
+				long long newVal = std::get<long long>(v1.value);
+
+				if (opz == "+") partialResult += newVal;
+				else if (opz == "-") partialResult -= newVal;
+				else if (opz == "*") partialResult *= newVal;
+				else if (opz == "/") partialResult /= newVal;
+
+				vResult.value = partialResult;
+			}
 
 			nodepos += 2;
 		}
@@ -889,6 +904,7 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 
 	liaVariable retVal;
 	std::vector<liaVariable> parameters;
+	size_t lineNum;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -902,6 +918,8 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					liaVariable arg = evaluateExpression(expr, env);
 					parameters.push_back(arg);
 				}
+
+				lineNum = ch->line;
 			}
 		}
 	}
@@ -924,7 +942,7 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0],env);
 					retVal=exeCuteLibFunctionReadFile(std::get<std::string>(p0.value),linenum);
 				}
-				else if (ch->token == "toInteger")
+				else if ((ch->token == "toInteger")|| (ch->token == "toLong"))
 				{
 					assert(theAst->nodes[1]->name == "ArgList");
 					assert(theAst->nodes[1]->nodes[0]->name == "Expression");
@@ -934,23 +952,38 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					if (p0.type != liaVariableType::string)
 					{
 						std::string err = "";
-						err += "toInteger accepts only string values. ";
+						err += "toInteger/toLong accepts only string values. ";
 						err += "Terminating.";
 						fatalError(err);
 					}
 
-					retVal.type = liaVariableType::integer;
+					if (ch->token == "toInteger")
+					{
+						retVal.type = liaVariableType::integer;
+					}
+					else if (ch->token == "toLong")
+					{
+						retVal.type = liaVariableType::longint;
+					}
+
 					std::string sVal = std::get<std::string>(p0.value);
 
 					try
 					{
-						retVal.value = std::stoi(sVal);
+						if (ch->token == "toInteger")
+						{
+							retVal.value = std::stoi(sVal);
+						}
+						else if (ch->token == "toLong")
+						{
+							retVal.value = std::stoll(sVal);
+						}
 					}
 					catch (...)
 					{
 						// unable to convert to integer
 						std::string err = "";
-						err += "Can't convert [" + sVal + "] to integer. ";
+						err += "Can't convert [" + sVal + "] to integer/long at line "+std::to_string(lineNum)+". ";
 						err += "Terminating.";
 						fatalError(err);
 					}
@@ -1518,6 +1551,10 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 		{
 			env->varMap[v->name].value = v->value;
 		}
+		else if (v->type == liaVariableType::longint)
+		{
+			env->varMap[v->name].value = v->value;
+		}
 		else if (v->type == liaVariableType::string)
 		{
 			env->varMap[v->name].value = v->value;
@@ -1659,10 +1696,12 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 				liaVariable lExpr = evaluateExpression(theAst->nodes[0], env);
 				liaVariable rExpr = evaluateExpression(theAst->nodes[2], env);
 
+				size_t line = theAst->nodes[0]->line;
+
 				if (lExpr.type != rExpr.type)
 				{
 					std::string err = "";
-					err += "Comparing variables of different types is forbidden. ";
+					err += "Comparing variables of different types ("+std::to_string(lExpr.type)+"-"+ std::to_string(rExpr.type) +") at line "+std::to_string(line) + " is forbidden. ";
 					err += "Terminating.";
 					fatalError(err);
 				}

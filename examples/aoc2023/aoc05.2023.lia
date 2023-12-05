@@ -1,0 +1,254 @@
+/* aoc 05 2023 - the return of the big ints */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc05.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc05.2023.test.txt");
+    return sarr;
+}
+
+fn extractSeeds(instr)
+{
+    line=instr[0];
+    a0=line.split(":");
+    sls=a0[1];
+    sl=sls.split(" ");
+    
+    sarr=[];
+    foreach (s in sl)
+    {
+        if (s.length>0)        
+        {
+            //sarr.add(toInteger(s));
+            sarr.add(toLong(s));
+        }
+    }
+
+    return sarr;
+}
+
+fn extractConvTables(instr)
+{
+    retConvTable=[];
+    convTableIsOpen=false;
+
+    foreach (row in instr)
+    {
+        if (row.find("seeds")>=0)
+        {
+        }
+        if (row.find("map:")>=0)
+        {
+            // a new convtable starts
+            if (convTableIsOpen==true)
+            {
+                minusOneL=toLong("-1");
+                retConvTable.add(minusOneL);
+            }
+            else
+            {
+                convTableIsOpen=true;
+            }
+        }
+        if ((row.find("map:")<0) && (row.find("seeds")<0) && (row.length!=0))
+        {
+            convArr=row.split(" ");
+            foreach (snum in convArr)
+            {
+                //retConvTable.add(toInteger(snum));
+                retConvTable.add(toLong(snum));
+            }
+        }
+    }
+
+    return retConvTable;
+}
+
+fn convert(s,convTable,idx)
+{
+    minusOneL=toLong("-1");
+
+    // jump to idx-th triplets
+    pos=0;
+    sectionNum=0;
+    while (sectionNum<idx)
+    {
+        if (convTable[pos]==minusOneL)
+        {
+            sectionNum+=1;
+            pos+=1;
+        }
+        else
+        {
+            pos+=3;
+        }
+    }
+
+    //print("Len of convTable is",convTable.length);
+    //print(convTable);
+    while (pos<convTable.length)
+    {
+        if (convTable[pos]==minusOneL)
+        {
+            return s;
+        }
+        else
+        {
+            //print("Pos is",pos);
+
+            destRangeStart=convTable[pos];
+            sourceRangeStart=convTable[pos+1];
+            rangeLength=convTable[pos+2];
+
+            //print("drs",destRangeStart,"srs",sourceRangeStart,"len",rangeLength);
+
+            if ((s>=sourceRangeStart)&&(s<(sourceRangeStart+rangeLength)))
+            {
+                res=destRangeStart+(s-sourceRangeStart);
+                return res;
+            }
+
+            //print("Continuing");
+            pos+=3;
+        }
+    }
+
+    return s;
+}
+
+fn process(s,convTable)
+{
+    print("seed",s);
+    p0=convert(s,convTable,0);
+    //print("p0",p0);
+    p1=convert(p0,convTable,1);
+    //print("p1",p1);
+    p2=convert(p1,convTable,2);
+    //print("p2",p2);
+    p3=convert(p2,convTable,3);
+    //print("p3",p3);
+    p4=convert(p3,convTable,4);
+    //print("p4",p4);
+    p5=convert(p4,convTable,5);
+    //print("p5",p5);
+    p6=convert(p5,convTable,6);
+    //print("p6",p6);
+
+    return p6;
+}
+
+fn part1(instr)
+{
+    // extract seeds numbers
+    seeds=extractSeeds(instr);
+    print(seeds);
+
+    // extract conversion tables
+    convTable=extractConvTables(instr);
+    //print(convTable);
+
+    minLocation=toLong("999999999999");
+    minSeed=toLong("0");
+    foreach (s in seeds)
+    {
+        location=process(s,convTable);
+        if (location<minLocation)
+        {
+            minLocation=location;
+            minSeed=s;
+        }
+    }
+    print(minLocation,minSeed);
+}
+
+fn extractSeedsP2(instr)
+{
+    line=instr[0];
+    a0=line.split(":");
+    sls=a0[1];
+    sl=sls.split(" ");
+    
+    sarr=[];
+    foreach (s in sl)
+    {
+        if (s.length>0)        
+        {
+            sarr.add(toLong(s));
+        }
+    }
+
+    realSeeds=[];
+
+    idx=0;
+    while (idx<sarr.length)
+    {
+        base=sarr[idx];
+        len=sarr[idx+1];
+
+        oneL=toLong("10000");
+        limit=base+len;
+        while (base<limit)
+        {
+            realSeeds.add(base);
+            base+=oneL;
+        }
+
+        idx+=2;
+    }
+
+    return realSeeds;
+}
+
+fn extractSeedsP3(instr)
+{
+    realSeeds=[];
+
+    base=toLong("2295834122");
+    end =toLong("2295844122");
+    oneL=toLong("1");
+    while (base<end)
+    {
+        realSeeds.add(base);
+        base+=oneL;
+    }
+
+    return realSeeds;
+}
+
+fn part2(instr)
+{
+    print("Extracting the universe");
+    seeds=extractSeedsP3(instr);
+    //print(seeds);
+
+    // extract conversion tables
+    convTable=extractConvTables(instr);
+    //print(convTable);
+
+    minLocation=toLong("999999999999");
+    minSeed=toLong("0");
+    foreach (s in seeds)
+    {
+        location=process(s,convTable);
+        if (location<minLocation)
+        {
+            minLocation=location;
+            minSeed=s;
+        }
+    }
+    print(minLocation,minSeed);
+}
+
+fn main(params)
+{
+    instr=readInput();
+    //part1(instr);
+    part2(instr);
+
+    //121677625 3826488878
+    //100630635 2296304122
+    //100380635 2296054122
+    //100255635 2295929122
+    //100170635 2295844122
+    //100165128 2295838615
+}
