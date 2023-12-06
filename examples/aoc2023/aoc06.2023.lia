@@ -1,0 +1,72 @@
+/* aoc 06 2023 - no parsing yay */
+
+fn getNumWaysToWin(time,dist)
+{
+    numWins=0;
+    timeCharging=1;
+
+    while(timeCharging<time)
+    {
+        distanceRun=(time-timeCharging)*timeCharging;
+        if (distanceRun>dist)
+        {
+            numWins+=1;
+        }
+        timeCharging+=1;
+    }
+
+    return numWins;
+}
+
+fn part1()
+{
+    // test data
+    // Time:      7  15   30
+    // Distance:  9  40  200    
+
+    //timeArr=[7,15,30];
+    //distArr=[9,40,200];
+
+    // prod data
+    // Time:        47     98     66     98
+    // Distance:   400   1213   1011   1540
+
+    timeArr=[47,98,66,98];
+    distArr=[400,1213,1011,1540];
+
+    totSum=1;
+    idx=0;
+    while (idx<timeArr.length)
+    {
+        numWaysToWin=getNumWaysToWin(timeArr[idx],distArr[idx]);
+        totSum*=numWaysToWin;
+        idx+=1;
+    }
+
+    print(totSum);
+}
+
+fn getNumWaysToWinEq(time,dist)
+{
+    // number of ways to win is the distance between the two intersections of a quadratic curve with the x axis
+    // -x^2+time*x>dist
+    // time*x-x^2-dist>0
+    // x^2-time*x+dist=0
+
+    fourL=toLong("4");
+    bSquaredMinus4ac=(time*time)-(fourL*dist);
+    print(lSqrt(bSquaredMinus4ac)+toLong("1"));
+}
+
+fn part2()
+{
+    //numWaysToWin=getNumWaysToWinEq(toLong("71530"),toLong("940200"));
+    numWaysToWin=getNumWaysToWinEq(toLong("47986698"),toLong("400121310111540"));
+    print(numWaysToWin);
+}
+
+fn main(params)
+{
+    //part1();
+    part2();
+}

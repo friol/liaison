@@ -1048,6 +1048,25 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(std::shared_ptr<peg::Ast> t
 					ss = (char)sVal;
 					retVal.value = ss;
 				}
+				else if (ch->token == "lSqrt")
+				{
+					// integer sqrt
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+
+					// parameter to convert must be lang lang
+					if (p0.type != liaVariableType::longint)
+					{
+						std::string err = "";
+						err += "Parameter for the 'lSqrt' function should be a longint. ";
+						err += "Terminating.";
+						fatalError(err);
+					}
+
+					retVal.type = liaVariableType::longint;
+					long long iVal = std::get<longint>(p0.value);
+					double fsq = sqrt(iVal);
+					retVal.value = (long long)fsq;
+				}
 				else if (ch->token == "getMillisecondsSinceEpoch")
 				{
 					// another function with an infinite name
@@ -1076,7 +1095,7 @@ void liaInterpreter::exeCuteVarDeclStatement(std::shared_ptr<peg::Ast> theAst, l
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	for (auto ch : theAst->nodes)
 	{
 		if (ch->is_token)
@@ -1153,7 +1172,7 @@ void liaInterpreter::exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, 
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	int mulAmount = 0;
 
 	for (auto ch : theAst->nodes)
@@ -1207,8 +1226,8 @@ void liaInterpreter::exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, li
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
-	int mulAmount = 0;
+	size_t curLine=0;
+	long long divAmount = 0;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -1225,14 +1244,22 @@ void liaInterpreter::exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, li
 			if (ch->name == "Expression")
 			{
 				liaVariable vInc = evaluateExpression(ch, env);
-				if (vInc.type != liaVariableType::integer)
+				if ((vInc.type != liaVariableType::integer)&& (vInc.type != liaVariableType::longint))
 				{
 					std::string err = "";
-					err += "Divide term should be an integer. ";
+					err += "Divide term should be an integer or a long int. ";
 					err += "Terminating.";
 					fatalError(err);
 				}
-				mulAmount = std::get<int>(vInc.value);
+
+				if (vInc.type == liaVariableType::integer)
+				{
+					divAmount = std::get<int>(vInc.value);
+				}
+				else if (vInc.type == liaVariableType::longint)
+				{
+					divAmount = std::get<long long>(vInc.value);
+				}
 			}
 		}
 	}
@@ -1242,7 +1269,12 @@ void liaInterpreter::exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, li
 	if (variable.type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(env->varMap[theVar.name].value);
-		env->varMap[theVar.name].value = vv /= mulAmount;
+		env->varMap[theVar.name].value = vv /= (int)divAmount;
+	}
+	else if (variable.type == liaVariableType::longint)
+	{
+		long long vv = std::get<long long>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv /= divAmount;
 	}
 	else
 	{
@@ -1261,7 +1293,7 @@ void liaInterpreter::exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast> theAst
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	int rExpr = 0;
 
 	for (auto ch : theAst->nodes)
@@ -1305,7 +1337,7 @@ void liaInterpreter::exeCuteLogicalOrStatement(std::shared_ptr<peg::Ast> theAst,
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	int rExpr = 0;
 
 	for (auto ch : theAst->nodes)
@@ -1349,7 +1381,7 @@ void liaInterpreter::exeCuteRshiftStatement(std::shared_ptr<peg::Ast> theAst, li
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	int rshiftAmount = 0;
 
 	for (auto ch : theAst->nodes)
@@ -1396,7 +1428,7 @@ void liaInterpreter::exeCuteLshiftStatement(std::shared_ptr<peg::Ast> theAst, li
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	int lshiftAmount = 0;
 
 	for (auto ch : theAst->nodes)
@@ -1443,7 +1475,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
-	size_t curLine;
+	size_t curLine=0;
 	liaVariable theInc;
 	liaVariable dictKey;
 
