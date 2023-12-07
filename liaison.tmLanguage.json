@@ -1,0 +1,41 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "liaison",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#linecomment"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.liaison",
+				"match": "\\b(if|while|for|fn|return|print|split|find|readTextFileLineByLine|toInteger|toString|toLong|lSqrt|getMillisecondsSinceEpoch)\\b"
+			}]
+		},
+		"linecomment": {
+			"patterns": [{
+				"name": "comment.line.as",
+				"match":  "(\/\/).*$\n?"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.liaison",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.liaison",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.lia"
+}
