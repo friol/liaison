@@ -6,6 +6,7 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
+// check if evaluating a function calls it two times
 // circuit breaking if statements with && 
 // one-line comments // DONE
 // multi-line comments // DONE
