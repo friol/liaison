@@ -244,6 +244,57 @@ fn test15()
     }
 }
 
+fn test16()
+{
+    a=1;
+    b="2";
+    c=6-3;
+    d=8-4;
+
+    e=a+toInteger(b)+c+(d*d);
+
+    if (e==22)
+    {
+        print("Test 16 passed.");
+    }
+    else
+    {
+        print("Test 16 failed.");
+    }
+}
+
+fn test17()
+{
+    a=1;
+    b="2";
+    c=6-3;
+
+    if ((a==1)&&(b=="2")&&(c==3))
+    {
+        print("Test 17 passed.");
+    }
+    else
+    {
+        print("Test 17 failed.");
+    }
+}
+
+fn test18()
+{
+    a=toLong("9223372036854775800");
+    b=toLong("7");
+    c=a+b;
+
+    if (c==toLong("9223372036854775807"))
+    {
+        print("Test 18 passed.");
+    }
+    else
+    {
+        print("Test 18 failed.");
+    }
+}
+
 fn main(params)
 {
     print("Lia test suite v0.1");
@@ -277,4 +328,10 @@ fn main(params)
     test14();
     /* array concatenation-'sum' */
     test15();
+    /* complex math expressions */
+    test16();
+    /* complex logic expressions */
+    test17();
+    /* long long ints */
+    test18();
 }

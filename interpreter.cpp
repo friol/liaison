@@ -1501,6 +1501,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 			if (ch->name == "Expression")
 			{
 				theInc = evaluateExpression(ch,env);
+				curLine = ch->line;
 			}
 		}
 	}
@@ -1508,7 +1509,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	if (env->varMap.find(theVar.name) == env->varMap.end())
 	{
 		std::string err = "";
-		err += "Variable "+theVar.name+" not found.";
+		err += "Variable \""+theVar.name+"\" not found at line "+std::to_string(curLine)+". ";
 		err += "Terminating.";
 		fatalError(err);
 	}
@@ -1521,7 +1522,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		if (pvar->type != theInc.type)
 		{
 			std::string err = "";
-			err += "Variables " + theVar.name + " and increment should be of the same type. ";
+			err += "Variable \"" + theVar.name + "\" and increment should be of the same type. ";
 			err += "Terminating.";
 			fatalError(err);
 		}
