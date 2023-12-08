@@ -1288,6 +1288,73 @@ void liaInterpreter::exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, li
 	// TODO: handle other types
 }
 
+void liaInterpreter::exeCuteModuloStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine = 0;
+	long long modAmount = 0;
+
+	for (auto ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				theVar.name += ch->token;
+				curLine = ch->line;
+			}
+		}
+		else
+		{
+			if (ch->name == "Expression")
+			{
+				liaVariable vInc = evaluateExpression(ch, env);
+				if ((vInc.type != liaVariableType::integer) && (vInc.type != liaVariableType::longint))
+				{
+					std::string err = "";
+					err += "Modulo term should be an integer or a long int. ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				if (vInc.type == liaVariableType::integer)
+				{
+					modAmount = std::get<int>(vInc.value);
+				}
+				else if (vInc.type == liaVariableType::longint)
+				{
+					modAmount = std::get<long long>(vInc.value);
+				}
+			}
+		}
+	}
+
+	liaVariable variable = env->varMap[theVar.name];
+
+	if (variable.type == liaVariableType::integer)
+	{
+		int vv = std::get<int>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv %= (int)modAmount;
+	}
+	else if (variable.type == liaVariableType::longint)
+	{
+		long long vv = std::get<long long>(env->varMap[theVar.name].value);
+		env->varMap[theVar.name].value = vv %= modAmount;
+	}
+	else
+	{
+		std::string err = "";
+		err += "Trying to perform modulo on a variable of other type";
+		err += " at line " + std::to_string(curLine) + ".";
+		err += "Terminating.";
+		fatalError(err);
+	}
+
+	// TODO: handle other types
+}
+
 void liaInterpreter::exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
@@ -1479,7 +1546,7 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	liaVariable theInc;
 	liaVariable dictKey;
 
-	for (auto ch : theAst->nodes)
+	for (auto& ch : theAst->nodes)
 	{
 		if (ch->name == "ArraySubscript")
 		{
@@ -1517,15 +1584,12 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	liaVariable* pvar = NULL;
 	pvar = &env->varMap[theVar.name];
 
-	if (pvar->type != liaVariableType::dictionary)
+	if ( (pvar->type != liaVariableType::dictionary) && (pvar->type != theInc.type) )
 	{
-		if (pvar->type != theInc.type)
-		{
-			std::string err = "";
-			err += "Variable \"" + theVar.name + "\" and increment should be of the same type. ";
-			err += "Terminating.";
-			fatalError(err);
-		}
+		std::string err = "";
+		err += "Variable \"" + theVar.name + "\" and increment should be of the same type. ";
+		err += "Terminating.";
+		fatalError(err);
 	}
 
 	if (pvar->type == liaVariableType::integer)
@@ -1764,7 +1828,7 @@ liaVariable liaInterpreter::exeCuteWhileStatement(std::shared_ptr<peg::Ast> theA
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
 
-	for (auto ch : theAst->nodes)
+	for (auto& ch : theAst->nodes)
 	{
 		if (ch->name == "Condition")
 		{
@@ -1931,7 +1995,7 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 {
 	liaVariable retVal;
 
-	for (auto stmt : theAst->nodes)
+	for (auto& stmt : theAst->nodes)
 	{
 		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
 		
@@ -1971,6 +2035,10 @@ liaVariable liaInterpreter::exeCuteCodeBlock(std::shared_ptr<peg::Ast> theAst,li
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "LshiftStmt"))
 		{
 			exeCuteLshiftStatement(stmt->nodes[0], env);
+		}
+		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "ModuloStmt"))
+		{
+			exeCuteModuloStatement(stmt->nodes[0], env);
 		}
 		else if ((stmt->nodes.size() == 1) && (stmt->nodes[0]->name == "LogicalAndStmt"))
 		{

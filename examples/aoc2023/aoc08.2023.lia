@@ -1,0 +1,212 @@
+/* aoc 08 2023 - the day after roasting */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc08.2023.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc08.2023.test2.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc08.2023.txt");
+    return sarr;
+}
+
+fn findNextNode(curNode,dir,turns,dirpos)
+{
+    idx=0;
+    nextNode="";
+    while (idx<turns.length)
+    {
+        curTurn=turns[idx];
+        if ((curTurn[0]==curNode[0])&&(curTurn[1]==curNode[1])&&(curTurn[2]==curNode[2]))
+        {
+            if (dir[dirpos]=="L")
+            {
+                nextNode+=curTurn[7];
+                nextNode+=curTurn[8];
+                nextNode+=curTurn[9];
+            }
+            else
+            {
+                nextNode+=curTurn[12];
+                nextNode+=curTurn[13];
+                nextNode+=curTurn[14];
+            }
+        }
+
+        idx+=1;
+    }
+
+    return nextNode;
+}
+
+fn part1(dir,turns)
+{
+    steps=0;
+    curNode="AAA";
+    dirpos=0;
+
+    while (curNode!="ZZZ")
+    {
+        curNode=findNextNode(curNode,dir,turns,dirpos);
+        print(curNode);
+        steps+=1;
+        dirpos+=1;
+
+        if (dirpos==dir.length)
+        {
+            dirpos=0;
+        }
+    }
+    
+    print(steps);
+}
+
+fn fillStartingNodes(turns)
+{
+    res=[];
+    idx=0;
+    while (idx<turns.length)
+    {
+        t=turns[idx];
+        if (t[2]=="A")
+        {
+            s=t[0];
+            s+=t[1];
+            s+=t[2];
+            res.add(s);
+        }
+
+        idx+=3;
+    }
+
+    return res;
+}
+
+fn findNextNodes(curNodeArr,turns,direction)
+{
+    newNodeArr=[];
+
+    foreach (n in curNodeArr)
+    {
+        idx=0;
+        found=false;
+        while ((idx<turns.length)&&(found==false))
+        {
+            if (n==turns[idx])
+            {
+                found=true;
+                if (direction=="L")
+                {
+                    nextNode=turns[idx+1];
+                }
+                else
+                {
+                    nextNode=turns[idx+2];
+                }
+                newNodeArr.add(nextNode);
+            }
+
+            idx+=3;
+        }
+    }
+
+    return newNodeArr;
+}
+
+fn areAllGhostsOnZ(curNodeArr)
+{
+    zc=0;
+    foreach (n in curNodeArr)
+    {
+        if (n[2]=="Z")
+        {
+            zc+=1;
+        }
+    }
+
+    if (zc==curNodeArr.length)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn part2(dir,turns)
+{
+    numArr=[];
+    masterNodeArr=[];
+
+    masterNodeArr=fillStartingNodes(turns);
+
+    idx=0;
+    while (idx<masterNodeArr.length)
+    {
+        dirpos=0;
+        nsteps=0;
+        allGhostsOnZs=false;
+        k=masterNodeArr[idx];
+        curNodeArr=[];
+        curNodeArr.add(k);
+
+        while (allGhostsOnZs==false)
+        {
+            direction=dir[dirpos];
+            curNodeArr=findNextNodes(curNodeArr,turns,direction);
+
+            dirpos+=1;
+            dirpos%=dir.length;
+            nsteps+=1;
+
+            allGhostsOnZs=areAllGhostsOnZ(curNodeArr);
+        }
+
+        numArr.add(nsteps);
+        idx+=1;
+    }
+
+    print("Result is LCM of",numArr);
+}
+
+fn createTurns(iarr)
+{
+    tarr=[];
+
+    idx=2;
+    while (idx<iarr.length)
+    {
+        line=iarr[idx];
+        print("Processing",line);
+        
+        s=line[0];
+        s+=line[1];
+        s+=line[2];
+        tarr.add(s);
+
+        s=line[7];
+        s+=line[8];
+        s+=line[9];
+        tarr.add(s);
+
+        s=line[12];
+        s+=line[13];
+        s+=line[14];
+        tarr.add(s);
+
+        idx+=1;
+    }
+
+    return tarr;
+}
+
+fn main(params)
+{
+    instr=readInput();
+
+    directions=instr[0];
+    turns=[];
+
+    turns=createTurns(instr);
+    //print(turns);
+
+    //part1(directions,turns);
+    part2(directions,turns);
+}

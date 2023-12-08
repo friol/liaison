@@ -89,6 +89,7 @@ private:
 	void exeCuteLogicalOrStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	void exeCuteDivideStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
+	void exeCuteModuloStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	
 	liaVariable exeCuteWhileStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	liaVariable exeCuteForeachStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
