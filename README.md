@@ -31,7 +31,7 @@ An [example program](https://github.com/friol/liaison/blob/master/examples/test.
 <br/>
 
 ### Compiling
-The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
+The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022.<br/>Just load the project and hit "compile solution".
 <br/><br/>
 ### My thoughts on the experience of developing Liaison
 As of this writing, we are at ~~day 2~~ ~~day 4~~ day 8 of Advent of Code, and I managed to solve ~~both~~ all of the days with Liaison (making small additions/fixes, like implementing the "find" function for strings and not only for arrays, and so on).<br/><br/>
