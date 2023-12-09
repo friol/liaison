@@ -585,41 +585,70 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 	}
 	else if (theAst->nodes[0]->name == "ArraySubscript")
 	{
-		//std::cout << peg::ast_to_s(ch);
+		//std::cout << peg::ast_to_s(theAst->nodes[0]);
+		size_t lineNum = theAst->nodes[0]->line;
+
 		std::string arrName;
 		arrName += theAst->nodes[0]->nodes[0]->token;
 
-		assert(theAst->nodes[0]->nodes[1]->name == "Expression");
-
-		liaVariable vIdx = evaluateExpression(theAst->nodes[0]->nodes[1], env);
-		
-		// can be a string too, for dictionaries
-		//assert(vIdx.type == liaVariableType::integer);
+		std::vector<liaVariable> vIdxArr;
+		for (auto& node : theAst->nodes[0]->nodes)
+		{
+			if (node->name == "Expression")
+			{
+				liaVariable vIdx = evaluateExpression(node, env);
+				vIdxArr.push_back(vIdx);
+			}
+		}
 
 		if (env->varMap[arrName].type == liaVariableType::array)
 		{
-			int arrIdx = std::get<int>(vIdx.value);
-			
-			if (arrIdx >= env->varMap[arrName].vlist.size())
+			liaVariable* pArr = &env->varMap[arrName];
+
+			for (auto& idx : vIdxArr)
+			{
+				int arrIdx = std::get<int>(idx.value);
+
+				if (arrIdx >= pArr->vlist.size())
+				{
+					std::string err;
+					err += "Array index out of range at " + std::to_string(lineNum) + ". ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				pArr = &pArr->vlist[arrIdx];
+			}
+
+			retVar.type = pArr->type;
+			retVar.value = pArr->value;
+			retVar.vlist = pArr->vlist;
+		}
+		else if (env->varMap[arrName].type == liaVariableType::dictionary)
+		{
+			if (vIdxArr.size() != 1)
 			{
 				std::string err;
-				err += "Array index out of range. ";
+				err += "Dictionaries can only be indexed once. ";
 				err += "Terminating.";
 				fatalError(err);
 			}
 
-			retVar.type = env->varMap[arrName].vlist[0].type;
-			retVar.value = env->varMap[arrName].vlist[arrIdx].value;
-		}
-		else if (env->varMap[arrName].type == liaVariableType::dictionary)
-		{
-			std::string key = std::get<std::string>(vIdx.value);
+			std::string key = std::get<std::string>(vIdxArr[0].value);
 			retVar.type = env->varMap[arrName].vMap[key].type;
 			retVar.value = env->varMap[arrName].vMap[key].value;
 		}
 		else if (env->varMap[arrName].type == liaVariableType::string)
 		{
-			int arrIdx = std::get<int>(vIdx.value);
+			if (vIdxArr.size() != 1)
+			{
+				std::string err;
+				err += "Strings are mono-dimensional. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			int arrIdx = std::get<int>(vIdxArr[0].value);
 			std::string tmp = std::get<std::string>(env->varMap[arrName].value);
 
 			if (arrIdx >= tmp.size())
@@ -748,6 +777,63 @@ liaVariable liaInterpreter::evaluateExpression(std::shared_ptr<peg::Ast> theAst,
 	return retVar;
 }
 
+void liaInterpreter::innerPrint(liaVariable& var)
+{
+	if (var.type == liaVariableType::array)
+	{
+		bool first = true;
+		std::cout << "[";
+		for (auto& el : var.vlist)
+		{
+			if (!first) std::cout << ",";
+			innerPrint(el);
+
+			/*if (el.type == liaVariableType::string)
+			{
+				std::visit([](const auto& x) { std::cout << "\"" << x << "\""; }, el.value);
+			}
+			else
+			{
+				std::visit([](const auto& x) { std::cout << x; }, el.value);
+			}*/
+			first = false;
+		}
+		std::cout << "]";
+	}
+	else if (var.type == liaVariableType::dictionary)
+	{
+		bool first = true;
+		std::cout << "{";
+
+		for (const auto& myPair : var.vMap)
+		{
+			if (!first) std::cout << ",";
+			std::cout << "\"" << myPair.first << "\"" << ":";
+			std::cout << std::get<int>(myPair.second.value);
+			first = false;
+		}
+		std::cout << "} ";
+	}
+	else if (var.type == liaVariableType::boolean)
+	{
+		if (std::get<bool>(var.value) == true) std::cout << "true";
+		else std::cout << "false";
+	}
+	else
+	{
+		if (var.type == liaVariableType::string)
+		{
+			std::string vv;
+			vv += std::get<std::string>(var.value);
+		}
+
+		std::visit([](const auto& x) { std::cout << x; }, var.value);
+		//std::cout << " ";
+	}
+
+
+}
+
 void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env)
 {
 	//std::cout << peg::ast_to_s(theAst);
@@ -757,56 +843,7 @@ void liaInterpreter::exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,li
 	for (auto node : theAst->nodes)
 	{
 		liaVariable retVar = evaluateExpression(node, env);
-
-		if (retVar.type == liaVariableType::array)
-		{
-			bool first = true;
-			std::cout << "[";
-			for (auto el : retVar.vlist)
-			{
-				if (!first) std::cout << ",";
-				if (el.type == liaVariableType::string)
-				{
-					std::visit([](const auto& x) { std::cout << "\"" << x << "\""; }, el.value);
-				}
-				else
-				{
-					std::visit([](const auto& x) { std::cout << x; }, el.value);
-				}
-				first = false;
-			}
-			std::cout << "] ";
-		}
-		else if (retVar.type == liaVariableType::dictionary)
-		{
-			bool first = true;
-			std::cout << "{";
-
-			for (const auto& myPair : retVar.vMap) 
-			{
-				if (!first) std::cout << ",";
-				std::cout << "\"" << myPair.first << "\"" << ":";
-				std::cout << std::get<int>(myPair.second.value);
-				first = false;
-			}
-			std::cout << "} ";
-		}
-		else if (retVar.type == liaVariableType::boolean)
-		{
-			if (std::get<bool>(retVar.value) == true) std::cout << "true";
-			else std::cout << "false";
-		}
-		else
-		{
-			if (retVar.type == liaVariableType::string)
-			{
-				std::string vv;
-				vv += std::get<std::string>(retVar.value);
-			}
-
-			std::visit([](const auto& x) { std::cout << x; }, retVar.value);
-			std::cout << " ";
-		}
+		innerPrint(retVar);
 	}
 
 	std::cout << std::endl;
@@ -1594,13 +1631,13 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 		fatalError(err);
 	}
 
-	if ((pvar->type == liaVariableType::array) && (!isSubscript))
+	/*if ((pvar->type == liaVariableType::array) && (!isSubscript))
 	{
 		std::string err;
 		err += "You can't increment an array at line " + std::to_string(curLine) + ". ";
 		err += "Terminating.";
 		fatalError(err);
-	}
+	}*/
 
 	if ((pvar->type != liaVariableType::array) && (pvar->type != liaVariableType::dictionary) && (pvar->type != theInc.type) )
 	{
@@ -1632,9 +1669,21 @@ void liaInterpreter::exeCuteIncrementStatement(std::shared_ptr<peg::Ast> theAst,
 	}
 	else if (pvar->type == liaVariableType::array)
 	{
-		int iInc = std::get<int>(theInc.value);
-		int vecVal = std::get<int>(pvar->vlist[std::get<int>(dictKey.value)].value);
-		pvar->vlist[std::get<int>(dictKey.value)].value = vecVal+(iInc * inc);
+		if (isSubscript)
+		{
+			// arr[x]+=n;
+			int iInc = std::get<int>(theInc.value);
+			int vecVal = std::get<int>(pvar->vlist[std::get<int>(dictKey.value)].value);
+			pvar->vlist[std::get<int>(dictKey.value)].value = vecVal + (iInc * inc);
+		}
+		else
+		{
+			// arr1+=arr2; (concatenation of arrays)
+			for (auto& el : theInc.vlist)
+			{
+				pvar->vlist.push_back(el);
+			}
+		}
 	}
 	else if (pvar->type == liaVariableType::dictionary)
 	{

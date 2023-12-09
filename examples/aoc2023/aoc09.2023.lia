@@ -1,0 +1,161 @@
+/* aoc 09 2023 */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc09.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc09.2023.test.txt");
+    return sarr;
+}
+
+fn areAllZero(l)
+{
+    foreach (el in l)
+    {
+        if (el!=0)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn process(nlist)
+{
+    listOfLists=[];
+    listOfLists.add(nlist);
+
+    // first build the upside-down pyramid
+
+    terminate=false;
+    nextList=nlist;
+
+    while (terminate==false)
+    {
+        curList=[];
+        curList=nextList;
+        nextList=[];
+        idx=0;
+        while (idx<(curList.length-1))
+        {
+            diff=curList[idx+1]-curList[idx];
+            nextList.add(diff);
+            idx+=1;
+        }
+        listOfLists.add(nextList);
+        if (areAllZero(nextList)==true)
+        {
+            terminate=true;
+        }
+    }
+
+    //print(listOfLists);
+    // then complete the pyramid with the last numbers for each row
+
+    lastVal=0;
+    idx=listOfLists.length-2;
+    while (idx>=0)
+    {
+        curRow=listOfLists[idx];
+        val2=curRow[curRow.length-1];
+        lastVal=val2+lastVal;
+
+        idx-=1;
+    }
+
+    return lastVal;
+}
+
+fn process2(nlist)
+{
+    listOfLists=[];
+    listOfLists.add(nlist);
+
+    // first build the upside-down pyramid
+
+    terminate=false;
+    nextList=nlist;
+
+    while (terminate==false)
+    {
+        curList=[];
+        curList=nextList;
+        nextList=[];
+        idx=0;
+        while (idx<(curList.length-1))
+        {
+            diff=curList[idx+1]-curList[idx];
+            nextList.add(diff);
+            idx+=1;
+        }
+        listOfLists.add(nextList);
+        if (areAllZero(nextList)==true)
+        {
+            terminate=true;
+        }
+    }
+
+    //print(listOfLists);
+    // then complete the pyramid with the first numbers for each row
+
+    lastVal=0;
+    idx=listOfLists.length-2;
+    while (idx>=0)
+    {
+        curRow=listOfLists[idx];
+        val2=curRow[0];
+        lastVal=val2-lastVal;
+
+        idx-=1;
+    }
+
+    return lastVal;
+}
+
+fn part2(nums)
+{
+    sumOfLastValues=0;
+
+    foreach (al in nums)
+    {
+        inLine=[];
+        numL=al.split(" ");
+        foreach (n in numL)
+        {
+            inLine.add(toInteger(n));
+        }
+
+        nextVal=process2(inLine);
+        //print(nextVal);
+        sumOfLastValues+=nextVal;
+    }
+
+    print(sumOfLastValues);
+}
+
+fn part1(nums)
+{
+    sumOfLastValues=0;
+
+    foreach (al in nums)
+    {
+        inLine=[];
+        numL=al.split(" ");
+        foreach (n in numL)
+        {
+            inLine.add(toInteger(n));
+        }
+
+        nextVal=process(inLine);
+        sumOfLastValues+=nextVal;
+    }
+
+    print(sumOfLastValues);
+}
+
+fn main(params)
+{
+    numbers=readInput();
+    //part1(numbers);    
+    part2(numbers);    
+}

@@ -109,7 +109,7 @@ liaParser::liaParser()
 	IntegerList <- IntegerNumber (',' IntegerNumber)*
 	StringList <- StringLiteral (',' StringLiteral)*
 
-	ArraySubscript <- VariableName '[' Expression ']'
+	ArraySubscript <- VariableName '[' Expression ']' ('[' Expression ']')*
 
 	VariableWithProperty <- VariableName '.' Property
 	Property <- 'length' / 'keys'

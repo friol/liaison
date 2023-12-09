@@ -105,6 +105,7 @@ private:
 	liaVariable exeCuteForeachStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	liaVariable exeCuteIfStatement(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
 	
+	void innerPrint(liaVariable& var);
 	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast> theAst,liaEnvironment* env);
 	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);
 

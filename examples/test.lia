@@ -21,11 +21,12 @@ fn test1()
     v+=42;
     if (v==84)
     {
-        print("Test 1 passed.");
+        return 1;
     }
     else
     {
         print("Test 1 failed.");
+        return 0;
     }
 }
 
@@ -37,11 +38,12 @@ fn test2()
 
     if (l==7)
     {
-        print("Test 2 passed.");
+        return 1;
     }
     else
     {
         print("Test 2 failed.");
+        return 0;
     }
 }
 
@@ -51,11 +53,12 @@ fn test3()
     res=fun2(fun1(n));
     if (res==30)
     {
-        print("Test 3 passed.");
+        return 1;
     }
     else
     {
         print("Test 3 failed.");
+        return 0;
     }
 }
 
@@ -64,11 +67,12 @@ fn test4()
     s="precipitevolissimevolmente";
     if (s.length==26)
     {
-        print("Test 4 passed.");
+        return 1;
     }
     else
     {
         print("Test 4 failed.");
+        return 0;
     }
 }
 
@@ -78,43 +82,53 @@ fn test5()
     arr=s.split(" ");
     if (arr[6]=="split")
     {
-        print("Test 5 passed.");
+        return 1;
     }
     else
     {
         print("Test 5 failed.");
+        return 0;
     }
 }
 
 fn test6()
 {
     idx=0;
-    while (idx<10)
+    while (idx<1000)
     {
-        idx+=1;
+        idx+=(3-2);
     }
 
-    if (idx==10)
+    if (idx==1000)
     {
-        print("Test 6 passed.");
+        return 1;
     }
     else
     {
         print("Test 6 failed.");
+        return 0;
     }
 }
 
 fn test7()
 {
-    arr=[1,2,3,4,5];
-    pos=arr.find(5);
-    if (pos==4)
+    arr=[];
+    idx=0;
+    while (idx<10000)
     {
-        print("Test 7 passed.");
+        arr.add(idx);
+        idx+=1;
+    }
+
+    pos=arr.find(5689);
+    if (pos==5689)
+    {
+        return 1;
     }
     else
     {
-        print("Test 7 failed.");
+        print("Test 7 failed, pos is ",pos);
+        return 0;
     }
 }
 
@@ -125,11 +139,12 @@ fn test8(a,b,c)
     res*=c;
     if (res==24)
     {
-        print("Test 8 passed.");
+        return 1;
     }
     else
     {
         print("Test 8 failed.");
+        return 0;
     }
 }
 
@@ -139,11 +154,12 @@ fn test9()
     i=toInteger(s);
     if (i==42)
     {
-        print("Test 9 passed.");
+        return 1;
     }
     else
     {
         print("Test 9 failed.");
+        return 0;
     }
 }
 
@@ -153,11 +169,12 @@ fn test10()
     n>>=2;
     if (n==1024)
     {
-        print("Test 10 passed.");
+        return 1;
     }
     else
     {
         print("Test 10 failed.");
+        return 0;
     }
 }
 
@@ -172,11 +189,12 @@ fn test11()
 
     if (s=="compose me")
     {
-        print("Test 11 passed.");
+        return 1;
     }
     else
     {
         print("Test 11 failed.");
+        return 0;
     }
 }
 
@@ -192,11 +210,12 @@ fn test12()
     
     if (res==42)
     {
-        print("Test 12 passed.");
+        return 1;
     }
     else
     {
         print("Test 12 failed.");
+        return 0;
     }
 }
 
@@ -206,11 +225,12 @@ fn test13()
     sk=toString(k);
     if (sk=="42")
     {
-        print("Test 13 passed.");
+        return 1;
     }
     else
     {
         print("Test 13 failed.");
+        return 0;
     }
 }
 
@@ -221,11 +241,12 @@ fn test14()
 
     if (a<=b)
     {
-        print("Test 14 passed.");
+        return 1;
     }
     else
     {
         print("Test 14 failed.");
+        return 0;
     }
 }
 
@@ -236,11 +257,12 @@ fn test15()
     a1+=a2;
     if (a1.length==7)
     {
-        print("Test 15 passed.");
+        return 1;
     }
     else
     {
         print("Test 15 failed.");
+        return 0;
     }
 }
 
@@ -255,11 +277,12 @@ fn test16()
 
     if (e==22)
     {
-        print("Test 16 passed.");
+        return 1;
     }
     else
     {
         print("Test 16 failed.");
+        return 0;
     }
 }
 
@@ -271,11 +294,12 @@ fn test17()
 
     if ((a==1)&&(b=="2")&&(c==3))
     {
-        print("Test 17 passed.");
+        return 1;
     }
     else
     {
         print("Test 17 failed.");
+        return 0;
     }
 }
 
@@ -287,51 +311,124 @@ fn test18()
 
     if (c==toLong("9223372036854775807"))
     {
-        print("Test 18 passed.");
+        return 1;
     }
     else
     {
         print("Test 18 failed.");
+        return 0;
+    }
+}
+
+fn test19()
+{
+    a=toLong("4096");
+    b=toLong("4096");
+    c=a*b;
+    d=lSqrt(c);
+    
+    if (d==toLong("4096"))
+    {
+        return 1;
+    }
+    else
+    {
+        print("Test 19 failed.");
+        return 0;
+    }
+}
+
+fn test20()
+{
+    a=[1,2,3,4];
+    b=[5,6,7,8];
+    c=[];
+    c.add(a);
+    c.add(b);
+    k=c[0][1];
+    j=c[1][1];
+    
+    r=k+j;
+    if (r==8)
+    {
+        return 1;
+    }
+    else
+    {
+        print("Test 20 failed.");
+        return 0;
+    }
+}
+
+fn test21()
+{
+    a=256;
+    a%=64;
+
+    if (a==0)
+    {
+        return 1;
+    }
+    else
+    {
+        print("Test 21 failed.");
+        return 0;
     }
 }
 
 fn main(params)
 {
-    print("Lia test suite v0.1");
+    print("Lia test suite v0.3 starting...");
+    t0=getMillisecondsSinceEpoch();
+
+    res=0;
     /* test variable assignment and increment */
-    test1();
+    res+=test1();
     /* tests array 'add' function and length */
-    test2();
+    res+=test2();
     /* tests nested functions */
-    test3();
+    res+=test3();
     /* test 4 tests string variables and length */
-    test4();
+    res+=test4();
     /* test 5 tests split function */
-    test5();
+    res+=test5();
     /* test 6 tests the while statement */
-    test6();
+    res+=test6();
     /* test 7 tests the find function for arrays */
-    test7();
+    res+=test7();
     /* passing multiple parameters to a function */
-    test8(2,3,4);
+    res+=test8(2,3,4);
     /* tests the toInteger function */
-    test9();
+    res+=test9();
     /* tests the right shift operator */
-    test10();
+    res+=test10();
     /* tests foreach cycles */
-    test11();
+    res+=test11();
     /* test 12 - dictionaries */
-    test12();
+    res+=test12();
     /* test 13 - toString */
-    test13();
+    res+=test13();
     /* test 14 - array comparison */
-    test14();
+    res+=test14();
     /* array concatenation-'sum' */
-    test15();
+    res+=test15();
     /* complex math expressions */
-    test16();
+    res+=test16();
     /* complex logic expressions */
-    test17();
+    res+=test17();
     /* long long ints */
-    test18();
+    res+=test18();
+    /* lSqrt function */
+    res+=test19();
+    /* arrays of arrays */
+    res+=test20();
+    /* modulo statement */
+    res+=test21();
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+
+    print(res,"/21 tests passed.");
+    print("Execution time:",t1);
+    // exec. time around 730ms in debug on my pc
 }
