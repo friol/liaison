@@ -39,8 +39,8 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		sourceFileName = "d:\\prova\\liaPrograms\\aoc08.2023.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // perf.test
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc09.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
@@ -78,7 +78,14 @@ int main(int argc,char** argv)
 			}
 		}
 
-		theLiaInterpreter.exeCute(theLiaParser.theAst,params);
+		try
+		{
+			theLiaInterpreter.exeCute(theLiaParser.theAst, params);
+		}
+		catch (...)
+		{
+			return 1;
+		}
 	}
 
 	return 0;

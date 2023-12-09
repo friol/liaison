@@ -58,6 +58,16 @@ struct liaFunction
 	std::shared_ptr<peg::Ast> functionCodeBlockAst;
 };
 
+class interpreterException : public std::exception 
+{
+public:
+	char* what() 
+	{
+		return (char*)"Interpreter exception";
+	}
+};
+
+
 class liaInterpreter
 {
 private:
@@ -112,7 +122,6 @@ public:
 	void dumpFunctions();
 	void exeCute(std::shared_ptr<peg::Ast> theAst,std::vector<std::string> params);
 	~liaInterpreter();
-
 };
 
 #endif
