@@ -21,7 +21,7 @@ fn main(params)
 
 (you already know what this code does).<br/>
 <br/>
-Liaison also has some "advanced" (let's call them this way) features, like booleans, arrays (but not arrays of arrays, at the moment), dictionaries, methods and properties for "objects" (like s.length or arr.split("x")) and circuit breaking (return statements immediately exit from a function).<br/>
+Liaison also has some "advanced" (let's call them this way) features, like booleans, arrays ~~(but not arrays of arrays, at the moment)~~, dictionaries, methods and properties for "objects" (like s.length or arr.split("x")) and circuit breaking (return statements immediately exit from a function).<br/>
 
 ~~Unfortunately, at the moment, Liaison is missing some "basic" functionalities like arithmetic and logic expressions. So you cannot write ```a=(a+1)*2;``` but you can always write ```a+=1; a*=2;``` (in more steps).~~
 <br/><br/>
@@ -31,7 +31,7 @@ An [example program](https://github.com/friol/liaison/blob/master/examples/test.
 <br/>
 
 ### Compiling
-The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022. Just load the project and hit "compile solution".
+The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022.<br/>Just load the project and hit "compile solution".
 <br/><br/>
 ### My thoughts on the experience of developing Liaison
 As of this writing, we are at ~~day 2~~ ~~day 4~~ day 8 of Advent of Code, and I managed to solve ~~both~~ all of the days with Liaison (making small additions/fixes, like implementing the "find" function for strings and not only for arrays, and so on).<br/><br/>
