@@ -6,7 +6,9 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
-// check if evaluating a function calls it two times
+// check if evaluating a function calls it two times // DONE
+// convert (almost) all the assertions to ifs
+// convert arraylist to expression list
 // circuit breaking if statements with && 
 // one-line comments // DONE
 // multi-line comments // DONE

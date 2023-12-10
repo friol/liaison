@@ -15,7 +15,7 @@
 //
 //
 
-const std::string appVersion = "0.5a";
+const std::string appVersion = "0.6a";
 
 void usage()
 {
@@ -31,7 +31,7 @@ int main(int argc,char** argv)
 		return 1;
 	}*/
 
-	std::string sourceFileName = "";
+	std::string sourceFileName;
 	if (argc == 2)
 	{
 		sourceFileName = argv[1];
@@ -39,9 +39,9 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc09.2023.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc10.2023.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test
-		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
 
@@ -82,8 +82,9 @@ int main(int argc,char** argv)
 		{
 			theLiaInterpreter.exeCute(theLiaParser.theAst, params);
 		}
-		catch (...)
+		catch (interpreterException& ex)
 		{
+			ex = ex;
 			return 1;
 		}
 	}

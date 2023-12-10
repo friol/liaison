@@ -1,0 +1,548 @@
+/* aoc 10 2023 - a-maze-me */
+
+fn readInput()
+{
+    // S=F
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.txt");
+    
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.test2.txt");
+    
+    //S=F
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.test3.txt");
+
+    //S=F
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.test4.txt");
+
+    //S=7
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc10.2023.test5.txt");
+    return sarr;
+}
+
+fn findS(grid)
+{
+    row=0;
+    foreach (r in grid)
+    {
+        col=0;
+        foreach (c in r)
+        {
+            if (c=="S")
+            {
+                ret=[];
+                ret.add(row);
+                ret.add(col);
+                return ret;
+            }
+
+            col+=1;
+        }
+
+        row+=1;
+    }
+
+    return [0,0];
+}
+
+fn move(p,curPipe,orient)
+{
+    cr=p[0];
+    cc=p[1];
+    newPos=[];
+
+    if (curPipe=="|")
+    {
+        if (orient=="S")
+        {
+            cr+=1;
+        }
+        else
+        {
+            cr-=1;
+        }
+    }
+    if (curPipe=="L")
+    {
+        if (orient=="S")
+        {
+            cc+=1;
+            orient="E";
+        }        
+        else
+        {
+            cr-=1;
+            orient="N";
+        }
+    }
+    if (curPipe=="J")
+    {
+        if (orient=="E")
+        {
+            cr-=1;
+            orient="N";
+        }        
+        else
+        {
+            cc-=1;
+            orient="W";
+        }
+    }
+    if (curPipe=="7")
+    {
+        if (orient=="E")
+        {
+            cr+=1;
+            orient="S";
+        }        
+        else
+        {
+            cc-=1;
+            orient="W";
+        }
+    }
+    if (curPipe=="F")
+    {
+        if (orient=="N")
+        {
+            cc+=1;
+            orient="E";
+        }        
+        else
+        {
+            cr+=1;
+            orient="S";
+        }
+    }
+    if (curPipe=="-")
+    {
+        if (orient=="E")
+        {
+            cc+=1;
+        }        
+        else
+        {
+            cc-=1;
+        }
+    }
+
+    newPos.add(cr);
+    newPos.add(cc);
+    newPos.add(orient);
+
+    return newPos;
+}
+
+fn getLoopPoints(scoords,grid)
+{
+    theLoop=[];
+    backAtStart=false; 
+    orient="S";
+    curPos=[];
+    curPos.add(scoords[0]);
+    curPos.add(scoords[1]);
+    theLoop.add(curPos);
+    curPos[0]=curPos[0]+1;
+    theLoop.add(curPos);
+
+    while (backAtStart==false)
+    {
+        curPipe=grid[curPos[0]][curPos[1]];
+        newPos=move(curPos,curPipe,orient);
+
+        if ((newPos[0]==scoords[0]) && (newPos[1]==scoords[1]))
+        {
+            backAtStart=true;
+            print("We are back to the start!");
+        }
+        else
+        {
+            curPos[0]=newPos[0];
+            curPos[1]=newPos[1];
+            orient=newPos[2];
+            //print("We are at ",curPos[0]," ",curPos[1]," with orientation ",orient);
+            theLoop.add(curPos);
+        }
+    }
+
+    nsteps=theLoop.length;
+    nsteps>>=1;
+    print("Far point is ",nsteps," steps away");
+
+    return theLoop;
+}
+
+fn part1(scoords,grid)
+{
+    getLoopPoints(scoords,grid);
+}
+
+fn isInTheLoop(r,c,theLoop)
+{
+    foreach (point in theLoop)
+    {
+        if ((point[0]==r)&&(point[1]==c))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn drawGrid(theLoop,grid)
+{
+    row=0;
+    foreach (r in grid)
+    {
+        s="";
+        col=0;
+        foreach (c in r)
+        {
+            if (isInTheLoop(row,col,theLoop)==true)
+            {
+                s+="*";
+            }
+            else
+            {
+                pix=grid[row][col];
+                s+=pix;
+            }
+
+            col+=1;
+        }
+
+        print(s);
+        row+=1;
+    }
+}
+
+fn getArr2x2(pt)
+{
+    arr2x2=[];
+    r0=[];
+    r1=[];
+    r0.add(pt);
+
+    //print("c is ",pt);
+
+    if (pt=="-")
+    {
+        r0.add(pt);
+        r1.add(".");
+    }
+    if (pt=="|")
+    {
+        r0.add(".");
+        r1.add("|");
+    }
+    if (pt==".")
+    {
+        r0.add(".");
+        r1.add(".");
+    }
+    if (pt=="L")
+    {
+        r0.add("-");
+        r1.add(".");
+    }
+    if (pt=="J")
+    {
+        r0.add(".");
+        r1.add(".");
+    }
+    if (pt=="7")
+    {
+        r0.add(".");
+        r1.add("|");
+    }
+    if (pt=="F")
+    {
+        r0.add("-");
+        r1.add("|");
+    }
+
+    r1.add(".");
+
+    arr2x2.add(r0);
+    arr2x2.add(r1);
+    return arr2x2;
+}
+
+fn createGrid2x(grid,loopLookup)
+{
+    grid2x=[];
+
+    row=0;
+    foreach (r in grid)
+    {
+        col=0;
+        row0=[];
+        row1=[];
+        llr=loopLookup[row];
+        foreach (c in r)
+        {
+            if (llr[col]==0)
+            {
+                row0.add(".");
+                row0.add(".");
+                row1.add(".");
+                row1.add(".");
+            }
+            else
+            {
+                arr2x2=getArr2x2(c);
+                row0.add(arr2x2[0][0]);
+                row0.add(arr2x2[0][1]);
+                row1.add(arr2x2[1][0]);
+                row1.add(arr2x2[1][1]);
+            }
+
+            col+=1;
+        }
+
+        grid2x.add(row0);
+        grid2x.add(row1);
+        row+=1;
+    }
+
+    return grid2x;
+}
+
+fn createLoopLookup(loopPoints,dimx,dimy)
+{
+    lookup=[];
+
+    y=0;
+    while (y<dimy)
+    {
+        x=0;
+        currow=[];
+        while (x<dimx)
+        {
+            currow.add(0);
+            x+=1;
+        }
+
+        lookup.add(currow);
+        y+=1;
+    }
+
+    foreach (pt in loopPoints)
+    {
+        lookup[pt[0]][pt[1]]=1;
+    }
+
+    return lookup;
+}
+
+fn isInList(x,y,lst)
+{
+    foreach (point in lst)
+    {
+        if ((point[0]==x)&&(point[1]==y))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn isInsideTheLoop(x,y,grid2x)
+{
+    x2=x*2;
+    y2=y*2;
+
+    row0=grid2x[0];
+    dimx2x=row0.length;
+    dimy2x=grid2x.length;
+
+    floodArr=[];
+
+    pt=[];
+    pt.add(x2);
+    pt.add(y2);
+    floodArr.add(pt);
+
+    added=true;
+    while (added==true)
+    {
+        added=false;
+        newPts=[];
+
+        foreach (el in floodArr)
+        {
+            pt=[];
+            pt.add(el[0]-1);
+            pt.add(el[1]);
+            //if (isInList(pt[0],pt[1],floodArr)==false)
+            if  (floodArr.find(pt)<0)
+            {
+                if (grid2x[pt[1]][pt[0]]=="O")
+                {
+                    return false;
+                }
+                if (grid2x[pt[1]][pt[0]]=="I")
+                {
+                    return true;
+                }
+                if (grid2x[pt[1]][pt[0]]==".")
+                {
+                    newPts.add(pt);
+                }
+            }
+
+            pt=[];
+            pt.add(el[0]+1);
+            pt.add(el[1]);
+            if (floodArr.find(pt)<0)
+            {
+                if (grid2x[pt[1]][pt[0]]=="O")
+                {
+                    return false;
+                }
+                if (grid2x[pt[1]][pt[0]]=="I")
+                {
+                    return true;
+                }
+                if (grid2x[pt[1]][pt[0]]==".")
+                {
+                    newPts.add(pt);
+                }
+            }
+
+            pt=[];
+            pt.add(el[0]);
+            pt.add(el[1]-1);
+            if (floodArr.find(pt)<0)
+            {
+                if (grid2x[pt[1]][pt[0]]=="O")
+                {
+                    return false;
+                }
+                if (grid2x[pt[1]][pt[0]]=="I")
+                {
+                    return true;
+                }
+                if (grid2x[pt[1]][pt[0]]==".")
+                {
+                    newPts.add(pt);
+                }
+            }
+
+            pt=[];
+            pt.add(el[0]);
+            pt.add(el[1]+1);
+            if (floodArr.find(pt)<0)
+            {
+                if (grid2x[pt[1]][pt[0]]=="O")
+                {
+                    return false;
+                }
+                if (grid2x[pt[1]][pt[0]]=="I")
+                {
+                    return true;
+                }
+                if (grid2x[pt[1]][pt[0]]==".")
+                {
+                    newPts.add(pt);
+                }
+            }
+        }
+
+        foreach (apt in newPts)
+        {
+            if ((apt[0]==0)||(apt[1]==0)||(apt[0]==(dimx2x-1))||(apt[1]==(dimy2x-1)))
+            {
+                return false;
+            }
+
+            //if (isInList(apt[0],apt[1],floodArr)==false)
+            if (floodArr.find(apt)<0)
+            {
+                if (grid2x[apt[1]][apt[0]]==".")
+                {
+                    newpoint=[];
+                    newpoint.add(apt[0]);
+                    newpoint.add(apt[1]);
+                    floodArr.add(newpoint);
+                    added=true;
+                }
+            }
+        }
+        //print(floodArr.length);
+        //drawGrid(floodArr,grid2x);
+    }
+
+    return true;
+}
+
+fn part2(scoords,grid)
+{
+    theLoop=getLoopPoints(scoords,grid);
+    row0=grid[0];
+    dimx=row0.length;
+    dimy=grid.length;
+
+    print("Creating lookup");
+    loopLookup=createLoopLookup(theLoop,dimx,dimy);
+
+    print("Creating 2x grid");
+    grid2x=createGrid2x(grid,loopLookup);
+    //drawGrid([],grid2x);
+
+    numPtsInsideLoop=0;
+    y=0;
+    while (y<dimy)
+    {
+        x=0;
+        while (x<dimx)
+        {
+            print("Processing ",x," ",y," - num pts. inside the loop:",numPtsInsideLoop);
+            if (loopLookup[y][x]==0)
+            {
+                if ((x!=0)&&(y!=0)&&(x!=(dimx-1)&&(y!=(dimy-1))))
+                {
+                    if (isInsideTheLoop(x,y,grid2x)==true)
+                    {
+                        grid2x[y*2][x*2]="I";
+                        numPtsInsideLoop+=1;
+                    }
+                    else
+                    {
+                        grid2x[y*2][x*2]="O";
+                    }
+                }
+            }
+            x+=1;
+        }
+        y+=1;
+    }
+
+    print(numPtsInsideLoop);
+}
+
+fn main(params)
+{
+    grid=readInput();
+    scoords=findS(grid);
+
+    ngrid=[];
+    foreach (s in grid)
+    {
+        na=[];
+        foreach (c in s)
+        {
+            if (c=="S")
+            {
+                c="F";
+                //c="7";
+            }
+            na.add(c);
+        }
+        ngrid.add(na);
+    }
+
+    //part1(scoords,ngrid);
+    part2(scoords,ngrid);
+}
