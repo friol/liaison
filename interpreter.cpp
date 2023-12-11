@@ -454,6 +454,13 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 		retVar.type = liaVariableType::integer;
 		retVar.value = std::stoi(tmp);
 	}
+	else if (theAst->nodes[0]->name == "LongNumber")
+	{
+		std::string tmp;
+		tmp += theAst->nodes[0]->token;
+		retVar.type = liaVariableType::longint;
+		retVar.value = std::stoll(tmp);
+	}
 	else if (theAst->nodes[0]->name == "BooleanConst")
 	{
 		std::string tmp;
@@ -623,38 +630,12 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 		retVar.type = liaVariableType::array;
 		if (theAst->nodes[0]->nodes.size() != 0)
 		{
-			assert(theAst->nodes[0]->nodes[0]->name == "ArrayList");
+			assert(theAst->nodes[0]->nodes[0]->name == "ExpressionList");
 
-			if (theAst->nodes[0]->nodes[0]->nodes[0]->name == "IntegerList")
+			for (auto& el : theAst->nodes[0]->nodes[0]->nodes)
 			{
-				for (auto t : theAst->nodes[0]->nodes[0]->nodes[0]->nodes)
-				{
-					assert(t->is_token);
-					liaVariable varel;
-					varel.name = "varWithNoName";
-					varel.type = liaVariableType::integer;
-					std::string tmp;
-					tmp += t->token;
-					varel.value = std::stoi(tmp);
-					retVar.vlist.push_back(varel);
-				}
-			}
-			else if (theAst->nodes[0]->nodes[0]->nodes[0]->name == "StringList")
-			{
-				//std::cout << peg::ast_to_s(theAst);
-				for (auto t : theAst->nodes[0]->nodes[0]->nodes[0]->nodes)
-				{
-					assert(t->is_token);
-					liaVariable varel;
-					varel.name = "varWithNoNameS";
-					varel.type = liaVariableType::string;
-					std::string tmp;
-					tmp += t->token;
-
-					std::regex quote_re("\"");
-					varel.value = std::regex_replace(tmp, quote_re, "");
-					retVar.vlist.push_back(varel);
-				}
+				liaVariable varel = evaluateExpression(el,env);
+				retVar.vlist.push_back(varel);
 			}
 		}
 	}
@@ -801,7 +782,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			if (vResult.type != v1.type)
 			{
 				std::string err;
-				err += "Only expressions of elements with the same type are supported at the moment. ";
+				err += "Only expressions of elements with the same type are supported at the moment at line " + std::to_string(lineNum) + ". ";
 				err += "Terminating.";
 				fatalError(err);
 			}
@@ -809,7 +790,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			if ((vResult.type != liaVariableType::integer)&& (vResult.type != liaVariableType::longint))
 			{
 				std::string err;
-				err += "Only expressions of elements with type integer/long are supported at the moment. ";
+				err += "Only expressions of elements with type integer/long are supported at the moment " + std::to_string(lineNum) + ". ";
 				err += "Terminating.";
 				fatalError(err);
 			}
@@ -2024,6 +2005,7 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 {
 	liaVariable retVal;
 	//std::cout << peg::ast_to_s(theAst);
+	size_t lineNum = theAst->line;
 
 	//assert(theAst->nodes.size() == 3);
 
@@ -2040,31 +2022,22 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 	std::string tmpVarname;
 	tmpVarname = theAst->nodes[0]->token;
 
-	std::string arrVarname; // array or string
-	arrVarname = theAst->nodes[1]->token;
+	liaVariable iterated = evaluateExpression(theAst->nodes[1], env);
 
-	if (env->varMap.find(arrVarname) == env->varMap.end())
+	//liaVariable* pArr = &env->varMap[arrVarname];
+	
+	if (iterated.type == liaVariableType::array)
 	{
-		std::string err;
-		err += "Variable named "+arrVarname+" not found.";
-		err += "Terminating.";
-		fatalError(err);
-	}
-
-	liaVariable* pArr = &env->varMap[arrVarname];
-
-	if (pArr->type == liaVariableType::array)
-	{
-		size_t vlsize = pArr->vlist.size();
+		size_t vlsize = iterated.vlist.size();
 		if (vlsize > 0)
 		{
 			liaVariable tmpVar;
 
 			for (int idx = 0;idx < vlsize;idx++)
 			{
-				tmpVar.type = pArr->vlist[idx].type;
-				tmpVar.value = pArr->vlist[idx].value;
-				tmpVar.vlist = pArr->vlist[idx].vlist;
+				tmpVar.type = iterated.vlist[idx].type;
+				tmpVar.value = iterated.vlist[idx].value;
+				tmpVar.vlist = iterated.vlist[idx].vlist;
 
 				env->varMap[tmpVarname] = tmpVar;
 
@@ -2080,10 +2053,10 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 			env->varMap.erase(tmpVarname);
 		}
 	}
-	else if (pArr->type == liaVariableType::string)
+	else if (iterated.type == liaVariableType::string)
 	{
 		std::string s;
-		s = std::get<std::string>(pArr->value);
+		s = std::get<std::string>(iterated.value);
 		if (s.size() > 0)
 		{
 			liaVariable tmpVar;
@@ -2106,6 +2079,13 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 			// remove temporary variable from scope
 			env->varMap.erase(tmpVarname);
 		}
+	}
+	else
+	{
+		std::string err;
+		err += "Unknown foreach iterated at line "+std::to_string(lineNum)+". ";
+		err += "Terminating.";
+		fatalError(err);
 	}
 
 	return retVal;

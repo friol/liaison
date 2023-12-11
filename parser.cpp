@@ -8,7 +8,8 @@
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // check if evaluating a function calls it two times // DONE
 // convert (almost) all the assertions to ifs
-// convert arraylist to expression list
+// convert arraylist to expression list // DONE
+// foreach iterated is an Expression // DONE
 // circuit breaking if statements with && 
 // one-line comments // DONE
 // multi-line comments // DONE
@@ -75,7 +76,7 @@ liaParser::liaParser()
 	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine? 
 
 	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n]? CodeBlock
-	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n]? CodeBlock
+	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' Expression ')' [\r\n]? CodeBlock
 
 	Condition <- InnerCondition ( CondOperator Condition )*
 	InnerCondition <- Expression Relop Expression / '(' Condition ')'
@@ -94,22 +95,21 @@ liaParser::liaParser()
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
-	InnerExpression <- BooleanConst / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
+	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
 					   BitwiseNot / ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName / '(' Expression ')'
 	ExprOperator <- '+' / '-' / '*' / '/' 
 
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >
+	LongNumber <- < ('-')?[0-9]+[L] >
 	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
-	ArrayInitializer <- '[' (ArrayList)* ']'
+	ArrayInitializer <- '[' ExpressionList? ']'
 	DictInitializer <- '{' (DictList)* '}'
 	BitwiseNot <- '~' Expression
 
 	DictList <- KeyValueList
-	ArrayList <- IntegerList / StringList
 	KeyValueList <- StringLiteral ':' Expression (',' StringLiteral ':' Expression)*
-	IntegerList <- IntegerNumber (',' IntegerNumber)*
-	StringList <- StringLiteral (',' StringLiteral)*
+	ExpressionList <- Expression (',' Expression)*
 
 	ArraySubscript <- VariableName '[' Expression ']' ('[' Expression ']')*
 
