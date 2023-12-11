@@ -99,33 +99,33 @@ private:
 
 	void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
-	liaVariable evaluateExpression(std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
+	liaVariable evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
 
 	liaVariable exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 
-	liaVariable exeCuteMethodCallStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,std::string varName);
-	liaVariable exeCuteFuncCallStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteVarDeclStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteArrayAssignmentStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	liaVariable exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,std::string varName);
+	liaVariable exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
-	void exeCuteIncrementStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,int inc);
-	void exeCuteRshiftStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteLshiftStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteLogicalAndStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteLogicalOrStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteMultiplyStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteDivideStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	void exeCuteModuloStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,int inc);
+	void exeCuteRshiftStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteLshiftStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteLogicalAndStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteLogicalOrStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteModuloStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
 	liaVariable exeCuteWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	liaVariable exeCuteForeachStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	liaVariable exeCuteIfStatement(std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	liaVariable exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	liaVariable exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
-	void innerPrint(liaVariable& var);
-	void exeCuteLibFunctionPrint(std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
+	void innerPrint(const liaVariable& var);
+	void exeCuteLibFunctionPrint(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
 	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);
 
-	liaVariable customFunctionCall(std::string fname, std::vector<liaVariable>* parameters, liaEnvironment* env);
+	liaVariable customFunctionCall(std::string& fname, std::vector<liaVariable>* parameters, liaEnvironment* env,size_t lineNum);
 
 	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine);
 
@@ -137,7 +137,7 @@ public:
 	int validateAst(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
 	void dumpFunctions();
-	void exeCute(std::shared_ptr<peg::Ast>& theAst,std::vector<std::string> params);
+	void exeCute(const std::shared_ptr<peg::Ast>& theAst,std::vector<std::string> params);
 	~liaInterpreter();
 };
 

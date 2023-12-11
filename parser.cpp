@@ -62,20 +62,20 @@ liaParser::liaParser()
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
 	MultiLineCommentStmt <- [ \t]* '/*' [^*/]* '*/' EndLine
 
-	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n] CodeBlock '\n' ('else' '\n' CodeBlock)?
+	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n]? CodeBlock '\n' ('else' '\n' CodeBlock)?
 
-	IncrementStmt <- [ \t]* (ArraySubscript / VariableName) '+=' Expression ';' EndLine
-	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine
-	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine 
-	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine 
-	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine 
-	DivideStmt <- [ \t]* VariableName '/=' Expression ';' EndLine 
-	ModuloStmt <- [ \t]* VariableName '%=' Expression ';' EndLine 
-	LogicalAndStmt <- [ \t]* VariableName '&=' Expression ';' EndLine 
-	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine 
+	IncrementStmt <- [ \t]* (ArraySubscript / VariableName) '+=' Expression ';' EndLine?
+	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine?
+	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine?
+	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine? 
+	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine? 
+	DivideStmt <- [ \t]* VariableName '/=' Expression ';' EndLine? 
+	ModuloStmt <- [ \t]* VariableName '%=' Expression ';' EndLine? 
+	LogicalAndStmt <- [ \t]* VariableName '&=' Expression ';' EndLine? 
+	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine? 
 
-	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n] CodeBlock
-	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n] CodeBlock
+	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n]? CodeBlock
+	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' VariableName ')' [\r\n]? CodeBlock
 
 	Condition <- InnerCondition ( CondOperator Condition )*
 	InnerCondition <- Expression Relop Expression / '(' Condition ')'
@@ -83,14 +83,14 @@ liaParser::liaParser()
 
 	Relop <- '==' / '<=' / '<' / '>=' / '>' / '!='
 
-	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n] CodeBlock
+	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n]? CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
 	FuncParam <- < [a-zA-Z][0-9a-zA-Z]* >
 
-	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine
+	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine?
 
-	ArrayAssignmentStmt <- [ \t]* ArraySubscript '=' Expression ';' EndLine
-	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine
+	ArrayAssignmentStmt <- [ \t]* ArraySubscript '=' Expression ';' EndLine?
+	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine?
 	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
@@ -117,12 +117,12 @@ liaParser::liaParser()
 	Property <- 'length' / 'keys'
 	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 
-	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine
+	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine?
 	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z_][0-9a-zA-Z_]* >
 	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
-	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine
+	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine?
 
 	EndLine <- [ \t]* [\r\n]
 	%whitespace <- [ \t]*
