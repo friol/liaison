@@ -1278,10 +1278,27 @@ void liaInterpreter::exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::
 
 		env->varMap[arrayName].vMap[std::get<std::string>(arrayIndex.value)] = value2assign;
 	}
+	else if (env->varMap[arrayName].type == liaVariableType::string)
+	{
+		assert(arrayIndex.type == liaVariableType::integer);
+		int iidx = std::get<int>(arrayIndex.value);
+		std::string theString = std::get<std::string>(env->varMap[arrayName].value);
+
+		if (iidx > theString.size())
+		{
+			std::string err;
+			err += "String index out of range at " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
+		theString[iidx] = std::get<std::string>(value2assign.value)[0];
+		env->varMap[arrayName].value=theString;
+	}
 	else
 	{
 		std::string err;
-		err += "For assignment, variable [" + arrayName + "] should be an array or a dictionary. ";
+		err += "For assignment, variable [" + arrayName + "] should be an array or a dictionary at " + std::to_string(lineNum) + ". ";
 		err += "Terminating.";
 		fatalError(err);
 	}
