@@ -6,11 +6,13 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
-// check if evaluating a function calls it two times // DONE
+// monodimensional array sorting
+// allow v[x].length (seems impossible to do, grammar gives an error)
+// circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
+// check if evaluating a function calls it two times // DONE
 // convert arraylist to expression list // DONE
 // foreach iterated is an Expression // DONE
-// circuit breaking if statements with && 
 // one-line comments // DONE
 // multi-line comments // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
@@ -96,7 +98,7 @@ liaParser::liaParser()
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
 	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
-					   BitwiseNot / ArraySubscript / VariableWithFunction / VariableWithProperty / VariableName / '(' Expression ')'
+					   VariableWithProperty / BitwiseNot / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
 	ExprOperator <- '+' / '-' / '*' / '/' 
 
 	BooleanConst <- < 'true' > / < 'false' >

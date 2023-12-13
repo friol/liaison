@@ -376,6 +376,30 @@ fn test21()
     }
 }
 
+fn test22()
+{
+    arr=[];
+    idx=0;
+    while (idx<100)
+    {
+        n=rnd(100);
+        arr.add(n);
+        idx+=1;
+    }
+
+    arr.sort();
+
+    if (arr.length==100)
+    {
+        return 1;
+    }
+    else
+    {
+        print("Test 22 failed.");
+        return 0;
+    }
+}
+
 fn main(params)
 {
     print("Lia test suite v0.3 starting...");
@@ -424,11 +448,13 @@ fn main(params)
     res+=test20();
     /* modulo statement */
     res+=test21();
+    /* rnd & sort functions */
+    res+=test22();
 
     t1=getMillisecondsSinceEpoch();
     t1-=t0;
 
-    print(res,"/21 tests passed.");
+    print(res,"/22 tests passed.");
     print("Execution time:",t1);
     // exec. time around 730ms in debug on my pc
 }

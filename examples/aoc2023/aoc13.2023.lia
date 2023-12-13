@@ -1,0 +1,370 @@
+/* aoc 13 2023 - pretty slow solution and I'm tired */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc13.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc13.2023.test.txt");
+    return sarr;
+}
+
+fn isHorizontallySymmetric(c0,c1,p)
+{
+    idx=0;
+    while (idx<p.length)
+    {
+        currow=p[idx];
+        if (currow[c0]!=currow[c1])
+        {
+            return false;
+        }
+
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn isVerticallySymmetric(r0,r1,p)
+{
+    if (p[r0]!=p[r1])
+    {
+        return false;
+    }
+
+    return true;
+}
+
+fn checkHorzSimmetry(col,p)
+{
+    c0=col-1;
+    c1=col;
+
+    p0=p[0];
+    p0l=p0.length-1;
+
+    while (isHorizontallySymmetric(c0,c1,p)==true)
+    {
+        c0-=1;
+        c1+=1;
+
+        if (c0<0)
+        {
+            return true;
+        }
+
+        if (c1>p0l)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn checkVertSimmetry(row,p)
+{
+    r0=row-1;
+    r1=row;
+
+    while (isVerticallySymmetric(r0,r1,p)==true)
+    {
+        r0-=1;
+        r1+=1;
+
+        if (r0<0)
+        {
+            return true;
+        }
+
+        if (r1>(p.length-1))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn calcHorzRefl(p)
+{
+    column=1;
+
+    row0=p[0];
+    while (column<=(row0.length-1))
+    {
+        if (checkHorzSimmetry(column,p)==true)
+        {
+            return column;
+        }
+        column+=1;
+    }
+
+    return -1;
+}
+
+fn calcHorzRefl2(p,x)
+{
+    column=1;
+
+    row0=p[0];
+    while (column<=(row0.length-1))
+    {
+        if ((checkHorzSimmetry(column,p)==true)&&(column!=x))
+        {
+            return column;
+        }
+        column+=1;
+    }
+
+    return -1;
+}
+
+fn calcVertRefl(p)
+{
+    row=1;
+    while (row<=(p.length-1))
+    {
+        if (checkVertSimmetry(row,p)==true)
+        {
+            return row;
+        }
+        row+=1;
+    }
+
+    return -1;
+}
+
+fn calcVertRefl2(p,y)
+{
+    row=1;
+    while (row<=(p.length-1))
+    {
+        if ((checkVertSimmetry(row,p)==true)&&(row!=y))
+        {
+            return row;
+        }
+        row+=1;
+    }
+
+    return -1;
+}
+
+
+fn calcReflection(p)
+{
+    // horizontal reflection
+    horzRef=calcHorzRefl(p);
+    if (horzRef==-1)
+    {
+        vertRef=calcVertRefl(p);
+        return [-1,vertRef];
+    }
+
+    return [horzRef,-1];
+}
+
+fn calcReflection2(p,res)
+{
+    // horizontal reflection
+    horzRef=calcHorzRefl2(p,res[0]);
+    //print("hrz:",horzRef);
+    if ((horzRef==res[0])||(horzRef==-1))
+    {
+        vertRef=calcVertRefl2(p,res[1]);
+        //print("vrt:",vertRef);
+        if ((vertRef==res[1])||(vertRef==-1))
+        {
+            return [-1,-1];
+        }
+        return [-1,vertRef];
+    }
+
+    return [horzRef,-1];
+}
+
+fn findOtherReflection(p,refl)
+{
+    p2=[];
+    foreach (row in p)
+    {
+        rr=[];
+        foreach (el in row)
+        {
+            rr.add(el);
+        }
+        p2.add(rr);
+    }
+
+    y=0;
+    while (y<p2.length)
+    {
+        x=0;
+        p0=p2[0];
+        while (x<p0.length)
+        {
+            tmp=p2[y][x];
+            if (tmp==".")
+            {
+                p2[y][x]="#";
+            }
+            else
+            {
+                p2[y][x]=".";
+            }
+            
+            p3=[];
+            foreach (row in p2)
+            {
+                s="";
+                foreach (el in row)
+                {
+                    s+=el;
+                }
+                p3.add(s);
+            }
+
+            //if ((y==13)&&(x==8))
+            //prettyPrintPattern(p3);
+            re=calcReflection2(p3,refl);
+            //print(re);
+            if ((re[0]!=refl[0])||(re[1]!=refl[1]))
+            {
+                if (re[0]!=-1)
+                {
+                    print(refl," ",re);
+                    return re;
+                }
+                else
+                {
+                    if (re[1]!=-1)
+                    {
+                        print(refl," ",re);
+                        return re;
+                    }
+                }
+            }
+
+            p2[y][x]=tmp;
+            x+=1;
+        }
+
+        y+=1;
+    }
+
+    return [-1,-1];
+}
+
+fn prettyPrintPattern(p)
+{
+    foreach (row in p)
+    {
+        print(row);
+    }
+    print("");
+}
+
+fn part1(input)
+{
+    idx=0;
+    totSum=0;
+
+    curPattern=[];
+    while (idx<input.length)
+    {
+        il=input[idx];
+        if (il.length>0)
+        {
+            curPattern.add(il);
+        }
+        else
+        {
+            prettyPrintPattern(curPattern);
+            refl=calcReflection(curPattern);
+            print(refl);
+            if (refl[0]!=-1)
+            {
+                totSum+=refl[0];
+            }
+            else
+            {
+                totSum+=refl[1]*100;
+            }
+
+            curPattern=[];
+        }
+        idx+=1;
+    }
+
+    prettyPrintPattern(curPattern);
+    refl=calcReflection(curPattern);
+    print(refl);
+    if (refl[0]!=-1)
+    {
+        totSum+=refl[0];
+    }
+    else
+    {
+        totSum+=refl[1]*100;
+    }
+
+    print(totSum);
+}
+
+fn part2(input)
+{
+    idx=0;
+    totSum=0;
+
+    pattNum=0;
+    curPattern=[];
+    while (idx<input.length)
+    {
+        il=input[idx];
+        if (il.length>0)
+        {
+            curPattern.add(il);
+        }
+        else
+        {
+            print("Processing pattern ",pattNum);
+            //prettyPrintPattern(curPattern);
+            refl=calcReflection(curPattern);
+            refl=findOtherReflection(curPattern,refl);
+            if (refl[0]!=-1)
+            {
+                totSum+=refl[0];
+            }
+            else
+            {
+                totSum+=refl[1]*100;
+            }
+
+            curPattern=[];
+            pattNum+=1;
+        }
+        idx+=1;
+    }
+
+    print("Processing pattern ",pattNum);
+    //prettyPrintPattern(curPattern);
+    refl=calcReflection(curPattern);
+    print(refl);
+    refl=findOtherReflection(curPattern,refl);
+    if (refl[0]!=-1)
+    {
+        totSum+=refl[0];
+    }
+    else
+    {
+        totSum+=refl[1]*100;
+    }
+
+    print(totSum);
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    part2(input);
+}

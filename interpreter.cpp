@@ -9,6 +9,7 @@
 
 liaInterpreter::liaInterpreter()
 {
+	srand((unsigned int)time(0));
 }
 
 void liaInterpreter::fatalError(std::string err)
@@ -200,6 +201,13 @@ bool liaInterpreter::liaVariableArrayComparison(liaVariable& v0, liaVariable& v1
 	return false;
 }
 
+bool compareIntVars(liaVariable i1, liaVariable i2)
+{
+	int iv1 = std::get<int>(i1.value);
+	int iv2 = std::get<int>(i2.value);
+	return (iv1<iv2);
+}
+
 liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, std::string varName)
 {
 	liaVariable retVal;
@@ -237,7 +245,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 		}
 	}
 
-	for (auto ch : theAst->nodes)
+	for (auto& ch : theAst->nodes)
 	{
 		if (ch->is_token)
 		{
@@ -413,6 +421,14 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 					retVal.type = liaVariableType::string;
 					retVal.value = thes;
 					return retVal;
+				}
+				else if (ch->token == "sort")
+				{
+					// sort monodimensional array
+					assert(pvarValue->type == liaVariableType::array);
+					assert(parameters.size() == 0);
+
+					std::sort(env->varMap[varName].vlist.begin(), env->varMap[varName].vlist.end(), compareIntVars);
 				}
 				else
 				{
@@ -999,7 +1015,7 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 	std::vector<liaVariable> parameters;
 	size_t lineNum=theAst->line;
 
-	for (auto ch : theAst->nodes)
+	for (auto& ch : theAst->nodes)
 	{
 		if (ch->is_token)
 		{
@@ -1141,6 +1157,23 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 					long long iVal = std::get<longint>(p0.value);
 					double fsq = sqrt(iVal);
 					retVal.value = (long long)fsq;
+				}
+				else if (ch->token == "rnd")
+				{
+					// generate a random number from zero to parameter 0
+					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
+
+					// parameter must be integer
+					if (p0.type != liaVariableType::integer)
+					{
+						std::string err;
+						err += "Parameter for the 'rnd' function should be an integer. ";
+						err += "Terminating.";
+						fatalError(err);
+					}
+
+					retVal.type = liaVariableType::integer;
+					retVal.value = rand() % std::get<int>(p0.value);
 				}
 				else if (ch->token == "getMillisecondsSinceEpoch")
 				{
