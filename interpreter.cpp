@@ -710,7 +710,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			if (arrIdx >= tmp.size())
 			{
 				std::string err;
-				err += "String index out of range. ";
+				err += "String index out of range at " + std::to_string(lineNum) + ". ";
 				err += "Terminating.";
 				fatalError(err);
 			}
@@ -1833,15 +1833,13 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 				env->varMap[v->name].vlist.push_back(el);
 			}
 		}
-		// TODO: check this
-		/*else
+		else
 		{
 			std::string err;
-			err += "Trying to assign a different type to variable ";
-			err += "at line " + std::to_string(curLine)+".";
+			err += "Unhandled type for scope variable update at " + std::to_string(curLine)+". ";
 			err+="Terminating.";
 			fatalError(err);
-		}*/
+		}
 	}
 	else
 	{

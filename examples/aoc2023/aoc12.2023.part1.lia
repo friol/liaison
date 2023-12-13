@@ -1,0 +1,195 @@
+/* aoc 12 2023 - hot springs pt][ */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc12.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc12.2023.test.txt");
+    return sarr;
+}
+
+fn canPlace(block,placingPos,sarr)
+{
+    idx=0;
+    bl=block.length;
+    slm1=sarr.length-1;
+    while (idx<bl)
+    {
+        if ( (placingPos>=0) && (placingPos<=slm1) )
+        {
+            if ( ((block[idx]=="#")&&(sarr[placingPos]==".")) || ((block[idx]==".")&&(sarr[placingPos]=="#")) )
+            {
+                return false;
+            }
+        }
+        placingPos+=1;
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn place(block,placingPos,sarr)
+{
+    idx=0;
+    bl=block.length;
+    while (idx<bl)
+    {
+        if ((placingPos>=0)&&(placingPos<sarr.length))
+        {
+            sarr[placingPos]=block[idx];
+        }
+        placingPos+=1;
+        idx+=1;
+    }
+
+    return sarr;
+}
+
+fn checkEquality(sarr,numarr)
+{
+    ssarr=sarr.split(".");
+
+    ssarr2=[];
+    foreach (el in ssarr)
+    {
+        if (el.length!=0)
+        {
+            ssarr2.add(el);
+        }
+    }
+
+    if (ssarr2.length!=numarr.length)
+    {
+        return false;
+    }
+
+    idx=0;
+    foreach (el in ssarr2)
+    {
+        if (el.length!=numarr[idx])
+        {
+            return false;
+        }
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn recursivePlacement(sarr,numarr,numArrPos,placingPos,blockz)
+{
+    totPlacements=0;
+    curBlock=blockz[numarr[numArrPos]];
+
+    slm1=sarr.length-1;
+    while (placingPos<slm1)
+    {
+        if (canPlace(curBlock,placingPos,sarr)==true)
+        {
+            if (numArrPos==(numarr.length-1))
+            {
+                sarr2=place(curBlock,placingPos,sarr);
+                sarr3=sarr2.replace("?",".");
+                if (checkEquality(sarr3,numarr)==true)
+                {
+                    totPlacements+=1;
+                }
+            }
+            else
+            {
+                sarr2=place(curBlock,placingPos,sarr);
+                totPlacements+=recursivePlacement(sarr2,numarr,numArrPos+1,placingPos+curBlock.length-1,blockz);
+            }
+        }
+
+        placingPos+=1;
+    }
+
+    return totPlacements;
+}
+
+fn findArrangements(sarr,numarr,blockz)
+{
+    return recursivePlacement(sarr,numarr,0,-1,blockz);
+}
+
+fn part2(ia)
+{
+    sa=0;
+
+    // build array of blockz
+    blockz=["."];
+    idx=1;
+    while (idx<20)
+    {
+        res=".";
+        idx2=0;
+        while (idx2<idx)
+        {
+            res+="#";
+            idx2+=1;
+        }
+        res+=".";
+        blockz.add(res);
+        idx+=1;
+    }
+
+    //print(blockz);
+
+    //line=ia[2];
+    //foreach (pippo in [1])
+    foreach (line in ia)
+    {
+        arr=line.split(" ");
+
+        numArr=[];
+        nums=arr[1];
+        sarr1=nums.split(",");
+
+        foreach (el in sarr1)
+        {
+            numArr.add(toInteger(el));
+        }
+
+        realNumArr=[];
+        realSprings="";
+        idx=0;
+        while (idx<5)
+        {
+            realSprings+=arr[0];
+            if (idx!=4) { realSprings+="?"; }
+
+            idx2=0;
+            while (idx2<numArr.length)
+            {
+                realNumArr.add(numArr[idx2]);
+                idx2+=1;
+            }
+
+            idx+=1;
+        }
+
+        //realNumArr=numArr;
+        //realSprings=arr[0];
+        //print(realSprings);
+        //print(realNumArr);
+
+        // find arrangementz
+        numArrangements=findArrangements(realSprings,realNumArr,blockz);
+        print(numArrangements);
+
+        sa+=numArrangements;
+    }
+
+    print(sa);
+}
+
+fn main(params)
+{
+    instrArr=readInput();
+    t0=getMillisecondsSinceEpoch();
+    part2(instrArr);
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
+}
