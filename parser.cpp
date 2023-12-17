@@ -6,7 +6,9 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
-// monodimensional array sorting
+// monodimensional array sorting // DONE
+// convert function list to function hashmap
+// globals (yep) (but only if they start with 'glb')
 // allow v[x].length (seems impossible to do, grammar gives an error)
 // circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
@@ -65,7 +67,7 @@ liaParser::liaParser()
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
 	MultiLineCommentStmt <- [ \t]* '/*' [^*/]* '*/' EndLine
 
-	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n]? CodeBlock '\n' ('else' '\n' CodeBlock)?
+	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n]? CodeBlock '\n' ('else' [\r\n]? CodeBlock)?
 
 	IncrementStmt <- [ \t]* (ArraySubscript / VariableName) '+=' Expression ';' EndLine?
 	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine?
@@ -88,13 +90,13 @@ liaParser::liaParser()
 
 	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n]? CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
-	FuncParam <- < [a-zA-Z][0-9a-zA-Z]* >
+	FuncParam <- < [a-zA-Z][0-9a-zA-Z_]* >
 
 	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine?
 
 	ArrayAssignmentStmt <- [ \t]* ArraySubscript '=' Expression ';' EndLine?
 	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine?
-	VariableName <- < [a-zA-Z][0-9a-zA-Z]* >
+	VariableName <- < [a-zA-Z][0-9a-zA-Z_]* >
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
 	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 

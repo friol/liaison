@@ -39,9 +39,10 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc13.2023.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test
-		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc12.2023.part2.fast.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc16.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s
+		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
 	}
 

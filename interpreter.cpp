@@ -422,6 +422,54 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 					retVal.value = thes;
 					return retVal;
 				}
+				else if (ch->token == "slice")
+				{
+					assert(parameters.size() == 2);
+					int beg = std::get<int>(parameters[0].value);
+					int end = std::get<int>(parameters[1].value);
+
+					if (pvarValue->type == liaVariableType::string)
+					{
+						std::string s = std::get<std::string>(pvarValue->value);
+
+						if (s.size() == 0)
+						{
+							retVal.type = liaVariableType::string;
+							retVal.value = s;
+							return retVal;
+						}
+
+						std::string s2;
+						int idx = 0;
+						while ((idx < end) && (idx < s.size()))
+						{
+							if (idx >= beg)
+							{
+								s2 += s[idx];
+							}
+							idx += 1;
+						}
+
+						retVal.type = liaVariableType::string;
+						retVal.value = s2;
+						return retVal;
+					}
+					else if (pvarValue->type == liaVariableType::array)
+					{
+						retVal.type = liaVariableType::array;
+						int idx = 0;
+						while (idx < end)
+						{
+							if (idx >= beg)
+							{
+								retVal.vlist.push_back(pvarValue->vlist[idx]);
+							}
+							idx += 1;
+						}
+
+						return retVal;
+					}
+				}
 				else if (ch->token == "sort")
 				{
 					// sort monodimensional array
@@ -1304,6 +1352,7 @@ void liaInterpreter::exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::
 		assert(std::get<int>(arrayIndex.value) < env->varMap[arrayName].vlist.size());
 
 		pArr->value = value2assign.value;
+		pArr->vlist = value2assign.vlist;
 	}
 	else if (env->varMap[arrayName].type == liaVariableType::dictionary)
 	{

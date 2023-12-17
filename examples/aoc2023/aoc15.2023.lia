@@ -1,0 +1,139 @@
+/* aoc 15 */
+
+fn calculateHASH(s)
+{
+    val=0;
+
+    foreach (c in s)
+    {
+        o=ord(c);
+        val+=o;
+        val*=17;
+        val%=256;
+    }
+
+    return val;
+}
+
+fn part1(s)
+{
+    totScore=0;
+    arr=s.split(",");
+    foreach (str in arr)
+    {
+        print(str);
+        score=calculateHASH(str);
+        totScore+=score;
+    }
+
+    print(totScore);
+}
+
+fn boxAdd(newLens,curBox)
+{
+    idx=0;
+    foreach (el in curBox)
+    {
+        if (el[0]==newLens[0])
+        {
+            curBox[idx][1]=newLens[1];
+            return curBox;
+        }
+        idx+=1;
+    }
+
+    curBox.add(newLens);
+    return curBox;
+}
+
+fn boxRemove(newLens,label,curBox)
+{
+    res=[];
+
+    foreach (el in curBox)
+    {
+        if (el[0]==label)
+        {
+        }
+        else
+        {
+            res.add(el);
+        }
+    }
+
+    return res;
+}
+
+fn calcFocusingPower(boxes)
+{
+    res=0;
+    boxidx=1;
+    foreach (box in boxes)
+    {
+        lensidx=1;
+        foreach (lens in box)
+        {
+            focalLength=lens[1];
+            res+=boxidx*lensidx*focalLength;
+            lensidx+=1;
+        }
+
+        boxidx+=1;
+    }
+
+    return res;
+}
+
+fn part2(s)
+{
+    boxes=[];
+    idx=0;
+    while (idx<256)
+    {
+        boxes.add([]);
+        idx+=1;
+    }
+
+    arr=s.split(",");
+    foreach (str in arr)
+    {
+        if (str.find("=")>=0)
+        {
+            astr=str.split("=");
+            lensLabel=astr[0];
+            lensFocal=toInteger(astr[1]);
+            print("label:",lensLabel," focal:",lensFocal);
+
+            newLens=[lensLabel,lensFocal];
+            lensPos=calculateHASH(lensLabel);
+            curBox=boxes[lensPos];
+            newVal=boxAdd(newLens,curBox);
+            boxes[lensPos]=newVal;
+        }
+        else
+        {
+            lensLabel=str.replace("-","");
+            print(lensLabel);
+
+            lensPos=calculateHASH(lensLabel);
+
+            curBox=boxes[lensPos];
+            newVal=boxRemove(newLens,lensLabel,curBox);
+            boxes[lensPos]=newVal;
+        }
+    }
+
+    print(boxes);
+    focusingPower=calcFocusingPower(boxes);
+    print(focusingPower);
+}
+
+fn main(params)
+{
+    //s="rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7";
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc15.2023.txt");
+    s=sarr[0];
+
+    //part1(s);
+    part2(s);
+}
