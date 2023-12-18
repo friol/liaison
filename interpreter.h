@@ -57,7 +57,8 @@ struct liaVariable
 struct liaEnvironment
 {
 	// a map is like 30x faster than a vector here
-	std::map<std::string, liaVariable> varMap;
+	// an unordered_map should be even faster
+	std::unordered_map<std::string, liaVariable> varMap;
 };
 
 struct liaFunctionParam
@@ -86,6 +87,7 @@ class liaInterpreter
 {
 private:
 
+	liaEnvironment globalScope;
 	std::vector<liaFunction> functionList;
 
 	int validateMainFunction(std::shared_ptr<peg::Ast> theAst);
@@ -121,7 +123,7 @@ private:
 	liaVariable exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	liaVariable exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
-	void innerPrint(const liaVariable& var);
+	void innerPrint(liaVariable& var);
 	void exeCuteLibFunctionPrint(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
 	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);
 
@@ -135,8 +137,11 @@ public:
 
 	liaInterpreter();
 	int validateAst(std::shared_ptr<peg::Ast> theAst);
+
+	int storeGlobalVariables(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
 	void dumpFunctions();
+	
 	void exeCute(const std::shared_ptr<peg::Ast>& theAst,std::vector<std::string> params);
 	~liaInterpreter();
 };

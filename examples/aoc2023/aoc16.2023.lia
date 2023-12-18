@@ -1,0 +1,309 @@
+/* aoc 16 2023 - pant */
+
+// our 1st global! tiny little globby
+glbMap=[];
+glbEnergizedTiles=[];
+glbDirMap=[];
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc16.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc16.2023.test.txt");
+    return sarr;
+}
+
+fn prettyPrintEnergy(et)
+{
+    foreach (row in et)
+    {
+        s="";
+        foreach (c in row)
+        {
+            s+=toString(c);
+        }
+        print(s);
+    }
+
+    print("");
+}
+
+fn traceBeam(beamPos,beamDir)
+{
+    incrDir=[[0,-1],[1,0],[0,1],[-1,0]];
+
+    r0=glbMap[0];
+    r0l=r0.length;
+
+    while (true==true)
+    {
+        //prettyPrintEnergy(energizedTiles);
+        //print("-----------");
+
+        if ((beamPos[0]<0)||(beamPos[1]<0)||(beamPos[1]>=glbMap.length)||(beamPos[0]>=r0l))
+        {
+            return 0;
+        }
+
+        dirVal=glbDirMap[beamPos[1]][beamPos[0]];
+        if (dirVal==-1)
+        {
+            glbDirMap[beamPos[1]][beamPos[0]]=beamDir;
+        }
+        if (dirVal==beamDir)
+        {
+            //print("Bailing out for cycle x:",beamPos[0]," y:",beamPos[1]);
+            return 0;
+        }
+
+        enVal=glbEnergizedTiles[beamPos[1]][beamPos[0]];
+        if (enVal>=20)
+        {
+            return 0;
+        }
+        glbEnergizedTiles[beamPos[1]][beamPos[0]]=glbEnergizedTiles[beamPos[1]][beamPos[0]]+1;
+
+        found=false;
+        curPoint=glbMap[beamPos[1]][beamPos[0]];
+        if (curPoint==".")
+        {
+            found=true;
+            //print(".");
+            beamPos[0]=beamPos[0]+incrDir[beamDir][0];
+            beamPos[1]=beamPos[1]+incrDir[beamDir][1];
+        }
+        if (curPoint=="|")
+        {
+            found=true;
+            //print("|");
+            if ((beamDir==0)||(beamDir==2))
+            {
+                // continue
+                beamPos[0]=beamPos[0]+incrDir[beamDir][0];
+                beamPos[1]=beamPos[1]+incrDir[beamDir][1];
+            }
+            else
+            {
+                // split the ray
+                //print("split!");
+                traceBeam([beamPos[0],beamPos[1]-1],0);
+                traceBeam([beamPos[0],beamPos[1]+1],2);
+                return 0;
+            }
+        }
+        if (curPoint=="-")
+        {
+            found=true;
+            //print("-");
+            if ((beamDir==1)||(beamDir==3))
+            {
+                // continue
+                beamPos[0]=beamPos[0]+incrDir[beamDir][0];
+                beamPos[1]=beamPos[1]+incrDir[beamDir][1];
+            }
+            else
+            {
+                // split the ray
+                //print("split!");
+                traceBeam([beamPos[0]+1,beamPos[1]],1);
+                traceBeam([beamPos[0]-1,beamPos[1]],3);
+                return 0;
+            }
+        }
+        if (curPoint=="/")
+        {
+            found=true;
+            //print("/");
+            if (beamDir==0) { beamDir=1; }
+            else
+            {
+                if (beamDir==1) { beamDir=0; }
+                else
+                {
+                    if (beamDir==2) { beamDir=3; }
+                    else
+                    {
+                        beamDir=2;
+                    }
+                }
+            }
+
+            beamPos[0]=beamPos[0]+incrDir[beamDir][0];
+            beamPos[1]=beamPos[1]+incrDir[beamDir][1];
+        }
+        if (curPoint==chr(92))
+        {
+            found=true;
+            //print(chr(92));
+            if (beamDir==0) { beamDir=3; }
+            else
+            {
+                if (beamDir==1) { beamDir=2; }
+                else
+                {
+                    if (beamDir==2) { beamDir=1; }
+                    else
+                    {
+                        beamDir=0;
+                    }
+                }
+            }
+
+            beamPos[0]=beamPos[0]+incrDir[beamDir][0];
+            beamPos[1]=beamPos[1]+incrDir[beamDir][1];
+        }
+    }
+
+    return 0;
+}
+
+fn countEnergized(m)
+{
+    tot=0;
+    foreach (row in m)
+    {
+        foreach (el in row)
+        {
+            if (el>0)
+            {
+                tot+=1;
+            }
+        }
+    }
+
+    return tot;
+}
+
+fn initEnergized(map)
+{
+    foreach (row in map)
+    {
+        curRow=[];
+        foreach (el in row)
+        {
+            curRow.add(0);
+        }
+        glbEnergizedTiles.add(curRow);
+    }
+}
+
+fn initDirmap(map)
+{
+    foreach (row in map)
+    {
+        dirRow=[];
+        foreach (el in row)
+        {
+            dirRow.add(-1);
+        }
+        glbDirMap.add(dirRow);
+    }
+}
+
+fn part1()
+{
+    beamPos=[0,0]; // upper left corner
+    beamDir=1; // right
+
+    initDirmap(glbMap);
+    initEnergized(glbMap);
+    traceBeam(beamPos,beamDir);
+    prettyPrintEnergy(glbEnergizedTiles);
+    print(countEnergized(glbEnergizedTiles));
+}
+
+fn getEnergized(beamPos,beamDir)
+{
+    glbDirMap=[];
+    initDirmap(glbMap);
+    glbEnergizedTiles=[];
+    initEnergized(glbMap);
+    traceBeam(beamPos,beamDir);
+    //prettyPrintEnergy(energizedTiles);
+    ke=countEnergized(glbEnergizedTiles);
+    return ke;
+}
+
+fn part2()
+{
+    maxEne=-1;
+
+    r0=glbMap[0];
+    r0lm1=r0.length-1;
+
+    y=0;
+    while (y<glbMap.length)
+    {
+        beamPos=[0,y];
+        beamDir=1; // right
+        print("Processing ",beamPos," ",beamDir);
+        newEne=getEnergized(beamPos,beamDir);
+        if (newEne>maxEne)
+        {
+            maxEne=newEne;
+        }
+        print(newEne);
+
+        beamPos=[r0lm1,y];
+        beamDir=3; // left
+        print("Processing ",beamPos," ",beamDir);
+        newEne=getEnergized(beamPos,beamDir);
+        if (newEne>maxEne)
+        {
+            maxEne=newEne;
+        }
+        print(newEne);
+
+        y+=1;
+    }
+
+    x=0;
+    while (x<=r0lm1)
+    {
+        beamPos=[x,0];
+        beamDir=2; // down
+        print("Processing ",beamPos," ",beamDir);
+        newEne=getEnergized(beamPos,beamDir);
+        if (newEne>maxEne)
+        {
+            maxEne=newEne;
+        }
+        print(newEne);
+
+        beamPos=[x,glbMap.length-1];
+        beamDir=0; // up
+        print("Processing ",beamPos," ",beamDir);
+        newEne=getEnergized(beamPos,beamDir);
+        if (newEne>maxEne)
+        {
+            maxEne=newEne;
+        }
+        print(newEne);
+
+        x+=1;
+    }
+
+    print("Max energy:",maxEne);
+}
+
+fn main(params)
+{
+    map=readInput();
+    foreach (row in map)
+    {
+        curRow=[];
+        foreach (el in row)
+        {
+            curRow.add(el);
+        }
+        glbMap.add(curRow);
+    }
+
+    t0=getMillisecondsSinceEpoch();
+
+    //part1();
+    part2();
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
+}

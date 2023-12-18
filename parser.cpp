@@ -6,9 +6,10 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
+// plain return without value
 // monodimensional array sorting // DONE
 // convert function list to function hashmap
-// globals (yep) (but only if they start with 'glb')
+// globals (yep) (but only if they start with 'glb') // DONE
 // allow v[x].length (seems impossible to do, grammar gives an error)
 // circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
@@ -56,7 +57,7 @@ liaParser::liaParser()
 	auto grammar=(R"(
 	LiaProgram <- ( TopLevelStmt )*
 
-	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / EndLine
+	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / GlobalVarDecl / EndLine
 
 	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
 			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / 
@@ -66,6 +67,8 @@ liaParser::liaParser()
 
 	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
 	MultiLineCommentStmt <- [ \t]* '/*' [^*/]* '*/' EndLine
+
+	GlobalVarDecl <- [ \t]* VariableName '=' Expression ';'  EndLine?
 
 	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n]? CodeBlock '\n' ('else' [\r\n]? CodeBlock)?
 

@@ -1,0 +1,210 @@
+/* aoc 12 2023 - hot springs pt][ - fast! - globby cache! */
+
+glbCache={};
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc12.2023.txt");
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc12.2023.test.txt");
+    return sarr;
+}
+
+fn times(t,char)
+{
+    s="";
+    idx=0;
+    while (idx<t) 
+    {
+        s+=char;
+        idx+=1;
+    }
+
+    return s;
+}
+
+fn pound(record,groups,next_group)
+{
+    this_group = record.slice(0,next_group);
+    this_group = this_group.replace("?", "#");
+
+    if (this_group != times(next_group,"#"))
+    {
+        return 0L;
+    }
+
+    if (record.length == next_group)
+    {
+        if (groups.length == 1)
+        {
+            return 1L;
+        }
+        else
+        {
+            return 0L;
+        }
+    }
+
+    if ((record[next_group]=="?")||(record[next_group]=="."))
+    {
+        key=makeKey(record.slice(next_group+1,record.length),groups.slice(1,groups.length));
+        if (isInCache(key)==true)
+        {
+            return glbCache[key];
+        }
+        else
+        {
+            out = recursiveCalcArrangements(record.slice(next_group+1,record.length),groups.slice(1,groups.length));
+            glbCache[key]=out;
+            return out;
+        }
+
+        //return recursiveCalcArrangements(record.slice(next_group+1,record.length),groups.slice(1,groups.length));
+    }
+
+    return 0L;
+}
+
+fn makeKey(slr,groups)
+{
+    k=slr;
+    k+="-";
+    foreach (el in groups)
+    {
+        k+=toString(el);
+        k+="-";
+    }
+
+    return k;
+}
+
+fn isInCache(key)
+{
+    ks=glbCache.keys;
+
+    if (ks.find(key)>=0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn recursiveCalcArrangements(record, groups)
+{
+    if (groups.length==0)
+    {
+        if (record.find("#")<0)
+        {
+            return 1L;
+        }
+        else
+        {
+            return 0L;
+        }
+    }
+
+    if (record.length==0)
+    {
+        return 0L;
+    }
+
+    next_character=record[0];
+    next_group=groups[0];
+
+    out=0L;
+    if (next_character == "#")
+    {
+        out = pound(record,groups,next_group);
+    }
+    if (next_character == ".")
+    {
+        slr=record.slice(1,record.length);
+        key=makeKey(slr,groups);
+        if (isInCache(key)==true)
+        {
+            out=glbCache[key];
+        }
+        else
+        {
+            out = recursiveCalcArrangements(slr,groups);
+            glbCache[key]=out;
+        }
+    }
+    if (next_character == "?")
+    {
+        slr=record.slice(1,record.length);
+
+        key=makeKey(slr,groups);
+
+        if (isInCache(key)==true)
+        {
+            out=glbCache[key]+ pound(record,groups,next_group);
+        }
+        else
+        {
+            res=recursiveCalcArrangements(slr,groups);
+            out=res+pound(record,groups,next_group); 
+            glbCache[key]=res;
+        }
+    }
+
+    return out;
+}
+
+fn part2(ia)
+{
+    sa=0L;
+
+    foreach (el in ia)
+    {
+        arr=el.split(" ");
+        record=arr[0];
+
+        groups=[];
+        a1=arr[1];
+        sgroups=a1.split(",");
+        foreach (g in sgroups)
+        {
+            groups.add(toInteger(g));
+        }
+
+        realRecord="";
+        realGroups=[];
+        idx=0;
+        while (idx<5)
+        {
+            realRecord+=record;
+            if (idx!=4)
+            {
+                realRecord+="?";
+            }
+
+            idx2=0;
+            while (idx2<groups.length)
+            {
+                realGroups.add(groups[idx2]);
+                idx2+=1;
+            }
+
+            idx+=1;
+        }
+
+        print(realRecord,realGroups);
+        //print(record,groups);
+        //sa+=recursiveCalcArrangements(record,groups);
+        sa+=recursiveCalcArrangements(realRecord,realGroups);
+        glbCache.clear();
+    }
+
+    print(sa);
+}
+
+fn main(params)
+{
+    instrArr=readInput();
+    t0=getMillisecondsSinceEpoch();
+    part2(instrArr);
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
+}

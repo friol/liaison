@@ -39,11 +39,11 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc12.2023.part2.fast.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\aoc16.2023.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc17.2023.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\lia01.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
@@ -68,6 +68,10 @@ int main(int argc,char** argv)
 		if (theLiaInterpreter.validateAst(theLiaParser.theAst) != 0) return 1;
 		theLiaInterpreter.getFunctions(theLiaParser.theAst);
 		//theLiaInterpreter.dumpFunctions();
+		if (theLiaInterpreter.storeGlobalVariables(theLiaParser.theAst) != 0)
+		{
+			return 1;
+		}
 
 		std::vector<std::string> params;
 		if (argc > 2)
