@@ -6,7 +6,7 @@
 // will have to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
-// plain return without value
+// plain return without value // DONE
 // monodimensional array sorting // DONE
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
@@ -129,7 +129,7 @@ liaParser::liaParser()
 	FuncName <- < [a-zA-Z_][0-9a-zA-Z_]* >
 	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
-	ReturnStmt <- [ \t]* 'return' Expression ';' EndLine?
+	ReturnStmt <- [ \t]* 'return' Expression? ';' EndLine?
 
 	EndLine <- [ \t]* [\r\n]
 	%whitespace <- [ \t]*

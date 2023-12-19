@@ -820,6 +820,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			std::string key = std::get<std::string>(vIdxArr[0].value);
 			retVar.type = pVar->vMap[key].type;
 			retVar.value = pVar->vMap[key].value;
+			retVar.vlist = pVar->vMap[key].vlist;
 		}
 		else if (pVar->type == liaVariableType::string)
 		{
@@ -2561,7 +2562,17 @@ liaVariable liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& th
 		else if (stmt->nodes[0]->name == "ReturnStmt")
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
-			retVal = evaluateExpression(stmt->nodes[0]->nodes[0], env);
+
+			if (stmt->nodes[0]->nodes.size() == 1)
+			{
+				// return without arguments
+			}
+			else
+			{
+				// return <expression>
+				retVal = evaluateExpression(stmt->nodes[0]->nodes[0], env);
+			}
+
 			retVal.name = "lia-ret-val"; // gah
 			return retVal;
 		}
