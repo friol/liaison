@@ -3,14 +3,16 @@
 // mandatory meaningless header
 // (c) friol 2023
 //
-// will have to support the following:
+// will *have* to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // plain return without value // DONE
 // monodimensional array sorting // DONE
+// if else if come on
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
-// allow v[x].length (seems impossible to do, grammar gives an error)
+// allow v[x].length // DONE
+// do this with infinite level of indirection
 // circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
 // check if evaluating a function calls it two times // DONE
@@ -120,7 +122,7 @@ liaParser::liaParser()
 
 	ArraySubscript <- VariableName '[' Expression ']' ('[' Expression ']')*
 
-	VariableWithProperty <- VariableName '.' Property
+	VariableWithProperty <- VariableName '.' Property /  ArraySubscript '.' Property
 	Property <- 'length' / 'keys'
 	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 

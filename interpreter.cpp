@@ -657,12 +657,36 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 	}
 	else if (theAst->nodes[0]->name == "VariableWithProperty")
 	{
+		//std::cout << peg::ast_to_s(theAst);
+
 		std::string varName;
-		varName += theAst->nodes[0]->nodes[0]->token;
 		std::string varProp;
-		varProp += theAst->nodes[0]->nodes[1]->token;
+		liaVariable arridx;
+
+		//std::cout << theAst->nodes[0]->name << std::endl;
+
+		// TODO: should handle multidimensional arrays with the usual method
+		if (theAst->nodes[0]->nodes[0]->name == "ArraySubscript")
+		{
+			varName += theAst->nodes[0]->nodes[0]->nodes[0]->token;
+			arridx = evaluateExpression(theAst->nodes[0]->nodes[0]->nodes[1],env);
+			if (arridx.type != liaVariableType::integer)
+			{
+				std::string err;
+				err += "Array index should be an integer at line " + std::to_string(lineNum) + ". ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+			varProp+= theAst->nodes[0]->nodes[1]->token;
+		}
+		else
+		{
+			varName += theAst->nodes[0]->nodes[0]->token;
+			varProp += theAst->nodes[0]->nodes[1]->token;
+		}
 
 		liaVariable* v = nullptr;
+		//std::cout << varName << std::endl;
 		if (env->varMap.find(varName) == env->varMap.end())
 		{
 			if (globalScope.varMap.find(varName) == globalScope.varMap.end())
@@ -681,6 +705,11 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 		else
 		{
 			v = &env->varMap[varName];
+		}
+
+		if (theAst->nodes[0]->nodes[0]->name == "ArraySubscript")
+		{
+			v = &v->vlist[std::get<int>(arridx.value)];
 		}
 
 		if (varProp == "length")
@@ -806,6 +835,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			retVar.type = pArr->type;
 			retVar.value = pArr->value;
 			retVar.vlist = pArr->vlist;
+			retVar.vMap = pArr->vMap;
 		}
 		else if (pVar->type == liaVariableType::dictionary)
 		{
@@ -821,6 +851,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			retVar.type = pVar->vMap[key].type;
 			retVar.value = pVar->vMap[key].value;
 			retVar.vlist = pVar->vMap[key].vlist;
+			retVar.vMap = pVar->vMap[key].vMap;
 		}
 		else if (pVar->type == liaVariableType::string)
 		{
