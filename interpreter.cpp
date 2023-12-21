@@ -2182,6 +2182,10 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 			pVar->vlist.push_back(el);
 		}
 	}
+	else if (v->type == liaVariableType::dictionary)
+	{
+		pVar->vMap = v->vMap;
+	}
 	else
 	{
 		std::string err;
