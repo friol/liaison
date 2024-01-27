@@ -8,6 +8,8 @@
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // plain return without value // DONE
 // monodimensional array sorting // DONE
+// arr[x].function()
+// conditions with only booleans
 // if else if come on
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
