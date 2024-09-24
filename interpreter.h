@@ -140,6 +140,7 @@ public:
 
 	int storeGlobalVariables(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
+	std::vector<liaFunction>& getLiaFunctions() { return functionList; }
 	void dumpFunctions();
 	
 	void exeCute(const std::shared_ptr<peg::Ast>& theAst,std::vector<std::string> params);

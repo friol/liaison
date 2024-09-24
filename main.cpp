@@ -10,12 +10,13 @@
 #include <streambuf>
 #include "parser.h"
 #include "interpreter.h"
+#include "compiler.h"
 
 //
 //
 //
 
-const std::string appVersion = "0.6a";
+const std::string appVersion = "0.6c";
 
 void usage()
 {
@@ -39,7 +40,7 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		sourceFileName = "d:\\prova\\liaPrograms\\aoc24.2023.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\hello.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\ltest.lia";
@@ -83,7 +84,11 @@ int main(int argc,char** argv)
 			}
 		}
 
-		try
+		liaCompiler theCompiler;
+		theCompiler.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
+		theCompiler.exeCute();
+
+		/*try
 		{
 			theLiaInterpreter.exeCute(theLiaParser.theAst, params);
 		}
@@ -91,7 +96,7 @@ int main(int argc,char** argv)
 		{
 			ex = ex;
 			return 1;
-		}
+		}*/
 	}
 
 	return 0;
