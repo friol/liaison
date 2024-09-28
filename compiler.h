@@ -10,6 +10,10 @@
 
 using namespace asmjit;
 
+//
+//
+//
+
 #define CONSTANT_POOL_SIZE 32
 
 class constantPoolManager
@@ -51,6 +55,27 @@ public:
 	}
 };
 
+//
+//
+//
+
+struct liaCompilerVariable
+{
+	std::string name;
+	liaVariableType type;
+	std::variant<bool, int, long long, std::string> value;
+	x86::Gp vreg;
+};
+
+struct liaCompilerEnvironment
+{
+	std::unordered_map<std::string, liaCompilerVariable> varMap;
+};
+
+//
+//
+//
+
 class liaCompiler
 {
 private:
@@ -63,9 +88,16 @@ private:
 
 	constantPoolManager constPoolMgr;
 
-	void compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst);
-	void generatePrintCode(const std::shared_ptr<peg::Ast>& theAst);
-	void compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst);
+	void generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);
+	void compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);
+	void compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
+	void compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
+	void compileWhileStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
+
+	liaCompilerVariable* addvarOrUpdateEnvironment(liaCompilerVariable* v, liaCompilerEnvironment* env);
+
+	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);
+	void compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env,Label& loopLabel);
 
 public:
 
