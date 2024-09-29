@@ -166,7 +166,7 @@ void liaCompiler::compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst, 
 	}
 }
 
-void liaCompiler::compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env)
+void liaCompiler::compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, int inc)
 {
 	std::string variableName;
 
@@ -191,7 +191,8 @@ void liaCompiler::compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theA
 				v.type = liaVariableType::integer;
 
 				liaCompilerVariable* pVar=addvarOrUpdateEnvironment(&v, env);
-				jitter->add(pVar->vreg, atoi(numVal.c_str()));
+				if (inc>0) jitter->add(pVar->vreg, atoi(numVal.c_str()));
+				else jitter->sub(pVar->vreg, atoi(numVal.c_str()));
 				int ival = std::get<int>(pVar->value);
 				ival+= atoi(numVal.c_str());
 				pVar->value = ival;
@@ -204,7 +205,7 @@ void liaCompiler::compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theA
 	}
 }
 
-void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, Label& loopLabel)
+void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, Label& loopLabel, bool invert)
 {
 	// compiles expression relop expression
 	// it should optimize out constant conditions, like 1<2 or 0==0 and such
@@ -237,9 +238,17 @@ void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst
 
 	jitter->cmp(pVar->vreg, ival);
 
-	if (relOpStr == "<")
+	if ((relOpStr == "<")&&(!invert))
 	{
 		jitter->jl(loopLabel);
+	}
+	else if ((relOpStr == "<") && invert)
+	{
+		jitter->jge(loopLabel);
+	}
+	else
+	{
+		throw("condition::Unsupported relop");
 	}
 }
 
@@ -267,7 +276,44 @@ void liaCompiler::compileWhileStmt(const std::shared_ptr<peg::Ast>& theAst, liaC
 	jitter->bind(L_condLoop);
 	compileCodeBlock(pBlock, env);
 	jitter->bind(L_loop);
-	compileSimpleCondition(pCond, env,L_condLoop);
+	compileSimpleCondition(pCond, env,L_condLoop, false);
+}
+
+void liaCompiler::compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env)
+{
+	liaVariable retVar;
+
+	std::shared_ptr<peg::Ast> pCond;
+	std::shared_ptr<peg::Ast> pBlock;
+	std::shared_ptr<peg::Ast> pBlock2;
+
+	pCond = theAst->nodes[0];
+	pBlock = theAst->nodes[1];
+
+	if (theAst->nodes.size() == 2)
+	{
+		// simple if
+
+		Label L_loop = jitter->newLabel();
+		compileSimpleCondition(pCond, env, L_loop, true);
+		compileCodeBlock(pBlock, env);
+		jitter->bind(L_loop);
+	}
+	else if (theAst->nodes.size() == 3)
+	{
+		// if/else
+		pBlock2 = theAst->nodes[2];
+
+		Label L_loop = jitter->newLabel();
+		Label L_elseloop = jitter->newLabel();
+
+		compileSimpleCondition(pCond, env, L_loop, true);
+		compileCodeBlock(pBlock, env);
+		jitter->jmp(L_elseloop);
+		jitter->bind(L_loop);
+		compileCodeBlock(pBlock2, env);
+		jitter->bind(L_elseloop);
+	}
 }
 
 void liaCompiler::exeCute()
@@ -311,13 +357,19 @@ void liaCompiler::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaC
 			//std::cout << "vardecl" << std::endl;
 			compileVarAssignment(stmt->nodes[0], env);
 		}
-		else if (stmt->nodes[0]->name == "IncrementStmt")
+		else if ((stmt->nodes[0]->name == "IncrementStmt")|| (stmt->nodes[0]->name == "DecrementStmt"))
 		{
-			compilePostincrementStmt(stmt->nodes[0], env);
+			int inc = 1;
+			if (stmt->nodes[0]->name == "DecrementStmt") inc = -1;
+			compilePostincrementStmt(stmt->nodes[0], env, inc);
 		}
 		else if (stmt->nodes[0]->name == "WhileStmt")
 		{
 			compileWhileStmt(stmt->nodes[0], env);
+		}
+		else if (stmt->nodes[0]->name == "IfStmt")
+		{
+			compileIfStatement(stmt->nodes[0], env);
 		}
 	}
 }
