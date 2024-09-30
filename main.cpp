@@ -1,7 +1,7 @@
 
 //
-// liaison - interpreter for the language with the same name
-// (c) friol 2023
+// liaison - interpreter&compiler for the language with the same name
+// (c) friol 2023-2024
 //
 
 #include <string>
@@ -88,7 +88,8 @@ int main(int argc,char** argv)
 		theCompiler.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
 		theCompiler.exeCute();
 
-		/*try
+		/*
+		try
 		{
 			theLiaInterpreter.exeCute(theLiaParser.theAst, params);
 		}
@@ -96,7 +97,8 @@ int main(int argc,char** argv)
 		{
 			ex = ex;
 			return 1;
-		}*/
+		}
+		*/
 	}
 
 	return 0;

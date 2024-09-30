@@ -12,7 +12,6 @@ liaCompiler::liaCompiler()
 	logger = new FileLogger(stdout);
 	codeChunk.init(rt.environment(), rt.cpuFeatures());
 	codeChunk.setLogger(logger);
-
 	jitter = new x86::Compiler(&codeChunk);
 }
 
@@ -50,8 +49,9 @@ void liaCompiler::generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, lia
 		const char* scpPtr = constPoolMgr.getStringConstantPtr(numVal);
 
 		InvokeNode* invokeNode;
-		jitter->invoke(&invokeNode, imm(&puts),FuncSignature::build<int,const char*>());
+		jitter->invoke(&invokeNode, imm(&fputs),FuncSignature::build<int,const char*, FILE*>());
 		invokeNode->setArg(0, scpPtr);
+		invokeNode->setArg(1, stdout);
 		x86::Gp x = jitter->newUInt32();
 		invokeNode->setRet(0, x);
 	}
@@ -65,8 +65,10 @@ void liaCompiler::generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, lia
 		const char* scpPtr = constPoolMgr.getStringConstantPtr(strVal);
 
 		InvokeNode* invokeNode;
-		jitter->invoke(&invokeNode, imm(&puts), FuncSignature::build<int, const char*>());
+		//jitter->invoke(&invokeNode, imm(&puts), FuncSignature::build<int, const char*>());
+		jitter->invoke(&invokeNode, imm(&fputs), FuncSignature::build<int, const char*,FILE*>());
 		invokeNode->setArg(0, scpPtr);
+		invokeNode->setArg(1, stdout);
 		x86::Gp x = jitter->newUInt32();
 		invokeNode->setRet(0, x);
 	}
@@ -82,6 +84,7 @@ void liaCompiler::generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, lia
 		if (pVar->type == liaVariableType::integer)
 		{
 			char tmpStr[16]; // is this persistent to hold the value?
+			tmpStr[0] = '\0';
 
 			InvokeNode* itoaInvoker;
 			jitter->invoke(&itoaInvoker, &itoa, FuncSignature::build<char*,int,char*,int>());
@@ -93,8 +96,9 @@ void liaCompiler::generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, lia
 			itoaInvoker->setRet(0,x);
 
 			InvokeNode* invokeNode;
-			jitter->invoke(&invokeNode, imm(&puts), FuncSignature::build<int, const char*>());
+			jitter->invoke(&invokeNode, imm(&fputs), FuncSignature::build<int, const char*, FILE*>());
 			invokeNode->setArg(0, tmpStr);
+			invokeNode->setArg(1, stdout);
 			x86::Gp rv = jitter->newUInt32();
 			invokeNode->setRet(0, rv);
 		}
@@ -110,6 +114,15 @@ void liaCompiler::generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, lia
 	}
 }
 
+void liaCompiler::generatePrintNewline()
+{
+	InvokeNode* invokeNode;
+	jitter->invoke(&invokeNode, imm(&puts), FuncSignature::build<int, const char*>());
+	invokeNode->setArg(0, "");
+	x86::Gp x = jitter->newUInt32();
+	invokeNode->setRet(0, x);
+}
+
 void liaCompiler::compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env)
 {
 	for (auto& ch : theAst->nodes)
@@ -121,7 +134,11 @@ void liaCompiler::compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, l
 				if (ch->token == "print")
 				{
 					// library function "print"
-					generatePrintCode(theAst->nodes[1]->nodes[0]->nodes[0]->nodes[0],env);
+					for (auto& ch : theAst->nodes[1]->nodes)
+					{
+						generatePrintCode(ch->nodes[0]->nodes[0], env);
+					}
+					generatePrintNewline();
 				}
 			}
 		}
@@ -205,6 +222,57 @@ void liaCompiler::compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theA
 	}
 }
 
+void liaCompiler::compileMultiplyDivideStmt(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, bool isMultiply)
+{
+	std::string variableName;
+
+	for (auto& ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				variableName = ch->token;
+			}
+		}
+		else
+		{
+			if (ch->nodes[0]->nodes[0]->name == "IntegerNumber")
+			{
+				std::string numVal;
+				numVal += ch->nodes[0]->nodes[0]->token;
+
+				liaCompilerVariable v;
+				v.name = variableName;
+				v.type = liaVariableType::integer;
+
+				liaCompilerVariable* pVar = addvarOrUpdateEnvironment(&v, env);
+
+				int coeff = atoi(numVal.c_str());
+				x86::Gp tmpReg = jitter->newGpd();
+				jitter->mov(tmpReg, coeff);
+
+				if (isMultiply) jitter->imul(pVar->vreg, tmpReg);
+				else
+				{
+					x86::Gp dummy = jitter->newGpd();
+					jitter->xor_(dummy, dummy);
+					jitter->idiv(dummy,pVar->vreg, tmpReg);
+				}
+
+				int ival = std::get<int>(pVar->value);
+				if (isMultiply) ival *= atoi(numVal.c_str());
+				else ival /= atoi(numVal.c_str());
+				pVar->value = ival;
+			}
+			else
+			{
+				std::cout << "unhandled post-operator operand type " << ch->nodes[0]->nodes[0]->name << std::endl;
+			}
+		}
+	}
+}
+
 void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, Label& loopLabel, bool invert)
 {
 	// compiles expression relop expression
@@ -238,17 +306,13 @@ void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst
 
 	jitter->cmp(pVar->vreg, ival);
 
-	if ((relOpStr == "<")&&(!invert))
-	{
-		jitter->jl(loopLabel);
-	}
-	else if ((relOpStr == "<") && invert)
-	{
-		jitter->jge(loopLabel);
-	}
+	if ((relOpStr == "<")&&(!invert)) jitter->jl(loopLabel);
+	else if ((relOpStr == "<") && invert) jitter->jge(loopLabel);
+	else if ((relOpStr == ">") && (!invert)) jitter->jg(loopLabel);
+	else if ((relOpStr == ">") && invert) jitter->jle(loopLabel);
 	else
 	{
-		throw("condition::Unsupported relop");
+		std::cout << "condition::Unsupported relop" << std::endl;
 	}
 }
 
@@ -371,6 +435,14 @@ void liaCompiler::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaC
 		{
 			compileIfStatement(stmt->nodes[0], env);
 		}
+		else if (stmt->nodes[0]->name == "MultiplyStmt")
+		{
+			compileMultiplyDivideStmt(stmt->nodes[0], env, true);
+		}
+		else if (stmt->nodes[0]->name == "DivideStmt")
+		{
+			compileMultiplyDivideStmt(stmt->nodes[0], env, false);
+		}
 	}
 }
 
@@ -407,4 +479,5 @@ int liaCompiler::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<st
 liaCompiler::~liaCompiler()
 {
 	delete(jitter);
+	delete(logger);
 }

@@ -88,10 +88,12 @@ private:
 
 	constantPoolManager constPoolMgr;
 
+	void generatePrintNewline();
 	void generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);
 	void compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);
 	void compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 	void compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env, int inc);
+	void compileMultiplyDivideStmt(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, bool isMultiply);
 	void compileWhileStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 
