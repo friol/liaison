@@ -273,6 +273,52 @@ void liaCompiler::compileMultiplyDivideStmt(const std::shared_ptr<peg::Ast>& the
 	}
 }
 
+void liaCompiler::compileShiftStatement(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, int verse)
+{
+	std::string variableName;
+
+	for (auto& ch : theAst->nodes)
+	{
+		if (ch->is_token)
+		{
+			if (ch->name == "VariableName")
+			{
+				variableName = ch->token;
+			}
+		}
+		else
+		{
+			if (ch->nodes[0]->nodes[0]->name == "IntegerNumber")
+			{
+				std::string numVal;
+				numVal += ch->nodes[0]->nodes[0]->token;
+
+				liaCompilerVariable v;
+				v.name = variableName;
+				v.type = liaVariableType::integer;
+
+				liaCompilerVariable* pVar = addvarOrUpdateEnvironment(&v, env);
+
+				int coeff = atoi(numVal.c_str());
+				x86::Gp tmpReg = jitter->newGpd();
+				jitter->mov(tmpReg, coeff);
+
+				if (verse>0) jitter->shr(pVar->vreg, tmpReg);
+				else jitter->shl(pVar->vreg, tmpReg);
+
+				int ival = std::get<int>(pVar->value);
+				if (verse > 0) ival >>= atoi(numVal.c_str());
+				else ival <<= atoi(numVal.c_str());
+				pVar->value = ival;
+			}
+			else
+			{
+				std::cout << "unhandled shift post-operator operand type " << ch->nodes[0]->nodes[0]->name << std::endl;
+			}
+		}
+	}
+}
+
 void liaCompiler::compileSimpleCondition(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, Label& loopLabel, bool invert)
 {
 	// compiles expression relop expression
@@ -442,6 +488,14 @@ void liaCompiler::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaC
 		else if (stmt->nodes[0]->name == "DivideStmt")
 		{
 			compileMultiplyDivideStmt(stmt->nodes[0], env, false);
+		}
+		else if (stmt->nodes[0]->name == "RshiftStmt")
+		{
+			compileShiftStatement(stmt->nodes[0], env, 1);
+		}
+		else if (stmt->nodes[0]->name == "LshiftStmt")
+		{
+			compileShiftStatement(stmt->nodes[0], env, -1);
 		}
 	}
 }

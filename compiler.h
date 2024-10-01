@@ -94,6 +94,7 @@ private:
 	void compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 	void compilePostincrementStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env, int inc);
 	void compileMultiplyDivideStmt(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, bool isMultiply);
+	void compileShiftStatement(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env, int verse);
 	void compileWhileStmt(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst,liaCompilerEnvironment* env);
 
