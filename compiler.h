@@ -67,6 +67,12 @@ struct liaCompilerVariable
 	x86::Gp vreg;
 };
 
+struct liaCompiledFunction
+{
+	FuncNode* nodePtr;
+	std::string name;
+};
+
 struct liaCompilerEnvironment
 {
 	std::unordered_map<std::string, liaCompilerVariable> varMap;
@@ -87,6 +93,8 @@ private:
 	FileLogger* logger;
 
 	constantPoolManager constPoolMgr;
+
+	std::vector<liaCompiledFunction> listOfCompiledFunctions;
 
 	void generatePrintNewline();
 	void generatePrintCode(const std::shared_ptr<peg::Ast>& theAst, liaCompilerEnvironment* env);

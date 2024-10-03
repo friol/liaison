@@ -10,6 +10,7 @@ using namespace asmjit;
 liaCompiler::liaCompiler()
 {
 	logger = new FileLogger(stdout);
+
 	codeChunk.init(rt.environment(), rt.cpuFeatures());
 	codeChunk.setLogger(logger);
 	jitter = new x86::Compiler(&codeChunk);
@@ -139,6 +140,30 @@ void liaCompiler::compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, l
 						generatePrintCode(ch->nodes[0]->nodes[0], env);
 					}
 					generatePrintNewline();
+				}
+				else
+				{
+					std::string funName;
+					funName += ch->token;
+
+					//std::cout << "other function invoked: " << funName << std::endl;
+
+					bool found = false;
+					unsigned int idx = 0;
+					while ((!found) && (idx < listOfCompiledFunctions.size()))
+					{
+						if (listOfCompiledFunctions[idx].name == funName) found = true;
+						else idx += 1;
+					}
+
+					if (!found)
+					{
+						std::cout << "Error: function call to unknown function " << funName << std::endl;
+						throw("Error");
+					}
+
+					InvokeNode* invokeNode;
+					jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<void>());
 				}
 			}
 		}
@@ -502,29 +527,61 @@ void liaCompiler::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaC
 
 int liaCompiler::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<std::string> params,std::vector<liaFunction>& functionList)
 {
-	// short recipe:
-	// this function has to scan all the functions in the program, and create chunks of code for each one.
-	// probably, sub-chunks will be needed, because an expression or a conditional expression
-	// could be evaluated at runtime with code that is quite complex. So it will map to a chunk.
-	// other problem: how to handle loops of code that repeatedly call an inner function (an inner chunk)
-	// solution: this should be doable defining a function and calling it with asmjit's invoker
-
-	liaCompilerEnvironment compEnv;
+	// first pass: create a list of functions (to be called - or not called - later)
 
 	for (liaFunction f : functionList)
 	{
-		if (f.name == "main")
+		//if (f.name != "main")
 		{
-			std::cout << peg::ast_to_s(f.functionCodeBlockAst);
-			assert(f.functionCodeBlockAst->name == "CodeBlock");
+			std::cout << "First pass: adding function " << f.name << std::endl;
+			
+			liaCompiledFunction newPhun;
+			newPhun.name = f.name;
+			newPhun.nodePtr = jitter->newFunc(FuncSignature::build<void>());
+			//jitter->newFuncNode(&newPhun.nodePtr, FuncSignature::build<void>());
 
-			FuncNode* funcNode = jitter->addFunc(FuncSignature::build<void>());
-
-			compileCodeBlock(f.functionCodeBlockAst, &compEnv);
-
-			jitter->ret();
-			jitter->endFunc();
+			listOfCompiledFunctions.push_back(newPhun);
 		}
+	}
+
+	// second pass: create main caller + chunks of code for main and other functions
+
+	bool found = false;
+	unsigned int idx = 0;
+	while ((!found) && (idx < listOfCompiledFunctions.size()))
+	{
+		if (listOfCompiledFunctions[idx].name == "main") found = true;
+		else idx += 1;
+	}
+
+	FuncNode* funcNode = jitter->addFunc(FuncSignature::build<void>());
+	InvokeNode* invokeNode;
+	jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<void>());
+	jitter->endFunc();
+
+	//
+
+	liaCompilerEnvironment compEnv;
+	for (liaFunction f : functionList)
+	{
+		std::cout << "compiling code for function " << f.name << std::endl;
+
+		bool found = false;
+		unsigned int idx = 0;
+		while ((!found)&&(idx<listOfCompiledFunctions.size()))
+		{
+			if (listOfCompiledFunctions[idx].name == f.name) found = true;
+			else idx += 1;
+		}
+
+		if (!found) throw("Error: unknown function name");
+
+		jitter->addFunc(listOfCompiledFunctions[idx].nodePtr);
+
+		compileCodeBlock(f.functionCodeBlockAst, &compEnv);
+
+		//jitter->ret();
+		jitter->endFunc();
 	}
 
 	return 0;
