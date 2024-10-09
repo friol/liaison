@@ -163,7 +163,7 @@ void liaCompiler::compileFunctionCall(const std::shared_ptr<peg::Ast>& theAst, l
 					}
 
 					InvokeNode* invokeNode;
-					jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<void>());
+					jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<int>());
 				}
 			}
 		}
@@ -199,6 +199,42 @@ void liaCompiler::compileVarAssignment(const std::shared_ptr<peg::Ast>& theAst, 
 				v.value = atoi(numVal.c_str());
 
 				addvarOrUpdateEnvironment(&v,env);
+			}
+			else if (ch->nodes[0]->nodes[0]->name == "RFuncCall")
+			{
+				//std::cout << ch->nodes[0]->nodes[0]->nodes[0] << std::endl;
+				//std::cout << peg::ast_to_s(ch->nodes[0]->nodes[0]) << std::endl;
+				std::string funName;
+				funName+=ch->nodes[0]->nodes[0]->nodes[0]->token;
+
+				bool found = false;
+				unsigned int idx = 0;
+				while ((!found) && (idx < listOfCompiledFunctions.size()))
+				{
+					if (listOfCompiledFunctions[idx].name == funName) found = true;
+					else idx += 1;
+				}
+
+				if (!found)
+				{
+					std::cout << "Error: function call to unknown function " << funName << std::endl;
+					throw("Error");
+				}
+
+				x86::Gp retVal = jitter->newUInt32();
+				InvokeNode* invokeNode;
+				jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<int>());
+				invokeNode->setRet(0, retVal);
+
+				liaCompilerVariable v;
+				v.name = variableName;
+				v.type = liaVariableType::integer;
+				//unsigned int rv=retVal.predicate();
+				v.vreg = jitter->newGpd();
+				v.vreg = retVal;
+				v.value = 0;
+
+				env->varMap[v.name] = v;
 			}
 			else
 			{
@@ -522,6 +558,29 @@ void liaCompiler::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaC
 		{
 			compileShiftStatement(stmt->nodes[0], env, -1);
 		}
+		else if (stmt->nodes[0]->name == "ReturnStmt")
+		{
+			//std::cout << peg::ast_to_s(stmt->nodes[0]);
+
+			if (stmt->nodes[0]->nodes.size() == 1)
+			{
+				// return without arguments
+				jitter->ret();
+			}
+			else
+			{
+				// return <expression>
+				if (stmt->nodes[0]->nodes[0]->nodes[0]->nodes[0]->name=="IntegerNumber")
+				{
+					x86::Gp x = jitter->newUInt32();
+					std::string tmps;
+					tmps += stmt->nodes[0]->nodes[0]->nodes[0]->nodes[0]->token;
+
+					jitter->mov(x, atoi(tmps.c_str()));
+					jitter->ret(x);
+				}
+			}
+		}
 	}
 }
 
@@ -531,17 +590,10 @@ int liaCompiler::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<st
 
 	for (liaFunction f : functionList)
 	{
-		//if (f.name != "main")
-		{
-			std::cout << "First pass: adding function " << f.name << std::endl;
-			
-			liaCompiledFunction newPhun;
-			newPhun.name = f.name;
-			newPhun.nodePtr = jitter->newFunc(FuncSignature::build<void>());
-			//jitter->newFuncNode(&newPhun.nodePtr, FuncSignature::build<void>());
-
-			listOfCompiledFunctions.push_back(newPhun);
-		}
+		liaCompiledFunction newPhun;
+		newPhun.name = f.name;
+		newPhun.nodePtr = jitter->newFunc(FuncSignature::build<int>());
+		listOfCompiledFunctions.push_back(newPhun);
 	}
 
 	// second pass: create main caller + chunks of code for main and other functions
@@ -554,17 +606,19 @@ int liaCompiler::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<st
 		else idx += 1;
 	}
 
-	FuncNode* funcNode = jitter->addFunc(FuncSignature::build<void>());
+	if (!found) throw("Error: main not found (this should not happen)");
+
+	FuncNode* funcNode = jitter->addFunc(FuncSignature::build<int>());
 	InvokeNode* invokeNode;
-	jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<void>());
+	jitter->invoke(&invokeNode, listOfCompiledFunctions[idx].nodePtr->label(), FuncSignature::build<int>());
 	jitter->endFunc();
 
-	//
+	// compile functions
 
 	liaCompilerEnvironment compEnv;
 	for (liaFunction f : functionList)
 	{
-		std::cout << "compiling code for function " << f.name << std::endl;
+		//std::cout << "compiling code for function " << f.name << std::endl;
 
 		bool found = false;
 		unsigned int idx = 0;
@@ -580,7 +634,6 @@ int liaCompiler::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<st
 
 		compileCodeBlock(f.functionCodeBlockAst, &compEnv);
 
-		//jitter->ret();
 		jitter->endFunc();
 	}
 
