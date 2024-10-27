@@ -208,6 +208,13 @@ bool compareIntVars(liaVariable i1, liaVariable i2)
 	return (iv1<iv2);
 }
 
+bool compareStringVars(liaVariable i1, liaVariable i2)
+{
+	std::string iv1 = std::get<std::string>(i1.value);
+	std::string iv2 = std::get<std::string>(i2.value);
+	return (iv1 < iv2);
+}
+
 liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, std::string varName)
 {
 	liaVariable retVal;
@@ -483,9 +490,30 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 				{
 					// sort monodimensional array
 					assert(pvarValue->type == liaVariableType::array);
-					assert(parameters.size() == 0);
 
-					std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareIntVars);
+					if (parameters.size() != 0)
+					{
+						std::string err;
+						err += "Sort function doesn't accept parameters. ";
+						err += "Terminating.";
+						fatalError(err);
+					}
+
+					if (pvarValue->vlist.size() != 0)
+					{
+						if (pvarValue->vlist[0].type == liaVariableType::integer)
+						{
+							std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareIntVars);
+						}
+						else if (pvarValue->vlist[0].type == liaVariableType::string)
+						{
+							std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareStringVars);
+						}
+						else
+						{
+							// TODO: unsupported type in sort
+						}
+					}
 				}
 				else if (ch->token == "clear")
 				{
@@ -2271,11 +2299,13 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 	{
 		if (theAst->nodes.size() == 1)
 		{
+			//std::cout << "A lonely condition " << theAst->name << " ns: " << theAst->nodes.size() << std::endl;
 			return evaluateCondition(theAst->nodes[0], env);
 		}
 		else if (theAst->nodes.size() == 3)
 		{
 			// [InnerCondition CondOperator Condition] or [Expression Relop Expression]
+			//std::cout << "Size 3 " << theAst->name << " ns: " << theAst->nodes.size() << std::endl;
 			if ((theAst->nodes[0]->name == "InnerCondition")|| (theAst->nodes[0]->name == "Condition"))
 			{
 				std::string condOp;
@@ -2327,6 +2357,31 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 			err += "Unhandled expression node scenario. ";
 			err += "Terminating.";
 			fatalError(err);
+		}
+	}
+	else
+	{
+		if ((theAst->nodes.size() == 1) && (theAst->name == "Expression"))
+		{
+			//std::cout << "Something else " << theAst->name << " ns: " << theAst->nodes.size() << std::endl;
+			liaVariable exprz = evaluateExpression(theAst->nodes[0], env);
+			if (exprz.type == liaVariableType::boolean)
+			{
+				return (std::get<bool>(exprz.value));
+			}
+			else if (exprz.type == liaVariableType::integer)
+			{
+				int varval = std::get<int>(exprz.value);
+				if (varval == 0) return false;
+				else return true;
+			}
+			else
+			{
+				std::string err;
+				err += "Unsupported expression type evaluation. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
 		}
 	}
 

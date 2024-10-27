@@ -90,7 +90,7 @@ liaParser::liaParser()
 	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' Expression ')' [\r\n]? CodeBlock
 
 	Condition <- InnerCondition ( CondOperator Condition )*
-	InnerCondition <- Expression Relop Expression / '(' Condition ')'
+	InnerCondition <- Expression (Relop Expression)* / '(' Condition ')'
 	CondOperator <- '&&' / '||'
 
 	Relop <- '==' / '<=' / '<' / '>=' / '>' / '!='
