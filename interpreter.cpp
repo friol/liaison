@@ -852,7 +852,8 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				if (arrIdx >= pArr->vlist.size())
 				{
 					std::string err;
-					err += "Array index out of range at " + std::to_string(lineNum) + ". ";
+					err += "Array index out of range at " + std::to_string(lineNum) + ". Requested index: "+ 
+						std::to_string(arrIdx)+" size of array: "+ std::to_string(pArr->vlist.size())+". ";
 					err += "Terminating.";
 					fatalError(err);
 				}
@@ -876,10 +877,22 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			}
 
 			std::string key = std::get<std::string>(vIdxArr[0].value);
-			retVar.type = pVar->vMap[key].type;
-			retVar.value = pVar->vMap[key].value;
-			retVar.vlist = pVar->vMap[key].vlist;
-			retVar.vMap = pVar->vMap[key].vMap;
+
+			// check if key is in dictionary keys
+			if (pVar->vMap.find(key) == pVar->vMap.end()) 
+			{
+				std::string err;
+				err += "Key "+key+" not found in dictionary. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+			else 
+			{
+				retVar.type = pVar->vMap[key].type;
+				retVar.value = pVar->vMap[key].value;
+				retVar.vlist = pVar->vMap[key].vlist;
+				retVar.vMap = pVar->vMap[key].vMap;
+			}
 		}
 		else if (pVar->type == liaVariableType::string)
 		{
@@ -974,10 +987,10 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				fatalError(err);
 			}
 
-			if ((vResult.type != liaVariableType::integer)&& (vResult.type != liaVariableType::longint))
+			if ((vResult.type != liaVariableType::integer)&&(vResult.type != liaVariableType::longint)&& (vResult.type != liaVariableType::string))
 			{
 				std::string err;
-				err += "Only expressions of elements with type integer/long are supported at the moment " + std::to_string(lineNum) + ". ";
+				err += "Only expressions of elements with type integer/long/string are supported at the moment " + std::to_string(lineNum) + ". ";
 				err += "Terminating.";
 				fatalError(err);
 			}
@@ -1003,6 +1016,23 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				else if (opz == "-") partialResult -= newVal;
 				else if (opz == "*") partialResult *= newVal;
 				else if (opz == "/") partialResult /= newVal;
+
+				vResult.value = partialResult;
+			}
+			else if (vResult.type == liaVariableType::string)
+			{
+				std::string partialResult = std::get<std::string>(vResult.value);
+				std::string newVal = std::get<std::string>(v1.value);
+
+				if (opz == "+") partialResult += newVal;
+				else
+				{
+					// only + supported for strings
+					std::string err;
+					err += "Only + is supported for strings at line " + std::to_string(lineNum) + ". ";
+					err += "Terminating.";
+					fatalError(err);
+				}
 
 				vResult.value = partialResult;
 			}
@@ -2500,7 +2530,7 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 	else
 	{
 		std::string err;
-		err += "Unknown foreach iterated at line "+std::to_string(lineNum)+". ";
+		err += "Unknown foreach iterated type at line "+std::to_string(lineNum)+". ";
 		err += "Terminating.";
 		fatalError(err);
 	}
