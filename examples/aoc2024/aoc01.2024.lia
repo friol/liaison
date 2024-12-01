@@ -1,0 +1,92 @@
+/* aoc 01 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2024.txt");
+    return sarr;
+}
+
+fn calcDistance(a,b)
+{
+    if (a>=b)
+    {
+        return a-b;
+    }
+
+    return b-a;
+}
+
+fn part1(arr)
+{
+    leftList=[];
+    rightList=[];
+
+    foreach (pair in arr)
+    {
+        p=pair.split("   ");
+        leftList.add(toInteger(p[0]));
+        rightList.add(toInteger(p[1]));
+    }
+
+    leftList.sort();
+    rightList.sort();
+
+    //
+
+    totalSum=0;
+    idx=0;
+    while (idx<leftList.length)
+    {
+        dist=calcDistance(leftList[idx],rightList[idx]);
+        print(dist);
+        totalSum+=dist;
+        idx+=1;
+    }
+
+    print(totalSum);
+}
+
+fn countOccurrencies(n,arr)
+{
+    totocc=0;
+
+    foreach (el in arr)
+    {
+        if (n==el)
+        {
+            totocc+=1;
+        }
+    }
+
+    return totocc;
+}
+
+fn part2(arr)
+{
+    leftList=[];
+    rightList=[];
+
+    foreach (pair in arr)
+    {
+        p=pair.split("   ");
+        leftList.add(toInteger(p[0]));
+        rightList.add(toInteger(p[1]));
+    }
+
+    totSimScore=0;
+    foreach (num in leftList)
+    {
+        occ=countOccurrencies(num,rightList);
+        totSimScore+=occ*num;
+    }
+
+    print(totSimScore);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    //part1(sarr);
+    part2(sarr);
+}
