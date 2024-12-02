@@ -414,6 +414,22 @@ fn test23()
     }
 }
 
+fn test24()
+{
+    // minus expression
+    n=-2;
+    m=-n;
+    if (m==2)
+    {
+        return 1;
+    }
+    else
+    {
+        print("Test 24 failed.");
+        return 0;
+    }
+}
+
 fn main(params)
 {
     print("Lia test suite v0.3 starting...");
@@ -466,11 +482,13 @@ fn main(params)
     res+=test22();
     /* evaluating if expressions */
     res+=test23();
+    /* minus expression */
+    res+=test24();
 
     t1=getMillisecondsSinceEpoch();
     t1-=t0;
 
-    print(res,"/23 tests passed.");
+    print(res,"/24 tests passed.");
     print("Execution time:",t1);
     // exec. time around 730ms in debug on my pc
 }

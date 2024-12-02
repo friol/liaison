@@ -9,7 +9,8 @@
 // plain return without value // DONE
 // monodimensional array sorting // DONE
 // arr[x].function()
-// conditions with only booleans
+// conditions with only booleans // DONE
+// if (!Expression)
 // if else if come on
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
@@ -63,8 +64,8 @@ liaParser::liaParser()
 
 	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / GlobalVarDecl / EndLine
 
-	Stmt <- IfStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
-			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ReturnStmt / ArrayAssignmentStmt / 
+	Stmt <- IfStmt / ReturnStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
+			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ArrayAssignmentStmt / 
 			DivideStmt / ModuloStmt / EndLine
 
 	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
@@ -107,7 +108,7 @@ liaParser::liaParser()
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
 	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
-					   VariableWithProperty / BitwiseNot / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
+					   VariableWithProperty / BitwiseNot / MinusExpression / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
 	ExprOperator <- '+' / '-' / '*' / '/' 
 
 	BooleanConst <- < 'true' > / < 'false' >
@@ -117,6 +118,7 @@ liaParser::liaParser()
 	ArrayInitializer <- '[' ExpressionList? ']'
 	DictInitializer <- '{' (DictList)* '}'
 	BitwiseNot <- '~' Expression
+	MinusExpression <- '-' Expression
 
 	DictList <- KeyValueList
 	KeyValueList <- StringLiteral ':' Expression (',' StringLiteral ':' Expression)*

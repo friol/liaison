@@ -1,0 +1,142 @@
+/* aoc 02 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.02.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.02.txt");
+    return sarr;
+}
+
+fn myAbs(n)
+{
+    if (n<0)
+    {
+        a=-1*n;
+        return a;
+    }
+
+    return n;
+}
+
+fn isSafe(report)
+{
+    increasing=false;
+    idx=1;
+    while (idx<report.length)
+    {
+        n0=toInteger(report[idx-1]);
+        n1=toInteger(report[idx]);
+
+        if (idx==1)
+        {
+            if (n1>n0)
+            {
+                increasing=true;
+            }
+        }
+
+        if ( (myAbs(n1-n0)>0) && (myAbs(n1-n0)<4) )
+        {
+        }
+        else
+        {
+            return false;
+        }
+
+        if (idx>1)
+        {
+            if ((n0>n1)&&increasing)
+            {
+                return false;
+            }
+
+            if ((n1>n0)&&(increasing==false))
+            {
+                return false;
+            }
+        }
+
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn part1(arr)
+{
+    totSafe=0;
+    foreach (line in arr)
+    {
+        report=line.split(" ");
+        if (isSafe(report))
+        {
+            totSafe+=1;
+        }
+    }
+
+    print(totSafe);
+}
+
+fn arrWithoutNumberAtPos(p,arr)
+{
+    ra=[];
+    idx=0;
+    while (idx<arr.length)
+    {
+        if (idx!=p)
+        {
+            ra.add(arr[idx]);
+        }
+
+        idx+=1;
+    }
+
+    return ra;
+}
+
+fn isSafeWithoutOne(report)
+{
+    idx=0;
+    while (idx<report.length)
+    {
+        newArr=arrWithoutNumberAtPos(idx,report);
+
+        if (isSafe(newArr))
+        {
+            return true;
+        }
+
+        idx+=1;
+    }
+
+    return false;
+}
+
+fn part2(arr)
+{
+    totSafe=0;
+    foreach (line in arr)
+    {
+        report=line.split(" ");
+        if (isSafe(report))
+        {
+            totSafe+=1;
+        }
+        else
+        {
+            if (isSafeWithoutOne(report))
+            {
+                totSafe+=1;
+            }
+        }
+    }
+
+    print(totSafe);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    //part1(sarr);
+    part2(sarr);
+}

@@ -591,6 +591,17 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 		retVar.type = liaVariableType::integer;
 		retVar.value = ~std::get<int>(expr.value);
 	}
+	else if (theAst->nodes[0]->name == "MinusExpression")
+	{
+		assert(theAst->nodes[0]->nodes.size() == 1);
+		assert(theAst->nodes[0]->nodes[0]->name == "Expression");
+
+		liaVariable expr = evaluateExpression(theAst->nodes[0]->nodes[0], env);
+		assert(expr.type == liaVariableType::integer);
+
+		retVar.type = liaVariableType::integer;
+		retVar.value = -std::get<int>(expr.value);
+	}
 	else if (theAst->nodes[0]->name == "VariableName")
 	{
 		std::string varName;
