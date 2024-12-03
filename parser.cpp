@@ -107,7 +107,7 @@ liaParser::liaParser()
 	VariableName <- < [a-zA-Z][0-9a-zA-Z_]* >
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
-	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / RFuncCall / 
+	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / NotExpression / RFuncCall / 
 					   VariableWithProperty / BitwiseNot / MinusExpression / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
 	ExprOperator <- '+' / '-' / '*' / '/' 
 
@@ -119,6 +119,7 @@ liaParser::liaParser()
 	DictInitializer <- '{' (DictList)* '}'
 	BitwiseNot <- '~' Expression
 	MinusExpression <- '-' Expression
+	NotExpression <- '!' Expression
 
 	DictList <- KeyValueList
 	KeyValueList <- StringLiteral ':' Expression (',' StringLiteral ':' Expression)*

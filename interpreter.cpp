@@ -1057,6 +1057,12 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 	{
 		return evaluateExpression(theAst->nodes[0], env);
 	}
+	else if (theAst->name == "NotExpression")
+	{
+		liaVariable rv=evaluateExpression(theAst->nodes[0], env);
+		rv.value = !std::get<bool>(rv.value);
+		return rv;
+	}
 
 	return retVar;
 }

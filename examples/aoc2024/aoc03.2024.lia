@@ -1,0 +1,103 @@
+/* aoc 03 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.03.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.03.txt");
+    return sarr;
+}
+
+fn substr(s,idx)
+{
+    rets="";
+    pos=idx;
+    while (pos<s.length)
+    {
+        rets+=s[pos];
+        pos+=1;
+    }
+    return rets;
+}
+
+// nnn,nnn)
+fn cutout(s)
+{
+    end=s.find(")");
+    if (end<0) 
+    { 
+        return 0; 
+    }
+
+    s2parse="";
+    idx=0;
+    while (idx<end)
+    {
+        s2parse+=s[idx];
+        idx+=1;
+    }
+
+    print("cutout is [",s2parse,"]");
+
+    if (s2parse.length>7) 
+    { 
+        print(s2parse," discarded for len>7");
+        return 0; 
+    }
+
+    numArr=s2parse.split(",");
+    //print("numarr is ",numArr);
+
+    if (numArr.length!=2) 
+    { 
+        return 0; 
+    }
+
+    a=toInteger(numArr[0]);
+    b=toInteger(numArr[1]);
+
+    return a*b;
+}
+
+fn part1(arr)
+{
+    str=arr[0];
+    idx=0;
+    totMul=0L;
+    finished=false;
+    slen=str.length;
+
+    while (finished==false)
+    {
+        //print("another one");
+        idx=str.find("mul(");
+        if (idx<0)
+        {
+            finished=true;
+        }
+        else
+        {
+            //print("found mul( at ",idx);
+            idx+=4;
+            str=substr(str,idx);
+            //print("ss is ",str);
+            mulRez=cutout(str);
+
+            if (mulRez!=0)
+            {
+                print(mulRez);
+            }
+            
+            mulRezLong=toLong(toString(mulRez));
+            totMul+=mulRezLong;
+        }
+    }
+
+    print(totMul);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    part1(sarr);
+    //part2(sarr);
+}
