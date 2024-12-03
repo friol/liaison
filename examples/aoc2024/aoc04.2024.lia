@@ -1,0 +1,20 @@
+/* aoc 04 2024 lia */
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.txt");
+    return sarr;
+}
+
+fn part1(arr)
+{
+    
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    part1(sarr);
+    //part2(sarr);
+}

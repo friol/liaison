@@ -95,9 +95,89 @@ fn part1(arr)
     print(totMul);
 }
 
+fn processSemaphores(isMulEnabled,str,idxMul)
+{
+    goOut=false;
+
+    while (!goOut)
+    {
+        idxDo=str.find("do()");
+        if ((idxDo!=-1)&&(idxDo<idxMul))
+        {
+            print("dofount");
+            isMulEnabled=true;
+            idxMul-=4;
+            str=substr(str,idxDo);
+        }
+        else
+        {
+            idxDont=str.find("don't()");
+            if ((idxDont!=-1)&&(idxDont<idxMul))
+            {
+                print("don'tfount");
+                isMulEnabled=false;
+                idxMul-=7;
+                str=substr(str,idxDont);
+            }
+            else
+            {
+                goOut=true;
+            }
+        }
+    }
+
+    print("semaphore is ",isMulEnabled);
+    return isMulEnabled;
+}
+
+fn part2(arr)
+{
+    str=arr[0];
+    idx=0;
+    totMul=0L;
+    finished=false;
+    slen=str.length;
+    isMulEnabled=true;
+
+    while (finished==false)
+    {
+        //print("another one");
+        idx=str.find("mul(");
+        if (idx<0)
+        {
+            finished=true;
+        }
+        else
+        {
+            // see if we have to disable or enable muls
+            //print("str:",str);
+            isMulEnabled=processSemaphores(isMulEnabled,str,idx);
+
+            //print("found mul( at ",idx);
+            idx+=4;
+            str=substr(str,idx);
+            //print("ss is ",str);
+            mulRez=cutout(str);
+
+            if (mulRez!=0)
+            {
+                print(mulRez);
+            }
+            
+            if (isMulEnabled)
+            {
+                mulRezLong=toLong(toString(mulRez));
+                totMul+=mulRezLong;
+            }
+        }
+    }
+
+    print(totMul);
+}
+
 fn main(params)
 {
     sarr=readInput();
-    part1(sarr);
-    //part2(sarr);
+    //part1(sarr);
+    part2(sarr);
 }
