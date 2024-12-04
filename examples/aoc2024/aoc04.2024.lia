@@ -1,20 +1,214 @@
 /* aoc 04 2024 lia */
 
+glbCruciPuzzle=[];
+
 fn readInput()
 {
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.test.txt");
-    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.txt");
     return sarr;
+}
+
+fn searchHorz(w,c,r,width,height)
+{
+    wlen=w.length;
+
+    if (c<(width-wlen+1))
+    {
+        idx=0;
+        while (idx<wlen)
+        {
+            if (glbCruciPuzzle[r][idx+c]!=w[idx])
+            {
+                return 0;
+            }
+            idx+=1;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+fn searchVert(w,c,r,width,height)
+{
+    wlen=w.length;
+
+    if (r<(height-wlen+1))
+    {
+        idx=0;
+        while (idx<wlen)
+        {
+            if (glbCruciPuzzle[idx+r][c]!=w[idx])
+            {
+                return 0;
+            }
+            idx+=1;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+fn searchDiag(w,c,r,width,height)
+{
+    wlen=w.length;
+
+    if ( (r<(height-wlen+1)) && (c<(width-wlen+1)) )
+    {
+        idx=0;
+        while (idx<wlen)
+        {
+            if (glbCruciPuzzle[idx+r][idx+c]!=w[idx])
+            {
+                return 0;
+            }
+            idx+=1;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+fn searchDiag2(w,c,r,width,height)
+{
+    if (c>(width-1))
+    {
+        return 0;
+    }
+
+    wlen=w.length;
+
+    if ( (r<(height-wlen+1)) && (c>=(wlen-1)) )
+    {
+        idx=0;
+        while (idx<wlen)
+        {
+            if (glbCruciPuzzle[idx+r][c-idx]!=w[idx])
+            {
+                return 0;
+            }
+            idx+=1;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+fn countXmases()
+{
+    totXmases=0;
+    width=glbCruciPuzzle[0].length;
+    height=glbCruciPuzzle.length;
+
+    r=0;
+    while (r<height)
+    {
+        c=0;
+        while (c<width)
+        {
+            totXmases+=searchHorz("XMAS",c,r,width,height);
+            totXmases+=searchHorz("SAMX",c,r,width,height);
+
+            totXmases+=searchVert("XMAS",c,r,width,height);
+            totXmases+=searchVert("SAMX",c,r,width,height);
+
+            totXmases+=searchDiag("XMAS",c,r,width,height);
+            totXmases+=searchDiag("SAMX",c,r,width,height);
+
+            totXmases+=searchDiag2("XMAS",c,r,width,height);
+            totXmases+=searchDiag2("SAMX",c,r,width,height);
+
+            c+=1;
+        }
+
+        r+=1;
+    }
+
+    print(totXmases);
 }
 
 fn part1(arr)
 {
-    
+    foreach (line in arr)
+    {
+        newLine=[];
+        foreach (c in line)
+        {
+            newLine.add(c);
+        }
+        glbCruciPuzzle.add(newLine);
+    }
+
+    countXmases();
+}
+
+fn countMASCrossed()
+{
+    totXmases=0;
+    width=glbCruciPuzzle[0].length;
+    height=glbCruciPuzzle.length;
+
+    r=0;
+    while (r<height)
+    {
+        c=0;
+        while (c<width)
+        {
+            locCount=0;
+            locCount+=searchDiag("MAS",c,r,width,height);
+            locCount+=searchDiag("SAM",c,r,width,height);
+
+            locCount+=searchDiag2("MAS",c+2,r,width,height);
+            locCount+=searchDiag2("SAM",c+2,r,width,height);
+
+            if (locCount==2)
+            {
+                totXmases+=1;
+            }
+
+            c+=1;
+        }
+
+        r+=1;
+    }
+
+    print(totXmases);
+}
+
+fn part2(arr)
+{
+    foreach (line in arr)
+    {
+        newLine=[];
+        foreach (c in line)
+        {
+            newLine.add(c);
+        }
+        glbCruciPuzzle.add(newLine);
+    }
+
+    countMASCrossed();
 }
 
 fn main(params)
 {
     sarr=readInput();
-    part1(sarr);
-    //part2(sarr);
+    //part1(sarr);
+    part2(sarr);
 }

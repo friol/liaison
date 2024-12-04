@@ -10,7 +10,8 @@
 // monodimensional array sorting // DONE
 // arr[x].function()
 // conditions with only booleans // DONE
-// if (!Expression)
+// if (!Expression) // DONE
+// regexs
 // if else if come on
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
