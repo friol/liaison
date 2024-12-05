@@ -1,0 +1,204 @@
+/* aoc 05 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.05.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.05.txt");
+    return sarr;
+}
+
+fn findMiddleNum(l)
+{
+    idx=l.length/2;
+    //print("idx is ",idx);
+    return l[idx];
+}
+
+fn isCompliant(index,pl,rules)
+{
+    n0=pl[index];
+
+    foreach (rule in rules)
+    {
+        r0=(rule[0]);
+        r1=(rule[1]);
+        //print(r0,",",r1,"-",pl);
+
+        if (n0==r0)
+        {
+            //print(pl,"-",r1);
+            idxr1=pl.find(r1);
+            if (idxr1!=-1)
+            {
+                if (idxr1<index)
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (n0==r1)
+        {
+            //print(pl,"-",r0);
+            idxr0=pl.find(r0);
+            if (idxr0!=-1)
+            {
+                if (idxr0>index)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+fn respectsRules(pl,rules)
+{
+    idx=0;
+    while (idx<pl.length)
+    {
+        if (isCompliant(idx,pl,rules)==false)
+        {
+            return false;
+        }
+
+        idx+=1;
+    }
+
+    return true;
+}
+
+fn part1(arr)
+{
+    rulesArr=[];
+    pageLists=[];
+    spaceFount=false;
+
+    foreach (line in arr)
+    {
+        if (line.length==0)
+        {
+            spaceFount=true;
+        }
+        else
+        {
+            if (!spaceFount)
+            {
+                s=line.split("|");
+                p0=toInteger(s[0]);
+                p1=toInteger(s[1]);
+                rulesArr.add([p0,p1]);
+            }
+            else
+            {
+                pageLists.add(line.split(","));
+            }
+        }
+    }
+
+    //print(rulesArr);
+    //print(pageLists);
+
+    totSum=0;
+    foreach (pl in pageLists)
+    {
+        //print("Checking ",pl);
+        if (respectsRules(pl,rulesArr))
+        {
+            print(pl," is valid");
+            middleNum=findMiddleNum(pl);
+            totSum+=middleNum;
+        }
+    }
+
+    print(totSum);
+}
+
+fn reorder(pl,rulesArr)
+{
+    a=0;
+    while (a<pl.length)
+    {
+        foreach (rule in rulesArr)
+        {
+            if ((pl.find(rule[0])!=-1)&&(pl.find(rule[1])!=-1))
+            {
+                idxr0=pl.find(rule[0]);
+                idxr1=pl.find(rule[1]);
+
+                if (idxr1<idxr0)
+                {
+                    tmp=pl[idxr0];
+                    pl[idxr0]=pl[idxr1];
+                    pl[idxr1]=tmp;
+                }
+            }
+        }
+
+        a+=1;
+    }
+
+    return pl;
+}
+
+fn part2(arr)
+{
+    rulesArr=[];
+    pageLists=[];
+    spaceFount=false;
+
+    foreach (line in arr)
+    {
+        if (line.length==0)
+        {
+            spaceFount=true;
+        }
+        else
+        {
+            if (!spaceFount)
+            {
+                s=line.split("|");
+                p0=toInteger(s[0]);
+                p1=toInteger(s[1]);
+                rulesArr.add([p0,p1]);
+            }
+            else
+            {
+                lst=line.split(",");
+                newarr=[];
+                foreach (el in lst)
+                {
+                    newarr.add(toInteger(el));
+                }
+                pageLists.add(newarr);
+            }
+        }
+    }
+
+    totSum=0;
+    foreach (pl in pageLists)
+    {
+        //print("Checking ",pl);
+        if (!respectsRules(pl,rulesArr))
+        {
+            print(pl," is not valid");
+            reorderedList=reorder(pl,rulesArr);
+
+            print("Reordered: ",reorderedList);
+
+            middleNum=findMiddleNum(reorderedList);
+            totSum+=middleNum;
+        }
+    }
+
+    print(totSum);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    //part1(sarr);
+    part2(sarr);
+}
