@@ -363,7 +363,14 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 						int val2find = std::get<int>(parameters[0].value);
 						if (pvarValue->vlist.size() > 0)
 						{
-							assert(pvarValue->vlist[0].type == liaVariableType::integer);
+							//assert(pvarValue->vlist[0].type == liaVariableType::integer);
+							if (pvarValue->vlist[0].type != liaVariableType::integer)
+							{
+								std::string err;
+								err += "Searching an integer in an array with elements not of type integer at " + std::to_string(lineNum) + ". ";
+								err += "Terminating.";
+								fatalError(err);
+							}
 
 							for (int idx = 0;idx < pvarValue->vlist.size();idx++)
 							{
