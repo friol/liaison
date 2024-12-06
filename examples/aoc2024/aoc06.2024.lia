@@ -1,0 +1,242 @@
+/* aoc 06 2024 lia */
+
+glbMap=[];
+glbinitialC=-1;
+glbinitialR=-1;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.06.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.06.txt");
+    return sarr;
+}
+
+fn printMap()
+{
+    row=0;
+    while (row<glbMap.length)
+    {
+        col=0;
+        curLine="";
+        while (col<glbMap[0].length)
+        {
+            if (glbMap[row][col]==0)
+            {
+                curLine+=".";
+            }
+            if (glbMap[row][col]==1)
+            {
+                curLine+="#";
+            }
+            if (glbMap[row][col]==2)
+            {
+                curLine+="X";
+            }
+
+            col+=1;
+        }
+
+        print(curLine);
+        row+=1;
+    }
+}
+
+fn canGo(curC,curR,curDir)
+{
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+
+    curC+=directions[curDir][0];
+    curR+=directions[curDir][1];
+
+    if ((curC<0)||(curR<0)||(curC>(glbMap[0].length-1))||(curR>(glbMap.length-1)))
+    {
+        return true;
+    }
+
+    nextVal=glbMap[curR][curC];
+
+    if (nextVal!=1)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn simulate(inc,inr)
+{
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+    curDirection=0;
+    curC=inc;
+    curR=inr;
+
+    iteration=0;
+    outOfBounds=false;
+    while ((!outOfBounds)&&(iteration<20000))
+    {
+        glbMap[curR][curC]=2;
+
+        if (canGo(curC,curR,curDirection))
+        {
+            curC+=directions[curDirection][0];
+            curR+=directions[curDirection][1];
+
+            if ((curC<0)||(curR<0)||(curC>(glbMap[0].length-1))||(curR>(glbMap.length-1)))
+            {
+                outOfBounds=true;
+            }
+        }
+        else
+        {
+            // rot8, at next iteration we'll see if we can go that dir
+            curDirection+=1;
+            curDirection%=4;
+        }
+
+        iteration+=1;
+    }
+
+    if (outOfBounds==true)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+fn countXs()
+{
+    count=0;
+
+    foreach (line in glbMap)
+    {
+        foreach (c in line)
+        {
+            if (c==2)
+            {
+                count+=1;
+            }
+        }
+    }
+
+    print(count);
+}
+
+fn part1(arr)
+{
+    glbinitialC=-1;
+    glbinitialR=-1;
+
+    row=0;
+    foreach (line in arr)
+    {
+        col=0;
+        newLine=[];
+
+        foreach (c in line)
+        {
+            if (c==".")
+            {
+                newLine.add(0);
+            }
+            if (c=="#")
+            {
+                newLine.add(1);
+            }
+            if (c=="^")
+            {
+                glbinitialC=col;
+                glbinitialR=row;
+                newLine.add(0);
+            }
+            col+=1;
+        }
+
+        glbMap.add(newLine);
+        row+=1;
+    }
+
+    //print("Initial col: ",initialC," initial row: ",initialR);
+
+    simulate(glbinitialC,glbinitialR);
+
+    //printMap();
+    //print(countXs());
+}
+
+fn clearMap()
+{
+    row=0;
+    foreach (line in glbMap)
+    {
+        col=0;
+        foreach (c in line)
+        {
+            if (c==2)
+            {
+                glbMap[row][col]=0;
+            }
+
+            col+=1;
+        }
+        row+=1;
+    }
+}
+
+fn part2()
+{
+    pointList=[];
+
+    row=0;
+    foreach (line in glbMap)
+    {
+        col=0;
+        foreach (c in line)
+        {
+            if (c==2)
+            {
+                if ((col==glbinitialC)&&(row==glbinitialR))
+                {
+                }
+                else
+                {
+                    pointList.add([col,row]);
+                }
+            }
+
+            col+=1;
+        }
+        row+=1;
+    }
+
+    //
+
+    numPointz=pointList.length;
+    pnum=0;
+    numLoops=0;
+    foreach (point in pointList)
+    {
+        clearMap();
+        glbMap[point[1]][point[0]]=1;
+        print("Testing point ",point," ",pnum,"/",numPointz);
+
+        ret=simulate(glbinitialC,glbinitialR);
+
+        if (ret==0)
+        {
+            numLoops+=1;
+            print("Loops");
+        }
+        glbMap[point[1]][point[0]]=0;
+        pnum+=1;
+    }
+
+    print(numLoops);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    part1(sarr);
+    part2();
+}
