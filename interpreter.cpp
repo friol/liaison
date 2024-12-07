@@ -1316,18 +1316,28 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 					assert(theAst->nodes[1]->nodes[0]->name == "Expression");
 					liaVariable p0 = evaluateExpression(theAst->nodes[1]->nodes[0], env);
 
-					// parameter to convert must be an integer
-					if (p0.type != liaVariableType::integer)
+					// parameter to convert must be an integer or long yep
+
+					if ((p0.type != liaVariableType::integer)&&(p0.type != liaVariableType::longint))
 					{
 						std::string err;
-						err += "Parameter to toString should be an integer. ";
+						err += "Parameter to toString should be an integer or long. ";
 						err += "Terminating.";
 						fatalError(err);
 					}
 
-					retVal.type = liaVariableType::string;
-					int sVal = std::get<int>(p0.value);
-					retVal.value = std::to_string(sVal);
+					if (p0.type == liaVariableType::integer)
+					{
+						retVal.type = liaVariableType::string;
+						int sVal = std::get<int>(p0.value);
+						retVal.value = std::to_string(sVal);
+					}
+					else
+					{
+						retVal.type = liaVariableType::string;
+						long long sVal = std::get<long long>(p0.value);
+						retVal.value = std::to_string(sVal);
+					}
 				}
 				else if (ch->token == "ord")
 				{

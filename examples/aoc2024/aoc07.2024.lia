@@ -1,0 +1,154 @@
+/* aoc 07 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.07.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.07.txt");
+    return sarr;
+}
+
+fn evaluate(result,operands,operators)
+{
+    runningTotal=operands[0];
+
+    idx=1;
+    foreach (op in operators)
+    {
+        n1=operands[idx];
+        if (op=="+")
+        {
+            runningTotal+=n1;
+        }
+        if (op=="*")
+        {
+            runningTotal=n1*runningTotal;
+        }
+        if (op=="||")
+        {
+            sRT=toString(runningTotal);
+            sn1=toString(n1);
+            snew=sRT+sn1;
+            runningTotal=toLong(snew);
+        }
+
+        idx+=1;
+    }
+
+    //print(result,"=?",runningTotal);
+    if (result==runningTotal)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn solve(result,operands,operators,runningResult)
+{
+    if (operators.length<(operands.length-1))
+    {
+        possibleOps=["+","*","||"];
+        foreach (op in possibleOps)
+        {
+            newOp=operators;
+            newOp.add(op);
+
+            rresCopy=runningResult;
+            if (op=="+")
+            {
+                rresCopy+=operands[newOp.length];
+            }
+            if (op=="*")
+            {
+                rresCopy=rresCopy*operands[newOp.length];
+            }
+            if (op=="||")
+            {
+                sRT=toString(runningResult);
+                sn1=toString(operands[newOp.length]);
+                snew=sRT+sn1;
+                rresCopy=toLong(snew);
+            }
+
+            if (rresCopy<=result)
+            {
+                if (solve(result,operands,newOp,rresCopy)==true)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                print("Backtracking:",rresCopy," is > ",result);
+            }
+        }
+    }
+    else
+    {
+        print("Trying ",operands," ",operators);
+        if (evaluate(result,operands,operators))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn canBeTrue(res,ops)
+{
+    totVal=0;
+    runningResult=ops[0];
+
+    if (solve(res,ops,[],runningResult)==true)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn part1and2(arr)
+{
+    rezArr=[];
+    opsArr=[];
+
+    foreach (line in arr)
+    {
+        a2=line.split(": ");
+        result=toLong(a2[0]);
+        rezArr.add(result);
+
+        ops2=a2[1];
+        ops=ops2.split(" ");
+
+        opzz=[];
+        foreach (num in ops)
+        {
+            opzz.add(toLong(num));
+        }
+        opsArr.add(opzz);
+    }
+
+    //
+
+    idx=0;
+    totSum=0L;
+    foreach (res in rezArr)
+    {
+        if (canBeTrue(res,opsArr[idx]))
+        {
+            totSum+=res;
+        }
+
+        idx+=1;
+    }
+
+    print(totSum);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    part1and2(sarr);
+}

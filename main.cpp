@@ -45,7 +45,7 @@ int main(int argc,char** argv)
 		//sourceFileName = "d:\\prova\\liason\\examples\\aoc2017.9.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
-		sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc06.2024.lia";
+		sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc07.2024.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\minustest.lia";
 	}
