@@ -1,0 +1,260 @@
+/* aoc 08 2024 lia */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.08.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.08.txt");
+    return sarr;
+}
+
+fn abs(n)
+{
+    if (n<0)
+    {
+        return -n;
+    }
+
+    return n;
+}
+
+fn calcAntinode(p0,p1)
+{
+    anx=0;
+    any=0;
+
+    print("Calculating antinode of ",p0," ",p1);
+
+    dx=abs(p0[0]-p1[0]);
+    dy=abs(p0[1]-p1[1]);
+
+    //print("dx is ",dx," dy is ",dy);
+
+    if (p0[0]<p1[0])
+    {
+        anx=p0[0]-dx;
+    }
+    else
+    {
+        anx=p0[0]+dx;
+    }
+
+    if (p0[1]<p1[1])
+    {
+        any=p0[1]-dy;
+    }
+    else
+    {
+        any=p0[1]+dy;
+    }
+
+    print("Antinode is ",[anx,any]);
+
+    return [anx,any];
+}
+
+fn calcAntinodes2(p0,p1)
+{
+    anx=0;
+    any=0;
+    anl=[p0,p1];
+
+    //print("Calculating antinodes of ",p0," ",p1);
+
+    dx=abs(p0[0]-p1[0]);
+    dy=abs(p0[1]-p1[1]);
+    mult=1;
+
+    while (mult<50)
+    {
+        if (p0[0]<p1[0])
+        {
+            anx=p0[0]-(dx*mult);
+        }
+        else
+        {
+            anx=p0[0]+(dx*mult);
+        }
+
+        if (p0[1]<p1[1])
+        {
+            any=p0[1]-(dy*mult);
+        }
+        else
+        {
+            any=p0[1]+(dy*mult);
+        }
+
+        //print("Antinode is ",[anx,any]);
+        anl.add([anx,any]);
+        mult+=1;
+    }
+
+    return anl;
+}
+
+fn findAntinodes(di)
+{
+    antiNodesList=[];
+
+    foreach (key in di.keys)
+    {
+        pointArr=di[key];
+
+        foreach (p0 in pointArr)
+        {
+            foreach (p1 in pointArr)
+            {
+                if ((p0[0]==p1[0])&&(p0[1]==p1[1]))
+                {
+                }
+                else
+                {
+                    an=calcAntinode(p0,p1);
+                    antiNodesList.add(an);
+                }
+            }
+        }
+    }
+
+    return antiNodesList;
+}
+
+fn findAntinodes2(di)
+{
+    antiNodesList=[];
+
+    foreach (key in di.keys)
+    {
+        pointArr=di[key];
+
+        foreach (p0 in pointArr)
+        {
+            foreach (p1 in pointArr)
+            {
+                if ((p0[0]==p1[0])&&(p0[1]==p1[1]))
+                {
+                }
+                else
+                {
+                    anList=calcAntinodes2(p0,p1);
+
+                    foreach (an in anList)
+                    {
+                        antiNodesList.add(an);
+                    }
+                }
+            }
+        }
+    }
+
+    return antiNodesList;
+}
+
+fn part1(arr)
+{
+    di={};
+
+    row=0;
+    foreach (line in arr)
+    {
+        col=0;
+        foreach (c in line)
+        {
+            if (c!=".")
+            {
+                newNode=[col,row];
+
+                k=di.keys;                
+                if (k.find(c)<0)
+                {
+                    di[c]=[newNode];
+                }
+                else
+                {
+                    pArr=di[c];
+                    pArr.add(newNode);
+                    di[c]=pArr;
+                }
+            }
+            col+=1;
+        }
+        row+=1;
+    }
+
+    //print(col," ",row);
+
+    // find antinodes
+    anlist=findAntinodes(di);    
+
+    realAnList=[];
+    foreach (node in anlist)
+    {
+        if ((node[0]>=0)&&(node[1]>=0)&&(node[0]<col)&&(node[1]<row))
+        {
+            if (realAnList.find(node)==-1)
+            {
+                realAnList.add(node);
+            }
+        }
+    }
+
+    print(realAnList);
+    print(realAnList.length);
+}
+
+fn part2(arr)
+{
+    di={};
+
+    row=0;
+    foreach (line in arr)
+    {
+        col=0;
+        foreach (c in line)
+        {
+            if (c!=".")
+            {
+                newNode=[col,row];
+
+                k=di.keys;                
+                if (k.find(c)<0)
+                {
+                    di[c]=[newNode];
+                }
+                else
+                {
+                    pArr=di[c];
+                    pArr.add(newNode);
+                    di[c]=pArr;
+                }
+            }
+            col+=1;
+        }
+        row+=1;
+    }
+
+    // find antinodes
+    anlist=findAntinodes2(di);    
+
+    realAnList=[];
+    foreach (node in anlist)
+    {
+        if ((node[0]>=0)&&(node[1]>=0)&&(node[0]<col)&&(node[1]<row))
+        {
+            if (realAnList.find(node)==-1)
+            {
+                realAnList.add(node);
+            }
+        }
+    }
+
+    print(realAnList);
+    print(realAnList.length);
+}
+
+fn main(params)
+{
+    sarr=readInput();
+    //part1(sarr);
+    part2(sarr);
+}

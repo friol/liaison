@@ -1591,7 +1591,7 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 
 	liaVariable theVar;
 	size_t curLine=0;
-	int mulAmount = 0;
+	long long mulAmount = 0;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -1608,18 +1608,26 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 			if (ch->name == "Expression")
 			{
 				liaVariable vInc = evaluateExpression(ch, env);
-				if (vInc.type!=liaVariableType::integer)
+				if ((vInc.type!=liaVariableType::integer)&& (vInc.type != liaVariableType::longint))
 				{
 					std::string err;
-					err += "Multiply term should be an integer. ";
+					err += "Multiply term should be an integer or long at line " + std::to_string(curLine) + ". ";
 					err += "Terminating.";
 					fatalError(err);
 				}
-				mulAmount = std::get<int>(vInc.value);
+
+				if (vInc.type == liaVariableType::integer)
+				{
+					mulAmount = std::get<int>(vInc.value);
+				}
+				else
+				{
+					mulAmount = std::get<long long>(vInc.value);
+				}
 			}
 		}
 	}
-
+	
 	liaVariable* pvar = nullptr;
 	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
 	{
@@ -1643,7 +1651,12 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
-		pvar->value = vv*=mulAmount;
+		pvar->value = vv*=(int)mulAmount;
+	}
+	else if (pvar->type == liaVariableType::longint)
+	{
+		long long vv = std::get<long long>(pvar->value);
+		pvar->value = vv *= mulAmount;
 	}
 	else
 	{
