@@ -1,0 +1,115 @@
+/* AoC 2024 09 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc09.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc09.2024.txt");
+    return sarr;
+}
+
+fn fsToExtendedRepr(line)
+{
+    ret=[];
+    fileId=0;
+    isEmpty=false;
+
+    foreach (c in line)
+    {
+        nBlocks=toInteger(c);
+        if (isEmpty)
+        {
+            idx=0;
+            while (idx<nBlocks)
+            {
+                ret.add(-1);
+                idx+=1;
+            }
+        }
+        else
+        {
+            idx=0;
+            while (idx<nBlocks)
+            {
+                ret.add(fileId);
+                idx+=1;
+            }
+        }
+
+        isEmpty=!isEmpty;
+        if (!isEmpty)
+        {
+            fileId+=1;
+        }
+    }
+
+    return ret;
+}
+
+fn compact(s)
+{
+    spaceIdx=0;
+    endIdx=s.length-1;
+
+    while (s[spaceIdx]!=-1)
+    {
+        spaceIdx+=1;
+    }
+
+    while (spaceIdx<endIdx)
+    {
+        tmp=s[spaceIdx];
+        s[spaceIdx]=s[endIdx];
+        s[endIdx]=tmp;
+
+        //
+
+        spaceIdx+=1;
+        while (s[spaceIdx]!=-1)
+        {
+            spaceIdx+=1;
+        }
+
+        endIdx-=1;
+        while (s[endIdx]==-1)        
+        {
+            endIdx-=1;
+        }
+    }
+
+    return s;
+}
+
+fn calcChecksum(s)
+{
+    pos=0;
+    checkSum=0L;
+
+    while (s[pos]!=-1)
+    {
+        posL=toLong(toString(pos));
+        idL=toLong(toString(s[pos]));
+
+        multL=posL*idL;
+        checkSum+=multL;
+
+        pos+=1;
+    }
+
+    print(checkSum);
+}
+
+fn part1(line)
+{
+    //print(line);
+    repr=fsToExtendedRepr(line);
+    //print(repr);
+    compacted=compact(repr);
+    //print(compacted);
+    calcChecksum(compacted);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input[0]);
+}
