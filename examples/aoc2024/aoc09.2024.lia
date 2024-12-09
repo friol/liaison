@@ -1,5 +1,7 @@
 /* AoC 2024 09 */
 
+glbS=[];
+
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc09.2024.test.txt");
@@ -84,13 +86,16 @@ fn calcChecksum(s)
     pos=0;
     checkSum=0L;
 
-    while (s[pos]!=-1)
+    while (pos<s.length)
     {
-        posL=toLong(toString(pos));
-        idL=toLong(toString(s[pos]));
+        if (s[pos]!=-1)
+        {
+            posL=toLong(toString(pos));
+            idL=toLong(toString(s[pos]));
 
-        multL=posL*idL;
-        checkSum+=multL;
+            multL=posL*idL;
+            checkSum+=multL;
+        }
 
         pos+=1;
     }
@@ -100,16 +105,140 @@ fn calcChecksum(s)
 
 fn part1(line)
 {
-    //print(line);
     repr=fsToExtendedRepr(line);
-    //print(repr);
     compacted=compact(repr);
-    //print(compacted);
+    calcChecksum(compacted);
+}
+
+fn findSpan(curFileId)
+{
+    minx=glbS.find(curFileId);
+    maxx=glbS.length-1;
+
+    while (glbS[maxx]!=curFileId)
+    {
+        if (glbS[maxx]!=curFileId)
+        {
+            maxx-=1;
+        }
+    }
+
+    return [minx,maxx];
+}
+
+fn findGapSize(pos)
+{
+    gs=1;
+    endpos=pos+1;
+
+    while (endpos<glbS.length)
+    {
+        if (glbS[endpos]==-1)
+        {
+            endpos+=1;
+            gs+=1;
+        }
+        else
+        {
+            return endpos-pos;            
+        }
+    }
+
+    return gs;
+}
+
+fn findGap(gapLen)
+{
+    pos=glbS.find(-1);
+
+    while (pos<glbS.length)
+    {
+        if (glbS[pos]==-1)
+        {
+            gSize=findGapSize(pos);
+            if (gSize>=gapLen)
+            {
+                return [pos,pos+gapLen-1];
+            }
+            else
+            {
+                pos+=1;
+            }
+        }
+        else
+        {
+            pos+=1;
+        }
+    }
+
+    return [-1,-1];
+}
+
+fn compact2()
+{
+    maxFileId=-1;
+
+    foreach (el in glbS)
+    {
+        if (el>maxFileId)
+        {
+            maxFileId=el;
+        }
+    }
+
+    print("Max file id: ",maxFileId);
+
+    //
+
+    curFileId=maxFileId;
+
+    while (curFileId>=0)
+    {
+        // find span of file with id curFileId
+        fileSpan=findSpan(curFileId);
+        print("Span:",fileSpan);
+
+        // find, if possible, a gap large enough to move file curFileId
+        gapLen=fileSpan[1]-fileSpan[0]+1;
+        gapSpan=findGap(gapLen);
+        print("Gap:",gapSpan);
+
+        // if found, move it
+        if ((gapSpan[0]!=-1)&&(gapSpan[1])!=-1)
+        {
+            if (fileSpan[0]>gapSpan[0])
+            {
+                lenMoved=0;
+                idxDest=gapSpan[0];
+                idxSrc=fileSpan[0];
+                while (lenMoved<gapLen)
+                {
+                    glbS[idxDest]=glbS[idxSrc];
+                    glbS[idxSrc]=-1;
+                    idxDest+=1;
+                    idxSrc+=1;
+                    lenMoved+=1;
+                }
+                print("MOVEd!");
+            }
+        }
+
+        curFileId-=1;
+    }
+
+    return glbS;
+}
+
+fn part2(line)
+{
+    glbS=fsToExtendedRepr(line);
+    compacted=compact2();
     calcChecksum(compacted);
 }
 
 fn main(params)
 {
     input=readInput();
-    part1(input[0]);
+    //part1(input[0]);
+    part2(input[0]);
 }
