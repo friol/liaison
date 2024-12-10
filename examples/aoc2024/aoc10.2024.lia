@@ -1,0 +1,144 @@
+/* AoC 2024 10 */
+
+glbMap=[];
+glbTargets=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc10.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc10.2024.txt");
+    return sarr;
+}
+
+fn canGo(x,y,dir)
+{
+    curHeight=glbMap[y][x];
+
+    if (dir==0)
+    {
+        if (y>0)
+        {
+            nextHeight=glbMap[y-1][x];
+            if ((nextHeight-curHeight)==1)
+            {
+                return true;
+            }
+        }
+    }
+
+    if (dir==1)
+    {
+        if (x<(glbMap[0].length-1))
+        {
+            nextHeight=glbMap[y][x+1];
+            if ((nextHeight-curHeight)==1)
+            {
+                return true;
+            }
+        }
+    }
+
+    if (dir==2)
+    {
+        if (y<(glbMap.length-1))
+        {
+            nextHeight=glbMap[y+1][x];
+            if ((nextHeight-curHeight)==1)
+            {
+                return true;
+            }
+        }
+    }
+
+    if (dir==3)
+    {
+        if (x>0)
+        {
+            nextHeight=glbMap[y][x-1];
+            if ((nextHeight-curHeight)==1)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+fn findTrailheads(x,y,curHeight,path)
+{
+    if (curHeight==9)
+    {
+        /*target=[x,y];
+        if (glbTargets.find(target)==-1)
+        {
+            glbTargets.add(target);
+            return 1;
+        }
+        return 0;*/
+        return 1;
+    }
+    else
+    {
+        summ=0;
+        directions=[[0,-1],[1,0],[0,1],[-1,0]];
+        sdir=["n","e","s","w"];
+
+        d=0;
+        while (d<4)
+        {
+            if (canGo(x,y,d))
+            {
+                newpath=path;
+                newpath.add(sdir[d]);
+                summ+=findTrailheads(x+directions[d][0],y+directions[d][1],curHeight+1,newpath);
+            }
+            d+=1;
+        }
+
+        return summ;
+    }
+
+    return 0;
+}
+
+fn part1(arr)
+{
+    foreach (row in arr)
+    {
+        mapRow=[];
+        foreach (c in row)
+        {
+            mapRow.add(toInteger(c));
+        }
+        glbMap.add(mapRow);
+    }
+
+    sumOfScores=0;
+    y=0;
+    foreach (row in glbMap)
+    {
+        x=0;
+        foreach (c in row)
+        {
+            if (c==0)
+            {
+                glbTargets=[];
+                newScore=findTrailheads(x,y,0,[]);
+                print("Trail starting at ",x," ",y," score:",newScore);
+                sumOfScores+=newScore;
+            }
+
+            x+=1;
+        }
+        y+=1;
+    }
+
+    print(sumOfScores);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+}
