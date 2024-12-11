@@ -1,0 +1,174 @@
+/* AoC 2024 11 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc11.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc11.2024.txt");
+    return sarr;
+}
+
+fn stoneSplit(s)
+{
+    ret=[];
+
+    sPart1="";
+    sPart2="";
+
+    idx=0;
+    while (idx<s.length)
+    {
+        if (idx<(s.length/2))
+        {
+            sPart1+=s[idx];
+        }
+        else
+        {
+            sPart2+=s[idx];
+        }
+
+        idx+=1;
+    }
+
+    ret.add(toLong(sPart1));
+    ret.add(toLong(sPart2));
+
+    return ret;
+}
+
+fn evolve(l)
+{
+    resList=[];
+
+    foreach (el in l)
+    {
+        if (el==0L)
+        {
+            resList.add(1L);
+        }
+        else
+        {
+            sEl=toString(el);
+            sElLen=sEl.length;
+
+            sElLen%=2;
+            if (sElLen==0)
+            {
+                rez=stoneSplit(sEl);
+
+                resList.add(rez[0]);
+                resList.add(rez[1]);
+            }
+            else
+            {
+                resList.add(el*2024L);
+            }
+        }
+    }
+
+    return resList;
+}
+
+fn part1(arr)
+{
+    stoneList=arr.split(" ");
+    longList=[];
+
+    foreach (s in stoneList)
+    {
+        sl=toLong(s);
+        longList.add(sl);
+    }
+
+    blinkNum=0;
+    while (blinkNum<75)
+    {
+        longList=evolve(longList);
+        print(blinkNum," ",longList.length);
+        blinkNum+=1;
+    }
+}
+
+fn countUnique(longList)
+{
+    luniq=[];
+
+    foreach (n in longList)
+    {
+        if (luniq.find(n)==-1)
+        {
+            luniq.add(n);
+        }
+    }
+
+    return luniq.length;
+}
+
+fn evolveDict(dict)
+{
+    resDict={};
+
+    foreach (key in dict.keys)
+    {
+        l=[];
+        l.add(toLong(key));
+        mult=dict[key];
+        l=evolve(l);
+        foreach (el in l)
+        {
+            kz=resDict.keys;
+            if (kz.find(toString(el))==-1)
+            {
+                resDict[toString(el)]=mult;
+            }
+            else
+            {
+                resDict[toString(el)]=resDict[toString(el)]+mult;
+            }
+        }
+    }
+
+    return resDict;
+}
+
+fn part2(arr)
+{
+    stoneList=arr.split(" ");
+    longList=[];
+
+    foreach (s in stoneList)
+    {
+        sl=toLong(s);
+        longList.add(sl);
+    }
+
+    dict={};
+    foreach (el in longList)
+    {
+        dict[toString(el)]=1L;
+    }
+
+    blinkNum=0;
+    while (blinkNum<75)
+    {
+        dict=evolveDict(dict);
+        blinkNum+=1;
+
+        total=0L;
+        foreach (k in dict.keys)
+        {
+            total+=dict[k];
+        }
+        //print(dict);
+        print(total);
+    }
+
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input[0]);
+    //part1("7");
+    part2(input[0]);
+    //part2("125 17");
+}
