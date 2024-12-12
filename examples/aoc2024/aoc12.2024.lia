@@ -5,8 +5,8 @@ glbFloodMap=[];
 
 fn readInput()
 {
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.test.txt");
-    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.txt");
     return sarr;
 }
 
@@ -174,11 +174,267 @@ fn calcPerimeter(idx)
     return total;
 }
 
+fn countSpans(arr)
+{
+    ns=1;
+
+    idx=0;
+    if (arr.length==1)
+    {
+        return 1;
+    }
+
+    while (idx<arr.length)
+    {
+        if (idx<(arr.length-1))
+        {
+            if (arr[idx+1]!=(arr[idx]+1))
+            {
+                ns+=1;            
+            }
+        }
+        idx+=1;
+    }
+
+    return ns;
+}
+
+fn calcNumSpansHorz(arr,miny,maxy)
+{
+    numSpans=0;
+
+    //print(arr);
+    //print(miny," ",maxy);
+
+    y=miny;
+    while (y<=maxy)
+    {
+        tmpArr=[];
+        foreach (el in arr)
+        {
+            if ((el[1]==y)&&(el[2]==0))
+            {
+                tmpArr.add(el[0]);
+            }
+        }
+        if (tmpArr.length>0)
+        {
+            tmpArr.sort();
+            cnt=countSpans(tmpArr);
+            print(tmpArr," has ",cnt," up sides");
+            numSpans+=cnt;
+        }
+
+        tmpArr=[];
+        foreach (el in arr)
+        {
+            if ((el[1]==y)&&(el[2]==1))
+            {
+                tmpArr.add(el[0]);
+            }
+        }
+        if (tmpArr.length>0)
+        {
+            tmpArr.sort();
+            cnt=countSpans(tmpArr);
+            print(tmpArr," has ",cnt," downsides");
+            numSpans+=cnt;
+        }
+
+        y+=1;
+    }
+
+    return numSpans;
+}
+
+fn calcNumSpansVert(arr,minx,maxx)
+{
+    numSpans=0;
+
+    x=minx;
+    while (x<=maxx)
+    {
+        tmpArr=[];
+        foreach (el in arr)
+        {
+            if ((el[0]==x)&&(el[2]==0))
+            {
+                tmpArr.add(el[1]);
+            }
+        }
+        if (tmpArr.length>0)
+        {
+            tmpArr.sort();
+            cnt=countSpans(tmpArr);
+            print(tmpArr," has ",cnt," vert leftsides");
+            numSpans+=cnt;
+        }
+
+        tmpArr=[];
+        foreach (el in arr)
+        {
+            if ((el[0]==x)&&(el[2]==1))
+            {
+                tmpArr.add(el[1]);
+            }
+        }
+        if (tmpArr.length>0)
+        {
+            tmpArr.sort();
+            cnt=countSpans(tmpArr);
+            print(tmpArr," has ",cnt," vert roitsides");
+            numSpans+=cnt;
+        }
+
+        x+=1;
+    }
+
+    return numSpans;
+}
+
+
 fn calcNumOfSides(idx)
 {
+    // calc min/max coords
 
+    minX=99999;
+    maxX=-99999;
+    minY=99999;
+    maxY=-99999;
 
-    return 0;
+    y=0;
+    foreach (row in glbFloodMap)
+    {
+        x=0;
+
+        foreach (c in row)
+        {
+            if (c==idx)
+            {
+                if (x<minX)
+                {
+                    minX=x;
+                }
+                if (y<minY)
+                {
+                    minY=y;
+                }
+                if (x>maxX)
+                {
+                    maxX=x;
+                }
+                if (y>maxY)
+                {
+                    maxY=y;
+                }
+            }
+            x+=1;
+        }
+
+        y+=1;
+    }
+
+    print("minx:",minX," maxX:",maxX," minY:",minY," maxY:",maxY);
+
+    // scan horizontally and produce a list of spans
+    horzSpanz=[];
+    y=minY;
+    while (y<=maxY)
+    {
+        x=minX;
+        while (x<=maxX)
+        {
+            if (glbFloodMap[y][x]==idx)
+            {
+                if (y==0)
+                {
+                    horzSpanz.add([x,-1,0]);
+                    if (glbFloodMap[1][x]!=idx)
+                    {
+                        horzSpanz.add([x,0,1]);
+                    }
+                }
+                else
+                {
+                    if (y<(glbFloodMap.length-1))
+                    {
+                        if (glbFloodMap[y-1][x]!=idx)
+                        {
+                            horzSpanz.add([x,y-1,0]);
+                        }
+                        if (glbFloodMap[y+1][x]!=idx)
+                        {
+                            horzSpanz.add([x,y,1]);
+                        }
+                    }
+                    else
+                    {
+                        if (glbFloodMap[y-1][x]!=idx)
+                        {
+                            horzSpanz.add([x,y,0]);
+                        }
+                        horzSpanz.add([x,y+1,1]);
+                    }
+                }
+            }
+            x+=1;
+        }
+
+        y+=1;
+    }
+
+    numOfHorzSpans=calcNumSpansHorz(horzSpanz,minY-1,maxY+1);
+
+    // scan vertically and produce a list of spans
+    vertSpanz=[];
+    x=minX;
+    while (x<=maxX)
+    {
+        y=minY;
+        while (y<=maxY)
+        {
+            if (glbFloodMap[y][x]==idx)
+            {
+                if (x==0)
+                {
+                    vertSpanz.add([-1,y,0]);
+                    if (glbFloodMap[y][1]!=idx)
+                    {
+                        vertSpanz.add([0,y,1]);
+                    }
+                }
+                else
+                {
+                    if (x<(glbFloodMap[0].length-1))
+                    {
+                        if (glbFloodMap[y][x-1]!=idx)
+                        {
+                            vertSpanz.add([x-1,y,0]);
+                        }
+                        if (glbFloodMap[y][x+1]!=idx)
+                        {
+                            vertSpanz.add([x,y,1]);
+                        }
+                    }
+                    else
+                    {
+                        if (glbFloodMap[y][x-1]!=idx)
+                        {
+                            vertSpanz.add([x,y,0]);
+                        }
+                        vertSpanz.add([x+1,y,1]);
+                    }
+                }
+            }
+            y+=1;
+        }
+
+        x+=1;
+    }
+
+    numOfVertSpans=calcNumSpansVert(vertSpanz,minX-1,maxX+1);
+
+    return numOfHorzSpans+numOfVertSpans;
 }
 
 fn part1(arr)
@@ -222,8 +478,13 @@ fn part1(arr)
     idx=0;
     area=0;
     perm=0;
+
+    //idees=[0];
+
     foreach (idx in idees)
     {
+        print("id:",idx);
+
         area=calcArea(idx);
         if (area!=0)
         {
@@ -237,9 +498,10 @@ fn part1(arr)
 
         if ((area!=0)&&(perm!=0))
         {
+            print("area:",area," sides:",perm);
             prod=area*perm;
             total+=prod;
-            print("Total: ",total," idx:",idx,"/",maxShapeId);
+            //print("Total: ",total," idx:",idx,"/",maxShapeId);
         }
 
     }
