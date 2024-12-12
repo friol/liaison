@@ -1,0 +1,254 @@
+/* AoC 2024 12 */
+
+glbMap=[];
+glbFloodMap=[];
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc12.2024.txt");
+    return sarr;
+}
+
+fn floodFill(x,y,id,lett)
+{
+    if (x<0) 
+    {
+        return;
+    }
+
+    if (y<0)
+    {
+        return;
+    }
+
+    if (x>=glbFloodMap[0].length)
+    {
+        return;
+    }
+
+    if (y>=glbFloodMap.length)
+    {
+        return;
+    }
+
+    if (glbFloodMap[y][x]!=-1)
+    {
+        return;
+    }
+
+    if (glbMap[y][x]==lett)
+    {
+        glbFloodMap[y][x]=id;
+    }
+    else
+    {
+        return;
+    }
+
+    floodFill(x,y-1,id,lett);
+    floodFill(x+1,y,id,lett);
+    floodFill(x,y+1,id,lett);
+    floodFill(x-1,y,id,lett);
+}
+
+fn buildFloodMap()
+{
+    shapeId=0;
+    y=0;
+    foreach (row in glbFloodMap)
+    {
+        x=0;
+        foreach (c in row)
+        {
+            if (c==-1)
+            {
+                floodFill(x,y,shapeId,glbMap[y][x]);
+                shapeId+=1;
+            }
+
+            x+=1;
+        }
+
+        y+=1;
+    }
+
+    return shapeId;
+}
+
+fn printFloodMap()
+{
+    foreach (row in glbFloodMap)
+    {
+        print(row);
+    }
+}
+
+fn calcArea(idx)
+{
+    total=0;
+    foreach (row in glbFloodMap)
+    {
+        foreach (c in row)
+        {
+            if (c==idx)
+            {
+                total+=1;
+            }
+        }
+    }
+    return total;
+}
+
+fn numConfining(x,y,idx)
+{
+    tot=0;
+    if (x>0)
+    {
+        if (glbFloodMap[y][x-1]!=idx)
+        {
+            tot+=1;
+        }
+    }
+    else
+    {
+        tot+=1;
+    }
+
+    if (y>0)
+    {
+        if (glbFloodMap[y-1][x]!=idx)
+        {
+            tot+=1;
+        }
+    }
+    else
+    {
+        tot+=1;
+    }
+
+    if (x<(glbFloodMap[0].length-1))
+    {
+        if (glbFloodMap[y][x+1]!=idx)
+        {
+            tot+=1;
+        }
+    }
+    else
+    {
+        tot+=1;
+    }
+
+    if (y<(glbFloodMap.length-1))
+    {
+        if (glbFloodMap[y+1][x]!=idx)
+        {
+            tot+=1;
+        }
+    }
+    else
+    {
+        tot+=1;
+    }
+
+    return tot;
+}
+
+fn calcPerimeter(idx)
+{
+    total=0;
+    y=0;
+    foreach (row in glbFloodMap)
+    {
+        x=0;
+        foreach (c in row)
+        {
+            if (c==idx)
+            {
+                total+=numConfining(x,y,idx);
+            }
+            x+=1;
+        }
+        y+=1;
+    }
+    return total;
+}
+
+fn calcNumOfSides(idx)
+{
+
+
+    return 0;
+}
+
+fn part1(arr)
+{
+    maxShapeId=-1;
+    foreach (row in arr)
+    {
+        floodRow=[];
+        curRow=[];
+        foreach (c in row)
+        {
+            curRow.add(c);
+            floodRow.add(-1);
+        }
+        glbMap.add(curRow);
+        glbFloodMap.add(floodRow);
+    }
+
+    // 
+
+    print("Building flood map");
+    maxShapeId=buildFloodMap();
+
+    print("Max shape id:",maxShapeId);
+
+    idees=[];
+    foreach (rowz in glbFloodMap)
+    {
+        foreach (cz in rowz)
+        {
+            if (idees.find(cz)==-1)
+            {
+                idees.add(cz);
+            }
+        }
+    }
+
+    print("Unique shapes:",idees.length);
+
+    total=0;
+    idx=0;
+    area=0;
+    perm=0;
+    foreach (idx in idees)
+    {
+        area=calcArea(idx);
+        if (area!=0)
+        {
+            perm=calcNumOfSides(idx);
+            //perm=calcPerimeter(idx);
+            //if (perm!=0)
+            //{
+            //    //print("Shape of id ",idx," with sperm ",perm);
+            //}
+        }
+
+        if ((area!=0)&&(perm!=0))
+        {
+            prod=area*perm;
+            total+=prod;
+            print("Total: ",total," idx:",idx,"/",maxShapeId);
+        }
+
+    }
+
+    print(total);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+}
