@@ -1,0 +1,217 @@
+/* AoC 2024 13 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc13.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc13.2024.txt");
+    return sarr;
+}
+
+fn readScenarios(arr,adder)
+{
+    scenarios=[];
+
+    currow=[];
+    foreach (row in arr)
+    {
+        if (row.find("Button A")!=-1)
+        {
+            z=row.find("X+");
+            pos=z+2;
+            comma=row.find(",");
+
+            pxs="";
+            while (pos<comma)
+            {
+                pxs+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pxs));
+
+            z=row.find("Y+");
+            pos=z+2;
+
+            pys="";
+            while (pos<row.length)
+            {
+                pys+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pys));
+        }
+        if (row.find("Button B")!=-1)
+        {
+            z=row.find("X+");
+            pos=z+2;
+            comma=row.find(",");
+
+            pxs="";
+            while (pos<comma)
+            {
+                pxs+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pxs));
+
+            z=row.find("Y+");
+            pos=z+2;
+
+            pys="";
+            while (pos<row.length)
+            {
+                pys+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pys));
+        }
+        if (row.find("Prize")!=-1)
+        {
+            z=row.find("X=");
+            pos=z+2;
+            comma=row.find(",");
+
+            pxs="";
+            while (pos<comma)
+            {
+                pxs+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pxs)+adder);
+
+            z=row.find("Y=");
+            pos=z+2;
+
+            pys="";
+            while (pos<row.length)
+            {
+                pys+=row[pos];
+                pos+=1;
+            }
+
+            currow.add(toLong(pys)+adder);
+        }
+        if (row.length==0)
+        {
+            scenarios.add(currow);
+            currow=[];
+        }
+    }
+
+    return scenarios;
+}
+
+fn findMinTokens(scenario)
+{
+    minTokens=999999L;
+
+    aPresses=1L;
+    while (aPresses<100L)
+    {
+        bPresses=1L;
+        while (bPresses<100L)
+        {
+            xpoz=aPresses*scenario[0];
+            ypoz=aPresses*scenario[1];
+
+            xpoz+=bPresses*scenario[2];
+            ypoz+=bPresses*scenario[3];
+
+            if ((xpoz==scenario[4])&&(ypoz==scenario[5]))
+            {
+                print("New soln: ",aPresses," ",bPresses);
+                if (((aPresses*3L)+bPresses)<minTokens)
+                {
+                    minTokens=(aPresses*3L)+bPresses;
+                }
+            }
+
+            bPresses+=1L;
+        }
+
+        aPresses+=1L;
+    }
+
+    return minTokens;
+}
+
+fn findMinTokensAnalytic(scenario)
+{
+    na=0L;
+    nb=0L;
+
+    mx0=scenario[0];
+    my0=scenario[1];
+    mx1=scenario[2];
+    my1=scenario[3];
+    px=scenario[4];
+    py=scenario[5];
+
+    print("mx0:",mx0," my0:",my0," mx1:",mx1," my1:",my1," px:",px," py:",py);
+
+    nb = ((mx0 * py) - (my0 * px)) / ((mx0 * my1) - (my0 * mx1));
+    na = (px - (mx1 * nb)) / mx0;
+
+    print("na:",na," nb:",nb);
+
+    if (((na*mx0)+(nb*mx1))!=px)
+    {
+        return 999999L;
+    }
+    if (((na*my0)+(nb*my1))!=py)
+    {
+        return 999999L;        
+    }
+
+    return ((na*3L)+nb);
+}
+
+fn part2(arr)
+{
+    problemArr=readScenarios(arr,10000000000000L);
+    //problemArr=readScenarios(arr,0L);
+    print(problemArr);
+
+    numTokens=0L;
+    foreach (scenario in problemArr)
+    {
+        minTok=findMinTokensAnalytic(scenario);
+        print(minTok);
+        if (minTok!=999999L)
+        {
+            numTokens+=minTok;
+        }
+    }
+
+    print("Num total tokens:",numTokens);
+}
+
+fn part1(arr)
+{
+    problemArr=readScenarios(arr,0L);
+    print(problemArr);
+
+    numTokens=0L;
+    foreach (scenario in problemArr)
+    {
+        minTok=findMinTokens(scenario);
+        print(minTok);
+        if (minTok!=999999L)
+        {
+            numTokens+=minTok;
+        }
+    }
+
+    print(numTokens);
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    part2(input);
+}
