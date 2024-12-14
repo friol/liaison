@@ -1,0 +1,201 @@
+/* AoC 2024 14 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc14.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc14.2024.txt");
+    return sarr;
+}
+
+fn parseRobots(arr)
+{
+    retarr=[];
+
+    foreach (row in arr)
+    {
+        newRow=[];
+
+        pz=row.find("p=");
+        spc=row.find(" ");
+        idx=pz+2;
+        coords="";
+        while (idx<spc)
+        {
+            coords+=row[idx];
+            idx+=1;
+        }
+
+        splt=coords.split(",");
+        newRow.add(toInteger(splt[0]));
+        newRow.add(toInteger(splt[1]));
+
+        //
+
+        vel=row.find("v=");
+        spc=row.length;
+        idx=vel+2;
+        velz="";
+        while (idx<spc)
+        {
+            velz+=row[idx];
+            idx+=1;
+        }
+
+        splt=velz.split(",");
+        newRow.add(toInteger(splt[0]));
+        newRow.add(toInteger(splt[1]));
+
+        retarr.add(newRow);
+    }
+
+    return retarr;
+}
+
+fn simulate (dimx,dimy,l)
+{
+    l2=[];
+
+    foreach (robot in l)
+    {
+        //print(robot," ",dimx," ",dimy);
+
+        px=robot[0];
+        px+=robot[2];
+        px=myMod(px,dimx);
+        robot[0]=px;
+
+        py=robot[1];
+        py+=robot[3];
+        py=myMod(py,dimy);
+        robot[1]=py;
+
+        l2.add(robot);
+    }
+
+    return l2;
+}
+
+fn findRobot(l,x,y)
+{
+    return l.find([x,y]);
+}
+
+fn printGrid(lr,tx,ty)
+{
+    l=[];
+    foreach (el in lr)
+    {
+        l.add([el[0],el[1]]);
+    }
+
+    y=0;
+    while (y<ty)
+    {
+        s="";
+        x=0;
+        while (x<tx)
+        {
+            //ir=findRobot(l,x,y);
+            if (l.find([x,y])!=-1)
+            {
+                s+="r";
+            }
+            else
+            {
+                s+=".";
+            }
+
+            x+=1;
+        }
+        
+        print(s);
+        y+=1;
+    }
+}
+
+fn countQuadrants(l,tx,ty)
+{
+    limx=(tx-1)/2;
+    limy=(ty-1)/2;
+
+    q=[0,0,0,0];
+
+    foreach (el in l)
+    {
+        px=el[0];
+        py=el[1];
+
+        if ((px<limx)&&(py<limy))
+        {
+            q[0]+=1;
+        }
+        if ((px>limx)&&(py<limy))
+        {
+            q[1]+=1;
+        }
+        if ((px<limx)&&(py>limy))
+        {
+            q[2]+=1;
+        }
+        if ((px>limx)&&(py>limy))
+        {
+            q[3]+=1;
+        }
+    }
+
+    prod=1;
+    foreach (n in q)
+    {
+        prod*=n;
+    }
+
+    print("Prod of quadrants:",prod);
+}
+
+fn part1(arr)
+{
+    listOfRobots=parseRobots(arr);
+
+    //tilesx=11;
+    //tilesy=7;
+    tilesx=101;
+    tilesy=103;
+
+    i=0;
+    while (i<7083)
+    {
+        print("simul8:",i);
+        listOfRobots=simulate(tilesx,tilesy,listOfRobots);
+        i+=1;
+    }
+
+    printGrid(listOfRobots,tilesx,tilesy);
+
+    //countQuadrants(listOfRobots,tilesx,tilesy);
+}
+
+fn myMod(n,m)
+{
+    if (n>=0)
+    {
+        n%=m;
+        return n;
+    }
+
+    n%=m;
+    if (n<0)
+    {
+        return (m+n);
+    }
+
+    return n;
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+    //part2(input);
+
+    //print(myMod(-10,11));
+}
