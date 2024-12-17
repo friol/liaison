@@ -110,7 +110,7 @@ liaParser::liaParser()
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
 	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / NotExpression / RFuncCall / 
 					   VariableWithProperty / BitwiseNot / MinusExpression / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
-	ExprOperator <- '+' / '-' / '*' / '/' / '%'
+	ExprOperator <- '+' / '-' / '*' / '/' / '%' / '^'
 
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >
