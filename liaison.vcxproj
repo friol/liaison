@@ -125,6 +125,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <StackReserveSize>41943040</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,6 +153,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <Profile>true</Profile>
+      <StackReserveSize>41943040</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

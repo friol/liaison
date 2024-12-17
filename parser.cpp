@@ -50,7 +50,7 @@
 // variable decrement // DONE
 // variable *= // DONE
 // >>= operator (integer division by 2 AKA right shift) // DONE
-// the ability to solve AOC problems, at least up to day 14
+// the ability to solve AOC problems, at least up to day 14 // DONE
 // many other things that don't come to mind at the moment
 //
 
@@ -110,7 +110,7 @@ liaParser::liaParser()
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
 	InnerExpression <- BooleanConst / LongNumber / IntegerNumber / StringLiteral / ArrayInitializer / DictInitializer / NotExpression / RFuncCall / 
 					   VariableWithProperty / BitwiseNot / MinusExpression / VariableWithFunction / ArraySubscript / VariableName / '(' Expression ')'
-	ExprOperator <- '+' / '-' / '*' / '/' 
+	ExprOperator <- '+' / '-' / '*' / '/' / '%'
 
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >

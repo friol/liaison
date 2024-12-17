@@ -1,0 +1,249 @@
+/* AoC 2024 16 */
+
+glbMap=[];
+glbCostMap=[];
+glbSpots=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc16.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc16.2024.txt");
+    return sarr;
+}
+
+fn printMap()
+{
+    foreach (row in glbMap)
+    {
+        s="";
+        foreach (c in row)
+        {
+            if (c==0)
+            {
+                s+=".";
+            }
+            if (c==1)
+            {
+                s+="#";
+            }
+        }
+        print(s);
+    }
+    print("");
+}
+
+fn parseMap(arr)
+{
+    start=[];
+    end=[];
+
+    y=0;
+    foreach (row in arr)
+    {
+        x=0;
+        curRow=[];
+        costRow=[];
+        foreach (c in row)
+        {
+            if (c==".")            
+            {
+                curRow.add(0);
+            }
+            if (c=="#")            
+            {
+                curRow.add(1);
+            }
+            if (c=="S")
+            {
+                start.add(x);
+                start.add(y);
+                curRow.add(0);
+            }
+            if (c=="E")
+            {
+                end.add(x);
+                end.add(y);
+                curRow.add(0);
+            }
+        
+            costRow.add([999999,999999,999999,999999]);
+            x+=1;
+        }
+
+        glbMap.add(curRow);
+        glbCostMap.add(costRow);
+        y+=1;
+    }
+
+    return [start[0],start[1],end[0],end[1]];
+}
+
+fn canGo(pos,dir)
+{
+    if (glbMap[pos[1]+dir[1]][pos[0]+dir[0]]==0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn calcScore(arr)
+{
+    score=0;
+    idx=0;
+    while (idx<=(arr.length-2))
+    {
+        
+        score+=1;
+        if (arr[idx]!=arr[idx+1])
+        {
+            score+=1000;
+        }
+
+        if ((arr[idx]==0)&&(arr[idx+1]==2))
+        {
+            print("onehundredeighty!");
+        }
+        if ((arr[idx]==1)&&(arr[idx+1]==3))
+        {
+            print("onehundredeighty!");
+        }
+
+        idx+=1;
+    }
+
+    return score;
+}
+
+fn artigianalDFS(curPos,end,visitedarr,directionarr,curdir,curCost)
+{
+    if (curCost>135512)
+    {
+        return;
+    }
+
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+
+    visitedarr.add([curPos[0],curPos[1]]);
+    directionarr.add(curdir);
+
+    if ((curPos[0]==end[0])&&(curPos[1]==end[1]))
+    {
+        //print("fin");
+        print(calcScore(directionarr));
+        return;
+    }
+
+    dirz=0;
+    foreach (d in directions)
+    {
+        if (canGo(curPos,d))
+        {
+            if (visitedarr.find([curPos[0]+d[0],curPos[1]+d[1]])==-1)
+            {
+                newcost=curCost;
+                if (dirz==curdir)
+                {
+                    newcost+=1;
+                }
+                else
+                {
+                    newcost+=1001;
+                }
+
+                artigianalDFS([curPos[0]+d[0],curPos[1]+d[1]],end,visitedarr,directionarr,dirz,newcost);
+            }
+        }
+        dirz+=1;
+    }
+}
+
+fn artigianalDjikstra(curPos,end,curdir,curCost,path)
+{
+    if (curCost>135512)
+    {
+        return;
+    }
+
+    if ((curPos[0]==end[0])&&(curPos[1]==end[1]))
+    {
+        if (curCost==135512)
+        {
+            print("reached the end, cost:",curCost);
+            print("the path:",path);
+            foreach (p in path)
+            {
+                if (glbSpots.find(p)==-1)
+                {
+                    glbSpots.add(p);
+                }
+            }
+        }
+        else
+        {
+            print("otha");
+        }
+        return;
+    }
+
+    if (glbCostMap[curPos[1]][curPos[0]][curdir]>=curCost)
+    {
+        glbCostMap[curPos[1]][curPos[0]][curdir]=curCost;
+        path.add(curPos);
+    }
+    else
+    {
+        return;
+    }
+
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+    dirz=0;
+    foreach (d in directions)
+    {
+        if ( ((dirz==0)&&(curdir==2)) || ((dirz==1)&&(curdir==3)) || ((dirz==2)&&(curdir==0)) || ((dirz==3)&&(curdir==1)) )
+        {
+        }
+        else
+        {
+            if (canGo(curPos,d))
+            {
+                newCost=curCost;
+                if (dirz==curdir)
+                {
+                    newCost+=1;
+                }
+                else
+                {
+                    newCost+=1001;
+                }
+
+                artigianalDjikstra([curPos[0]+d[0],curPos[1]+d[1]],end,dirz,newCost,path);
+            }
+        }
+        dirz+=1;
+    }
+}
+
+fn part1(arr)
+{
+    startEnd=parseMap(arr);
+    printMap();
+
+    //artigianalDFS([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],[],[],1,0);
+    artigianalDjikstra([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],1,0,[]);
+
+    idx=0;
+    while (idx<glbSpots.length)
+    {
+        idx+=1;
+    }
+    print(idx+1);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+    //part2(input);
+}

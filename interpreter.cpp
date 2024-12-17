@@ -1022,6 +1022,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				else if (opz == "-") partialResult -= newVal;
 				else if (opz == "*") partialResult *= newVal;
 				else if (opz == "/") partialResult /= newVal;
+				else if (opz == "%") partialResult %= newVal;
 
 				vResult.value = partialResult;
 			}
@@ -1034,6 +1035,7 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				else if (opz == "-") partialResult -= newVal;
 				else if (opz == "*") partialResult *= newVal;
 				else if (opz == "/") partialResult /= newVal;
+				else if (opz == "%") partialResult %= newVal;
 
 				vResult.value = partialResult;
 			}
