@@ -1914,7 +1914,7 @@ void liaInterpreter::exeCuteLogicalOrStatement(const std::shared_ptr<peg::Ast>& 
 
 	liaVariable theVar;
 	size_t curLine=0;
-	int rExpr = 0;
+	long long rExpr = 0;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -1931,8 +1931,15 @@ void liaInterpreter::exeCuteLogicalOrStatement(const std::shared_ptr<peg::Ast>& 
 			if (ch->name == "Expression")
 			{
 				liaVariable andVal = evaluateExpression(ch, env);
-				assert(andVal.type == liaVariableType::integer);
-				rExpr = std::get<int>(andVal.value);
+				//assert(andVal.type == liaVariableType::integer);
+				if (andVal.type == liaVariableType::integer)
+				{
+					rExpr = (long long)std::get<int>(andVal.value);
+				}
+				else
+				{
+					rExpr = (long long)std::get<long long>(andVal.value);
+				}
 			}
 		}
 	}
@@ -1962,10 +1969,15 @@ void liaInterpreter::exeCuteLogicalOrStatement(const std::shared_ptr<peg::Ast>& 
 		int vv = std::get<int>(pvar->value);
 		pvar->value = vv | rExpr;
 	}
+	else if (pvar->type == liaVariableType::longint)
+	{
+		long long vv = std::get<long long>(pvar->value);
+		pvar->value = vv | rExpr;
+	}
 	else
 	{
 		std::string err;
-		err += "Logical or is valid only between integers";
+		err += "Logical or is valid only between integers or longs";
 		err += " at line " + std::to_string(curLine) + ".";
 		err += "Terminating.";
 		fatalError(err);

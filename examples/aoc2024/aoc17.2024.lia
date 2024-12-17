@@ -1,9 +1,9 @@
 /* AoC 2024 17 - intcode! */
 
 glbPC=0;
-glbRegA=0;
-glbRegB=0;
-glbRegC=0;
+glbRegA=0L;
+glbRegB=0L;
+glbRegC=0L;
 glbProgram=[];
 glbOutBuf="";
 
@@ -27,7 +27,7 @@ fn parseProgram(arr)
                 sVal+=row[idx];
                 idx+=1;
             }
-            glbRegA=toInteger(sVal);
+            glbRegA=toLong(sVal);
         }
         if (row.find("Register B: ")!=-1)
         {
@@ -38,7 +38,7 @@ fn parseProgram(arr)
                 sVal+=row[idx];
                 idx+=1;
             }
-            glbRegB=toInteger(sVal);
+            glbRegB=toLong(sVal);
         }
         if (row.find("Register C: ")!=-1)
         {
@@ -49,7 +49,7 @@ fn parseProgram(arr)
                 sVal+=row[idx];
                 idx+=1;
             }
-            glbRegC=toInteger(sVal);
+            glbRegC=toLong(sVal);
         }
         if (row.find("Program")!=-1)
         {
@@ -63,7 +63,7 @@ fn parseProgram(arr)
             sArr=sVal.split(",");
             foreach (opcode in sArr)
             {
-                glbProgram.add(toInteger(opcode));
+                glbProgram.add(toLong(opcode));
             }
         }
     }
@@ -73,19 +73,19 @@ fn getComboOperand()
 {
     op=glbProgram[glbPC+1];
 
-    if (op<4)
+    if (op<4L)
     {
         return op;
     }
-    if (op==4)
+    if (op==4L)
     {
         return glbRegA;
     }
-    if (op==5)
+    if (op==5L)
     {
         return glbRegB;
     }
-    if (op==6)
+    if (op==6L)
     {
         return glbRegC;
     }
@@ -96,17 +96,17 @@ fn getComboOperand()
 
 fn getPowerOf2(n)
 {
-    if (n==0)
+    if (n==0L)
     {
-        return 1;
+        return 1L;
     }
     
-    rez=1;
-    idx=0;
+    rez=1L;
+    idx=0L;
     while (idx<n)
     {
-        rez*=2;
-        idx+=1;
+        rez*=2L;
+        idx+=1L;
     }
 
     return rez;
@@ -139,16 +139,16 @@ fn executeCDV()
 fn executeBST()
 {
     combo=getComboOperand();
-    combo%=8;
+    combo%=8L;
     glbRegB=combo;
 }
 
 fn executeJNZ()
 {
-    if (glbRegA!=0)
+    if (glbRegA!=0L)
     {
         lit=glbProgram[glbPC+1];
-        glbPC=lit;
+        glbPC=toInteger(toString(lit));
     }
     else
     {
@@ -171,7 +171,7 @@ fn executeBXC()
 fn executeOUT()
 {
     combo=getComboOperand();
-    combo%=8;
+    combo%=8L;
     //print(combo,",");
     glbOutBuf+=toString(combo);
     glbOutBuf+=",";
@@ -184,49 +184,50 @@ fn executeProgram()
     while (!halted)
     {
         opcode=glbProgram[glbPC];
+        //print("opcode is:",opcode);
 
-        if (opcode==0)
+        if (opcode==0L)
         {
             // adv
             executeADV();
             glbPC+=2;
         }
-        if (opcode==1)
+        if (opcode==1L)
         {
             // bxl
             executeBXL();
             glbPC+=2;
         }
-        if (opcode==2)
+        if (opcode==2L)
         {
             // bst
             executeBST();
             glbPC+=2;
         }
-        if (opcode==3)
+        if (opcode==3L)
         {
             // jnz
             executeJNZ();
         }
-        if (opcode==4)
+        if (opcode==4L)
         {
             // bxc
             executeBXC();
             glbPC+=2;
         }
-        if (opcode==5)
+        if (opcode==5L)
         {
             // out
             executeOUT();
             glbPC+=2;
         }
-        if (opcode==6)
+        if (opcode==6L)
         {
             // bdv
             executeBDV();
             glbPC+=2;
         }
-        if (opcode==7)
+        if (opcode==7L)
         {
             // cdv
             executeCDV();
@@ -267,27 +268,48 @@ fn part2(arr)
 
     //print("SProg:",sProg);
 
-    aVal=200000;
+    idx=glbProgram.length-1;
+    baseNum=0L;
     while (true)
     {
-        print("regA is ",aVal);
-
-        glbRegA=aVal;
-        glbPC=0;
-        glbRegB=0;
-        glbRegC=0;
-        glbOutBuf="";
-        executeProgram();
-
-        print("Result:",glbOutBuf);
-
-        if (glbOutBuf==sProg)
+        oct=0L;
+        arrz=[];
+        while (oct<64L)
         {
-            print("Fount!");
-            return;
+            g=baseNum;
+            g|=oct;
+
+            print("regA is ",g);
+            glbRegA=g;
+            glbRegB=0L;
+            glbRegC=0L;
+            glbPC=0;
+            glbOutBuf="";
+            executeProgram();
+            print("Result:",glbOutBuf);
+
+            sarr=glbOutBuf.split(",");
+            c=toLong(sarr[0]);
+            if (c==glbProgram[idx])
+            {
+                print("found ",c);
+                arrz.add(oct);
+            }
+
+            oct+=1L;
         }
 
-        aVal+=1;
+        arrz.sort();
+        findz=arrz[0];
+
+        baseNum|=findz;
+        baseNum*=8L;
+        idx-=1;
+
+        if (idx<0)
+        {
+            return;
+        }
     }
 }
 
