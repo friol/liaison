@@ -18,7 +18,7 @@ fn fallBytes(n,xsize,ysize,arr)
         newRow=[];
         while (x<xsize)
         {
-            newRow.add([0,0]);
+            newRow.add([0,0,[-1,-1]]);
             x+=1;
         }
         glbMap.add(newRow);
@@ -85,11 +85,31 @@ fn canGo(p,dir)
     return true;
 }
 
+fn printPath(end)
+{
+    stepz=0;
+    curv=end;
+    while (true)
+    {
+        print(curv);
+        parx=glbMap[curv[1]][curv[0]][2][0];
+        pary=glbMap[curv[1]][curv[0]][2][1];
+
+        if ((parx==-1)&&(pary==-1))
+        {
+            print(stepz);
+            return;
+        }
+        curv=[parx,pary];
+        stepz+=1;
+    }
+}
+
 fn findShortestPath(start,end)
 {
     s=[];
     glbMap[start[1]][start[0]][1]=1;
-    s.add([start,[-1,-1]]);
+    s.add(start);
 
     while (s.length!=0)
     {
@@ -97,23 +117,24 @@ fn findShortestPath(start,end)
         s=pop(s);
 
         //print(v);
-        if ((v[0][0]==end[0])&&(v[0][1]==end[1]))
+        if ((v[0]==end[0])&&(v[1]==end[1]))
         {
-            print("Fount!",v[1]);
-
-            return;
+            print("Fount!",v);
+            printPath(end);
+            //return;
         }
 
         directions=[[0,-1],[1,0],[0,1],[-1,0]];
 
         foreach (dir in directions)
         {
-            if (canGo(v[0],dir))
+            if (canGo(v,dir))
             {
-                if (glbMap[v[0][1]+dir[1]][v[0][0]+dir[0]][1]==0)
+                if (glbMap[v[1]+dir[1]][v[0]+dir[0]][1]==0)
                 {
-                    glbMap[v[0][1]+dir[1]][v[0][0]+dir[0]][1]=1;
-                    s.add([[v[0][0]+dir[0],v[0][1]+dir[1]],[-dir[0],-dir[1]]]);
+                    glbMap[v[1]+dir[1]][v[0]+dir[0]][1]=1;
+                    glbMap[v[1]+dir[1]][v[0]+dir[0]][2]=v;
+                    s.add([v[0]+dir[0],v[1]+dir[1]]);
                 }
             }
         }
