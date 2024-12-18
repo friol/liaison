@@ -1,0 +1,146 @@
+/* AoC 2024 18 */
+
+glbMap=[];
+
+fn readInput()
+{
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc18.2024.test.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc18.2024.txt");
+    return sarr;
+}
+
+fn fallBytes(n,xsize,ysize,arr)
+{
+    y=0;
+    while (y<ysize)
+    {
+        x=0;
+        newRow=[];
+        while (x<xsize)
+        {
+            newRow.add([0,0]);
+            x+=1;
+        }
+        glbMap.add(newRow);
+        y+=1;
+    }
+
+    //
+
+    idx=0;
+    while (idx<n)
+    {
+        snowflake=arr[idx];
+        coords=snowflake.split(",");
+
+        xc=toInteger(coords[0]);
+        yc=toInteger(coords[1]);
+
+        glbMap[yc][xc][0]=1;
+
+        idx+=1;
+    }
+
+}
+
+fn pop(arr)
+{
+    newarr=[];
+    idx=0;
+    while (idx<(arr.length-1))
+    {
+        newarr.add(arr[idx]);
+        idx+=1;
+    }
+    return newarr;
+}
+
+fn canGo(p,dir)
+{
+    newpx=p[0]+dir[0];
+    newpy=p[1]+dir[1];
+
+    if (newpx<0)
+    {
+        return false;
+    }
+    if (newpy<0)
+    {
+        return false;
+    }
+    if (newpx>=glbMap[0].length)
+    {
+        return false;
+    }
+    if (newpy>=glbMap.length)
+    {
+        return false;
+    }
+
+    if (glbMap[newpy][newpx][0]==1)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+fn findShortestPath(start,end)
+{
+    s=[];
+    glbMap[start[1]][start[0]][1]=1;
+    s.add([start,[-1,-1]]);
+
+    while (s.length!=0)
+    {
+        v=s[s.length-1];
+        s=pop(s);
+
+        //print(v);
+        if ((v[0][0]==end[0])&&(v[0][1]==end[1]))
+        {
+            print("Fount!",v[1]);
+
+            return;
+        }
+
+        directions=[[0,-1],[1,0],[0,1],[-1,0]];
+
+        foreach (dir in directions)
+        {
+            if (canGo(v[0],dir))
+            {
+                if (glbMap[v[0][1]+dir[1]][v[0][0]+dir[0]][1]==0)
+                {
+                    glbMap[v[0][1]+dir[1]][v[0][0]+dir[0]][1]=1;
+                    s.add([[v[0][0]+dir[0],v[0][1]+dir[1]],[-dir[0],-dir[1]]]);
+                }
+            }
+        }
+    }
+}
+
+fn part1(arr)
+{
+    gridXsize=7;
+    gridYsize=7;
+    numBytes=12;
+
+    //gridXsize=71;
+    //gridYsize=71;
+    //numBytes=1024;
+
+    fallBytes(numBytes,gridXsize,gridYsize,arr);
+
+    start=[0,0];
+    end=[gridXsize-1,gridYsize-1];
+
+    findShortestPath(start,end);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+    //part2(input);
+}
