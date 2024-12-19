@@ -1,0 +1,109 @@
+/* AoC 2024 19 */
+
+glbListOfColors=[];
+glbNeededPatterns=[];
+glbNumCanBeMade=0;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc19.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc19.2024.txt");
+    return sarr;
+}
+
+fn parseInput(arr)
+{
+    foreach (el in arr)
+    {
+        if (el.find(",")!=-1)
+        {
+            glbListOfColors=el.split(", ");
+        }
+        else
+        {
+            if (el.length>0)
+            {
+                glbNeededPatterns.add(el);
+            }
+        }
+    }
+}
+
+fn canBeMade(s)
+{
+    //print("analyzing ",s);
+
+    if (s.length==0)
+    {
+        print("this should not happen");
+        return false;
+    }
+
+    foreach (block in glbListOfColors)
+    {
+        if (s.find(block)==0)
+        {
+            //print(block," matches in ",s);
+            if (s.length==block.length)
+            {
+                // finished
+                //print("end condition: can be made!");
+                glbNumCanBeMade+=1;
+                return true;
+            }
+            else
+            {
+                sslen=s.length-block.length;
+                subss="";
+                idx=0;
+                while (idx<s.length)
+                {
+                    if (idx>=block.length)
+                    {
+                        subss+=s[idx];
+                    }
+
+                    idx+=1;
+                }
+                ec=canBeMade(subss);
+                //if (ec==true)
+                //{
+                //    return true;
+                //}
+            }
+        }
+    }
+
+    return false;
+}
+
+fn part1(arr)
+{
+    parseInput(arr);
+
+    foreach (design in glbNeededPatterns)
+    {
+        canBeMade(design);
+    }
+
+    print(glbNumCanBeMade);
+}
+
+fn part2(arr)
+{
+    parseInput(arr);
+
+    foreach (design in glbNeededPatterns)
+    {
+        print("Testing ",design);
+        canBeMade(design);
+        print(glbNumCanBeMade);
+    }
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    part2(input);
+}
