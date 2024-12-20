@@ -1,0 +1,447 @@
+/* AoC 2024 20 */
+
+glbMap=[];
+glbNumTargets=0;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc20.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc20.2024.txt");
+    return sarr;
+}
+
+fn parseMap(arr)
+{
+    start=[];
+    end=[];
+
+    y=0;
+    foreach(row in arr)
+    {
+        x=0;
+        curRow=[];
+        foreach(col in row)
+        {
+            if (col==".")
+            {
+                curRow.add([0,0,[-1,-1]]);
+            }
+            if (col=="#")
+            {
+                curRow.add([1,0,[-1,-1]]);
+            }
+            if (col=="S")
+            {
+                start=[x,y];
+                curRow.add([0,0,[-1,-1]]);
+            }
+            if (col=="E")
+            {
+                end=[x,y];
+                curRow.add([0,0,[-1,-1]]);
+            }
+
+            x+=1;
+        }
+        glbMap.add(curRow);
+        y+=1;
+    }
+
+    return [start,end];
+}
+
+fn addToFront(arr,el)
+{
+    newarr=[];
+    newarr.add(el);
+    foreach (oldel in arr)
+    {
+        newarr.add(oldel);
+    }
+    return newarr;
+}
+
+fn pop(arr)
+{
+    newarr=[];
+    idx=0;
+    while (idx<(arr.length-1))
+    {
+        newarr.add(arr[idx]);
+        idx+=1;
+    }
+
+    //print("arr len:",arr.length);
+    //print("poped len:",newarr.length);
+
+    return newarr;
+}
+
+fn canGo(p,dir)
+{
+    newpx=p[0]+dir[0];
+    newpy=p[1]+dir[1];
+
+    if (newpx<0)
+    {
+        return false;
+    }
+    if (newpy<0)
+    {
+        return false;
+    }
+    if (newpx>=glbMap[0].length)
+    {
+        return false;
+    }
+    if (newpy>=glbMap.length)
+    {
+        return false;
+    }
+
+    if (glbMap[newpy][newpx][0]==1)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+fn getPathLength(end)
+{
+    stepz=0;
+    curv=end;
+    //thePath=[];
+    while (true)
+    {
+        //print(curv);
+        parx=glbMap[curv[1]][curv[0]][2][0];
+        pary=glbMap[curv[1]][curv[0]][2][1];
+
+        if ((parx==-1)&&(pary==-1))
+        {
+            //print(thePath);
+            /*minx=999999;
+            miny=999999;
+            maxx=-1;
+            maxy=-1;
+
+            foreach (el in thePath)
+            {
+                if (el[0]<minx)
+                {
+                    minx=el[0];
+                }
+                if (el[1]<miny)
+                {
+                    miny=el[1];
+                }
+                if (el[0]>maxx)
+                {
+                    maxx=el[0];
+                }
+                if (el[1]>maxy)
+                {
+                    maxy=el[1];
+                }
+            }
+
+            print(minx," ",miny," ",maxx," ",maxy);*/
+            return stepz;
+        }
+
+        curv=[parx,pary];
+        //thePath.add(curv);
+        stepz+=1;
+    }
+}
+
+fn getPath(end)
+{
+    curv=end;
+    thePath=[curv];
+    while (true)
+    {
+        //print(curv);
+        parx=glbMap[curv[1]][curv[0]][2][0];
+        pary=glbMap[curv[1]][curv[0]][2][1];
+
+        if ((parx==-1)&&(pary==-1))
+        {
+            revPath=[];
+            idx=thePath.length-1;
+            while (idx>=0)
+            {
+                revPath.add(thePath[idx]);
+                idx-=1;
+            }
+            return revPath;
+        }
+
+        curv=[parx,pary];
+        thePath.add(curv);
+    }
+}
+
+fn findShortestPath(start,end)
+{
+    s=[];
+    glbMap[start[1]][start[0]][1]=1;
+    s.add(start);
+
+    while (s.length!=0)
+    {
+        v=s[s.length-1];
+        s=pop(s);
+
+        if ((v[0]==end[0])&&(v[1]==end[1]))
+        {
+            //print("Fount!",v);
+            pl=getPathLength(end);
+            return [pl,getPath(end)];
+        }
+
+        directions=[[0,-1],[1,0],[0,1],[-1,0]];
+
+        foreach (dir in directions)
+        {
+            if (canGo(v,dir))
+            {
+                if (glbMap[v[1]+dir[1]][v[0]+dir[0]][1]==0)
+                {
+                    glbMap[v[1]+dir[1]][v[0]+dir[0]][1]=1;
+                    glbMap[v[1]+dir[1]][v[0]+dir[0]][2]=v;
+                    
+                    s=addToFront(s,[v[0]+dir[0],v[1]+dir[1]]);
+                }
+            }
+        }
+    }
+
+    return [-1,[]];
+}
+
+fn resetMap()
+{
+    y=0;
+    foreach(row in glbMap)
+    {
+        x=0;
+        foreach(col in row)
+        {
+            glbMap[y][x][1]=0;
+            glbMap[y][x][2]=[-1,-1];
+            x+=1;
+        }
+        y+=1;
+    }
+}
+
+fn findCheats(start,end,baseline)
+{
+    listOfSavings=[];
+    targetSave=64;
+
+    // horizontals+vertical cheats
+    cheatNum=0;
+    while (cheatNum<2)
+    {
+        y=1;
+        while (y<(glbMap.length-1))
+        {
+            x=1;
+
+            while (x<(glbMap[0].length-1))
+            {
+                if (cheatNum==0)
+                {
+                    p0=[x,y];
+                    p1=[x+1,y];
+                }
+                else
+                {
+                    p0=[x,y];
+                    p1=[x,y+1];
+                }
+
+                if ((glbMap[p1[1]][p1[0]][0]==1)&&(glbMap[p0[1]][p0[0]][0]==0))
+                {
+                    oldp0=glbMap[p0[1]][p0[0]][0];
+                    oldp1=glbMap[p1[1]][p1[0]][0];
+                    glbMap[p0[1]][p0[0]][0]=0;
+                    glbMap[p1[1]][p1[0]][0]=0;
+
+                    print("Testing... phase",cheatNum," pos:",p0,p1," Total targets found:",glbNumTargets);
+                    resetMap();
+                    pathlen=findShortestPath(start,end);
+                    //print(minLength);
+                    save=baseline-pathlen;
+                    if (save==targetSave)
+                    {
+                        print("save target:",p0,p1);
+                        glbNumTargets+=1;
+                    }
+                    //if (listOfSavings.find(save)==-1)
+                    //{
+                        listOfSavings.add(save);
+                    //}
+
+                    glbMap[p0[1]][p0[0]][0]=oldp0;
+                    glbMap[p1[1]][p1[0]][0]=oldp1;
+                }
+
+                x+=1;
+            }
+
+            y+=1;
+        }
+
+        cheatNum+=1;
+    }
+
+    print(glbNumTargets);
+
+    //listOfSavings.sort();
+    //print(listOfSavings);
+}
+
+fn abz(n)
+{
+    if (n<0)
+    {
+        return -n;
+    }
+    return n;
+}
+
+fn calcManhattanDistance(p0,p1)
+{
+    return abz(p0[0]-p1[0])+abz(p0[1]-p1[1]);
+}
+
+fn findCheatzzz(sp,target)
+{
+    numCheats=0;
+    idxcs=0;
+    while (idxcs<sp[0])
+    {
+        idxce=idxcs+1;//sp[0];
+        while (idxce<sp[1].length)
+        {
+            // are cheat-compatible?
+            cs=sp[1][idxcs];
+            ce=sp[1][idxce];
+
+            //dist=calcManhattanDistance(cs,ce);
+            d0=cs[0]-ce[0];
+            d1=cs[1]-ce[1];
+            if (d0<0)
+            {
+                d0=-d0;
+            }
+            if (d1<0)
+            {
+                d1=-d1;
+            }
+            dist=d0+d1;
+            if (dist==2)
+            {
+                saved=idxce-idxcs-2;
+                //print(cs,ce,saved);
+                if (saved>=target)
+                {
+                    //print("Cheat: ",cs,ce);
+                    numCheats+=1;
+                }
+            }
+
+            idxce+=1;
+        }
+
+        print(idxcs,"/",sp[0]);
+        idxcs+=1;
+    }
+
+    return numCheats;
+}
+
+fn part1(arr)
+{
+    startend=parseMap(arr);
+
+    start=startend[0];
+    end=startend[1];
+
+    resetMap();
+    sp=findShortestPath(start,end);
+    print(sp);
+
+    print(findCheatzzz(sp,100));    
+}
+
+fn findCheatzzz2(sp,target)
+{
+    numCheats=0;
+    idxcs=0;
+    while (idxcs<sp[0])
+    {
+        idxce=idxcs+1;//sp[0];
+        while (idxce<sp[1].length)
+        {
+            // are cheat-compatible?
+            cs=sp[1][idxcs];
+            ce=sp[1][idxce];
+
+            //dist=calcManhattanDistance(cs,ce);
+            d0=cs[0]-ce[0];
+            d1=cs[1]-ce[1];
+            if (d0<0)
+            {
+                d0=-d0;
+            }
+            if (d1<0)
+            {
+                d1=-d1;
+            }
+            dist=d0+d1;
+            if ((dist>=2)&&(dist<=20))
+            {
+                saved=idxce-idxcs-dist;
+                //print(cs,ce,saved);
+                if (saved>=target)
+                {
+                    //print("Cheat: ",cs,ce);
+                    numCheats+=1;
+                }
+            }
+
+            idxce+=1;
+        }
+
+        print(idxcs,"/",sp[0]);
+        idxcs+=1;
+    }
+
+    return numCheats;
+}
+
+fn part2(arr)
+{
+    startend=parseMap(arr);
+
+    start=startend[0];
+    end=startend[1];
+
+    resetMap();
+    sp=findShortestPath(start,end);
+    print(sp);
+
+    print(findCheatzzz2(sp,100));    
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    part2(input);
+}
