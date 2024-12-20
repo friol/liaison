@@ -2,7 +2,8 @@
 
 glbListOfColors=[];
 glbNeededPatterns=[];
-glbNumCanBeMade=0;
+glbReducedSet=[];
+glbCacheDict={};
 
 fn readInput()
 {
@@ -48,7 +49,6 @@ fn canBeMade(s)
             {
                 // finished
                 //print("end condition: can be made!");
-                glbNumCanBeMade+=1;
                 return true;
             }
             else
@@ -66,15 +66,60 @@ fn canBeMade(s)
                     idx+=1;
                 }
                 ec=canBeMade(subss);
-                //if (ec==true)
-                //{
-                //    return true;
-                //}
+                if (ec==true)
+                {
+                    return true;
+                }
             }
         }
     }
 
     return false;
+}
+
+fn calcCombinations(s)
+{
+    foreach (k in glbCacheDict.keys)
+    {
+        if (s==k)
+        {
+            return glbCacheDict[k];
+        }
+    }
+
+    totz=0L;
+    foreach (block in glbReducedSet)
+    {
+        if (s.find(block)==0)
+        {
+            //print(block," matches in ",s);
+            if (s.length==block.length)
+            {
+                // finished
+                totz+=1L;
+            }
+            else
+            {
+                sslen=s.length-block.length;
+                subss="";
+                idx=0;
+                while (idx<s.length)
+                {
+                    if (idx>=block.length)
+                    {
+                        subss+=s[idx];
+                    }
+
+                    idx+=1;
+                }
+
+                totz+=calcCombinations(subss);
+            }
+        }
+    }
+
+    glbCacheDict[s]=totz;
+    return totz;
 }
 
 fn part1(arr)
@@ -85,20 +130,33 @@ fn part1(arr)
     {
         canBeMade(design);
     }
-
-    print(glbNumCanBeMade);
 }
 
 fn part2(arr)
 {
     parseInput(arr);
 
+    totKomb=0L;
     foreach (design in glbNeededPatterns)
     {
         print("Testing ",design);
-        canBeMade(design);
-        print(glbNumCanBeMade);
+        if (canBeMade(design))
+        {
+            glbReducedSet=[];
+            foreach (towel in glbListOfColors)
+            {
+                if (design.find(towel)!=-1)
+                {
+                    glbReducedSet.add(towel);
+                }
+            }
+            nc=calcCombinations(design);
+            print(nc);
+            totKomb+=nc;
+        }
     }
+
+    print(totKomb);
 }
 
 fn main(params)
