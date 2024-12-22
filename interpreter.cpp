@@ -311,6 +311,30 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 
 					pvarValue->vlist.push_back(parameters[0]);
 				}
+				else if (ch->token == "findKey")
+				{
+					assert(parameters.size() == 1);
+					assert(pvarValue->type == liaVariableType::dictionary);
+
+					retVal.type = liaVariableType::integer;
+					retVal.value = -1;
+
+					if (parameters[0].type == liaVariableType::string)
+					{
+						std::string key2find = std::get<std::string>(parameters[0].value);
+						if (pvarValue->vMap.find(key2find) != pvarValue->vMap.end())
+						{
+							retVal.value = 1;
+						}
+					}
+					else
+					{
+						std::string err;
+						err += "Unhandled findKey type at " + std::to_string(lineNum) + ". ";
+						err += "Terminating.";
+						fatalError(err);
+					}
+				}
 				else if (ch->token == "find")
 				{
 					// s.find("value"), returns idx of found element, or -1 if not found

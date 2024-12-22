@@ -1,0 +1,498 @@
+/* AoC 2024 21 */
+
+glbTransCodeDir={};
+glbIteration=0;
+glbMaxIterations=10000;
+
+glbKeypad=[];
+glbNumkeypadMinlen=999999;
+glbNumpadPossiblePaths=[];
+
+glbDirKeypad=[];
+glbDirkeypadMinlen=999999;
+glbDirpadPossiblePaths=[];
+
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc21.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc21.2024.txt");
+    return sarr;
+}
+
+fn canGoNumpad(p,dir)
+{
+    newpx=p[0]+dir[0];
+    newpy=p[1]+dir[1];
+
+    if (newpx<0)
+    {
+        return false;
+    }
+    if (newpy<0)
+    {
+        return false;
+    }
+    if (newpx>=glbKeypad[0].length)
+    {
+        return false;
+    }
+    if (newpy>=glbKeypad.length)
+    {
+        return false;
+    }
+
+    if (glbKeypad[newpy][newpx]==-1)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+fn findNumkeyPath(pos,code,targetDigit,moves,visitedArr)
+{
+    visitedArr.add(pos);
+
+    if (targetDigit==3)
+    {
+        target=11;
+    }
+    else
+    {
+        target=toInteger(code[targetDigit]);
+    }
+
+    if (glbKeypad[pos[1]][pos[0]]==target)
+    {
+        if (target==11)
+        {
+            // sequence done
+            moves.add("A");
+            if (glbNumkeypadMinlen>=moves.length)
+            {
+                glbNumkeypadMinlen=moves.length;
+                //print("seq done:",moves);
+                glbNumpadPossiblePaths.add(moves);
+            }
+            return;
+        }
+        else
+        {
+            moves.add("A");
+            targetDigit+=1;
+            visitedArr=[];
+            visitedArr.add(pos);
+        }
+    }
+
+    if (moves.length>glbNumkeypadMinlen)
+    {
+        return;
+    }
+
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+    dirTranscode=["^",">","v","<"];
+
+    dirz=0;
+    foreach (dir in directions)
+    {
+        newPos=[pos[0]+dir[0],pos[1]+dir[1]];
+        if (visitedArr.find(newPos)==-1)
+        {
+            if (canGoNumpad(pos,dir))
+            {
+                newmoves=moves;
+                newmoves.add(dirTranscode[dirz]);
+                findNumkeyPath([pos[0]+dir[0],pos[1]+dir[1]],code,targetDigit,newmoves,visitedArr);
+            }
+        }
+        dirz+=1;
+    }
+}
+
+fn findNumkeypadSequences(code)
+{
+    glbNumkeypadMinlen=999999;
+    glbNumpadPossiblePaths=[];
+    findNumkeyPath([2,3],code,0,[],[]);
+
+    retArr=[];
+    foreach (path in glbNumpadPossiblePaths)
+    {
+        if (path.length==glbNumkeypadMinlen)
+        {
+            retArr.add(path);
+        }
+    }
+
+    return retArr;
+}
+
+fn canGoDirpad(p,dir)
+{
+    newpx=p[0]+dir[0];
+    newpy=p[1]+dir[1];
+
+    if (newpx<0)
+    {
+        return false;
+    }
+    if (newpy<0)
+    {
+        return false;
+    }
+    if (newpx>=glbDirKeypad[0].length)
+    {
+        return false;
+    }
+    if (newpy>=glbDirKeypad.length)
+    {
+        return false;
+    }
+
+    if (glbDirKeypad[newpy][newpx]==-1)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+fn printMove(m)
+{
+    s="";
+    foreach (el in m)
+    {
+        s+=el;
+    }
+    print(s," ",s.length);
+}
+
+fn findDirkeyPath(pos,code,targetDigit,moves,visitedArr,limited)
+{
+    if (moves.length>=glbDirkeypadMinlen)
+    {
+        return;
+    }
+
+    if (limited)
+    {
+        glbIteration+=1;
+        if (glbIteration>=glbMaxIterations)
+        {
+            return;
+        }
+    }
+
+    visitedArr.add(pos);
+
+    target=glbTransCodeDir[code[targetDigit]];
+
+    if (glbDirKeypad[pos[1]][pos[0]]==target)
+    {
+        moves.add("A");
+        targetDigit+=1;
+        
+        if (targetDigit==code.length)
+        {
+            // sequence done
+            if (glbDirkeypadMinlen>=moves.length)
+            {
+                glbDirkeypadMinlen=moves.length;
+                printMove(moves);
+                glbDirpadPossiblePaths.add(moves);
+            }
+            return;
+        }
+
+        while (code[targetDigit]==code[targetDigit-1])
+        {
+            moves.add("A");
+            targetDigit+=1;
+            
+            if (targetDigit==code.length)
+            {
+                // sequence done
+                if (glbDirkeypadMinlen>=moves.length)
+                {
+                    glbDirkeypadMinlen=moves.length;
+                    printMove(moves);
+                    glbDirpadPossiblePaths.add(moves);
+                }
+                return;
+            }
+        }
+
+        visitedArr=[];
+        visitedArr.add(pos);
+    }
+
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+    dirTranscode=["^",">","v","<"];
+
+    dirz=0;
+    foreach (dir in directions)
+    {
+        if (canGoDirpad(pos,dir))
+        {
+            newPos=[pos[0]+dir[0],pos[1]+dir[1]];
+            if (visitedArr.find(newPos)==-1)
+            {
+                newmoves=moves;
+                newmoves.add(dirTranscode[dirz]);
+                findDirkeyPath(newPos,code,targetDigit,newmoves,visitedArr,limited);
+            }
+        }
+        dirz+=1;
+    }
+}
+
+fn findDirkeypadSequences(code,limited)
+{
+    glbIteration=0;
+    findDirkeyPath([2,0],code,0,[],[],limited);
+
+    retArr=[];
+    foreach (path in glbDirpadPossiblePaths)
+    {
+        if (path.length<=glbDirkeypadMinlen)
+        {
+            retArr.add(path);
+        }
+    }
+
+    return retArr;
+}
+
+fn part1(input)
+{
+    glbTransCodeDir["^"]=0;
+    glbTransCodeDir[">"]=1;
+    glbTransCodeDir["v"]=2;
+    glbTransCodeDir["<"]=3;
+    glbTransCodeDir["A"]=11;
+
+    glbKeypad.add([7,8,9]);
+    glbKeypad.add([4,5,6]);
+    glbKeypad.add([1,2,3]);
+    glbKeypad.add([-1,0,11]);
+
+    glbDirKeypad.add([-1,0,11]);
+    glbDirKeypad.add([3,2,1]);
+
+    iter=0;
+    megaSum=0;
+    foreach (curCode in input)
+    {
+        seqs=findNumkeypadSequences(curCode);
+        //print(seqs);
+
+        glbDirkeypadMinlen=999999;
+        seqs3=[];
+        foreach (seq in seqs)
+        {
+            glbDirpadPossiblePaths=[];
+            seqs2=findDirkeypadSequences(seq,false);
+            foreach (s in seqs2)
+            {
+                if (s.length<=glbDirkeypadMinlen)
+                {
+                    seqs3.add(s);
+                }
+            }
+        }
+
+        //print(seqs3);
+
+        glbDirkeypadMinlen=999999;
+
+        snum=0;
+        foreach (sex in seqs3)
+        {
+            print("iter ",iter,"/",input.length," sex ",snum,"/",seqs3.length);
+            glbDirpadPossiblePaths=[];
+            findDirkeypadSequences(sex,true);
+            snum+=1;
+        }
+
+        kode=toInteger(curCode[0])*100;
+        kode+=toInteger(curCode[1])*10;
+        kode+=toInteger(curCode[2])*1;
+
+        komplexity=kode*glbDirkeypadMinlen;
+        print(komplexity);
+        megaSum+=komplexity;
+
+        iter+=1;
+    }
+
+    print(megaSum);
+}
+
+fn getNextSequence(s)
+{
+    spathDict={};
+
+    spathDict["AA"]=["A"];
+    spathDict["^^"]=["A"];
+    spathDict[">>"]=["A"];
+    spathDict["vv"]=["A"];
+    spathDict["<<"]=["A"];
+
+    spathDict["A^"]=["<","A"];
+    spathDict["A>"]=["v","A"];
+    spathDict["Av"]=["<","v","A"];
+    spathDict["A<"]=["v","<","<","A"];
+
+    spathDict["^A"]=[">","A"];
+    spathDict["^>"]=["v",">","A"];
+    spathDict["^<"]=["v","<","A"];
+
+    spathDict["<A"]=[">",">","^","A"];
+    spathDict["<v"]=[">","A"];
+    spathDict["<^"]=[">","^","A"];
+
+    spathDict[">A"]=["^","A"];
+    spathDict[">v"]=["<","A"];
+    spathDict[">^"]=["<","^","A"];
+
+    spathDict["vA"]=["^",">","A"];
+    spathDict["v<"]=["<","A"];
+    spathDict["v>"]=[">","A"];
+
+    resSeq=[];
+    curKey="A";
+    idx=0;
+    while (idx<s.length)
+    {
+        nextKey=s[idx];
+        bin=curKey;
+        bin+=nextKey;
+
+        foreach (keystroke in spathDict[bin])
+        {
+            resSeq.add(keystroke);
+        }
+
+        curKey=nextKey;
+
+        idx+=1;
+    }
+
+    return resSeq;
+}
+
+fn evolveSequences(s)
+{
+    retArr=[];
+    foreach (seq in s)
+    {
+        s2=getNextSequence(seq);
+        retArr.add(s2);
+    }
+    return retArr;
+}
+
+fn part2(input)
+{
+    glbTransCodeDir["^"]=0;
+    glbTransCodeDir[">"]=1;
+    glbTransCodeDir["v"]=2;
+    glbTransCodeDir["<"]=3;
+    glbTransCodeDir["A"]=11;
+
+    glbKeypad.add([7,8,9]);
+    glbKeypad.add([4,5,6]);
+    glbKeypad.add([1,2,3]);
+    glbKeypad.add([-1,0,11]);
+
+    glbDirKeypad.add([-1,0,11]);
+    glbDirKeypad.add([3,2,1]);
+
+    curCode=input[0];
+    megaSum=0;
+    foreach (curCode in input)
+    {
+        print("Processing code ",curCode);
+        seqs=findNumkeypadSequences(curCode);
+        print(seqs);
+
+        idx=0;
+        while (idx<2)
+        {
+            foreach (s0 in seqs)
+            {
+                print("Evolution number ",idx," seqs len:",s0.length);
+            }
+            seqs2=evolveSequences(seqs);
+            //print(seqs2);
+
+            seqs=seqs2;
+            idx+=1;
+        }
+
+        minLen=999999999;
+        foreach (s in seqs)
+        {
+            if (s.length<minLen)
+            {
+                minLen=s.length;
+            }
+        }
+
+        kode=toInteger(curCode[0])*100;
+        kode+=toInteger(curCode[1])*10;
+        kode+=toInteger(curCode[2])*1;
+
+        komplexity=kode*minLen;
+        print(komplexity);
+        megaSum+=komplexity;
+    }
+
+    print("Mega-sum:",megaSum);
+}
+
+fn part2bis(input)
+{
+    glbTransCodeDir["^"]=0;
+    glbTransCodeDir[">"]=1;
+    glbTransCodeDir["v"]=2;
+    glbTransCodeDir["<"]=3;
+    glbTransCodeDir["A"]=11;
+
+    glbKeypad.add([7,8,9]);
+    glbKeypad.add([4,5,6]);
+    glbKeypad.add([1,2,3]);
+    glbKeypad.add([-1,0,11]);
+
+    glbDirKeypad.add([-1,0,11]);
+    glbDirKeypad.add([3,2,1]);
+
+    curCode=input[0];
+    print("Processing code ",curCode);
+    seqs=findNumkeypadSequences(curCode);
+    print(seqs);
+
+    bit=[seqs[0][0],seqs[0][1]];
+
+    idx=0;
+    while (idx<2)
+    {
+        print(idx," ",bit.length);
+        bit=getNextSequence(bit);
+        idx+=1;
+    }
+
+
+
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    //part2(input);
+    part2bis(input);
+}

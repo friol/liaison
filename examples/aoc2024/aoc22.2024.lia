@@ -1,0 +1,148 @@
+/* AoC 2024 22 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc22.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc22.2024.txt");
+    return sarr;
+}
+
+fn calcNextSecretNumber(n)
+{
+    nby64=n*64L;
+    n=nby64^n;
+    n%=16777216L;
+    ndiv32=n/32L;
+    n=ndiv32^n;
+    n%=16777216L;
+    nby2048=n*2048L;
+    n=nby2048^n;
+    n%=16777216L;
+
+    return n;
+}
+
+fn part1(input)
+{
+    bigSum=0L;
+    foreach (nss in input)
+    {
+        ns=toLong(nss);
+
+        idx=0;
+        while (idx<2000)
+        {
+            ns=calcNextSecretNumber(ns);
+            idx+=1;
+        }
+
+        print(ns);
+        bigSum+=ns;
+    }
+
+    print(bigSum);
+}
+
+fn createChangeSequence(s)
+{
+    ret=[-99];
+
+    idx=1;
+    while (idx<s.length)
+    {
+        change=s[idx]-s[idx-1];
+        ret.add(change);
+        idx+=1;
+    }
+
+    return ret;
+}
+
+fn part2(input)
+{
+    sequencesDict={};
+
+    numz=0;
+    foreach (nss in input)
+    {
+        print("Processing ",nss," ",numz,"/",input.length);
+
+        ns=toLong(nss);
+        curSequence=[];
+        curSequence.add(ns%10L);
+        idx=0;
+        while (idx<2000)
+        {
+            ns=calcNextSecretNumber(ns);
+            curSequence.add(ns%10L);
+            idx+=1;
+        }
+
+        changeSequence=createChangeSequence(curSequence);
+
+        thisLineSequences=[];
+
+        idx=4;
+        while (idx<changeSequence.length)
+        {
+            p3=toString(changeSequence[idx]);
+            p2=toString(changeSequence[idx-1]);
+            p1=toString(changeSequence[idx-2]);
+            p0=toString(changeSequence[idx-3]);
+            seq=""; seq+=p0; seq+=p1; seq+=p2; seq+=p3;
+
+            if (thisLineSequences.find(seq)==-1)
+            {
+                thisLineSequences.add(seq);
+                if (sequencesDict.findKey(seq)==-1)
+                {
+                    //if (seq=="-21-13")
+                    //{
+                    //    print("Sex creating:",curSequence[idx]);
+                    //}
+                    sequencesDict[seq]=curSequence[idx];
+                }
+                else
+                {
+                    //if (seq=="-21-13")
+                    //{
+                    //    print("Sex adding:",curSequence[idx]);
+                    //}
+                    sequencesDict[seq]=curSequence[idx]+sequencesDict[seq];
+                }
+            }
+
+            idx+=1;
+        }
+
+        // count keyz&max
+        maxBananas=0L;
+        numKeys=0;
+        foreach (key in sequencesDict.keys)
+        {
+            if (sequencesDict[key]>maxBananas)
+            {
+                maxBananas=sequencesDict[key];
+            }
+            numKeys+=1;
+        }
+        print("Max Bananas is ",maxBananas," Current keys:",numKeys);
+
+        numz+=1;
+    }
+
+
+}
+
+fn main(params)
+{
+    input=readInput();
+    //part1(input);
+    part2(input);
+
+    //myDict={};
+    //myDict["a"]=2;
+    //myDict["b"]=2;
+    //myDict["c"]=2;
+    //print(myDict.findKey("aab"));
+}
