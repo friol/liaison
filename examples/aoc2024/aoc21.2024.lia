@@ -12,6 +12,8 @@ glbDirKeypad=[];
 glbDirkeypadMinlen=999999;
 glbDirpadPossiblePaths=[];
 
+glbMemoDict={};
+
 //
 
 fn readInput()
@@ -362,7 +364,7 @@ fn getNextSequence(s)
     spathDict["v<"]=["<","A"];
     spathDict["v>"]=[">","A"];
 
-    resSeq=[];
+    resSeq="";
     curKey="A";
     idx=0;
     while (idx<s.length)
@@ -373,7 +375,7 @@ fn getNextSequence(s)
 
         foreach (keystroke in spathDict[bin])
         {
-            resSeq.add(keystroke);
+            resSeq+=keystroke;
         }
 
         curKey=nextKey;
@@ -454,6 +456,71 @@ fn part2(input)
     print("Mega-sum:",megaSum);
 }
 
+fn splitToA(seq)
+{
+    ret=[];
+
+    idx=0;
+    curss=[];    
+    while (idx<seq.length)
+    {
+        curss.add(seq[idx]);
+
+        if (seq[idx]!="A")
+        {
+        }
+        else
+        {
+            ret.add(curss);
+            curss=[];
+        }
+        idx+=1;
+    }
+
+    return ret;
+}
+
+fn getString(arr)
+{
+    s="";
+    foreach (el in arr)
+    {
+        s+=el;
+    }
+    return s;
+}
+
+fn recursiveSolve(seq,level,maxlev)
+{
+    key=getString(seq);
+    key+=toString(level);
+    if (glbMemoDict.findKey(key)!=-1)
+    {
+        return glbMemoDict[key];
+    }
+
+    totLen=0L;
+
+    subseqs=splitToA(seq);
+    //print("Splitted: ",subseqs);
+    foreach (ss in subseqs)
+    {
+        if (level==maxlev)
+        {
+            totLen+=toLong(toString(ss.length));
+        }
+        else
+        {
+            nextss=getNextSequence(ss);
+            totLen+=recursiveSolve(nextss,level+1,maxlev);
+        }
+    }
+
+    glbMemoDict[key]=totLen;
+
+    return totLen;
+}
+
 fn part2bis(input)
 {
     glbTransCodeDir["^"]=0;
@@ -470,23 +537,37 @@ fn part2bis(input)
     glbDirKeypad.add([-1,0,11]);
     glbDirKeypad.add([3,2,1]);
 
-    curCode=input[0];
-    print("Processing code ",curCode);
-    seqs=findNumkeypadSequences(curCode);
-    print(seqs);
+    //curCode=input[0];
 
-    bit=[seqs[0][0],seqs[0][1]];
-
-    idx=0;
-    while (idx<2)
+    megaSum=0L;
+    foreach (curCode in input)
     {
-        print(idx," ",bit.length);
-        bit=getNextSequence(bit);
-        idx+=1;
+        print("Processing code ",curCode);
+        seqs=findNumkeypadSequences(curCode);
+        print(seqs);
+
+        minLen=999999999999L;
+        foreach (seq in seqs)
+        {
+            shortestLen=recursiveSolve(seq,0,25);
+            if (shortestLen<minLen)
+            {
+                minLen=shortestLen;
+            }
+        }
+
+        print(minLen);
+
+        kode=toLong(curCode[0])*100L;
+        kode+=toLong(curCode[1])*10L;
+        kode+=toLong(curCode[2])*1L;
+
+        komplexity=kode*minLen;
+        print(komplexity);
+        megaSum+=komplexity;
     }
 
-
-
+    print(megaSum);
 }
 
 fn main(params)
