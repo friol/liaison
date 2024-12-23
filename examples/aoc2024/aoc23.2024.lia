@@ -1,6 +1,12 @@
 /* AoC 2024 23 */
 
+glbMaxClique=[];
 glbMaxCliqueLen=0;
+glbDiscarded=[];
+
+glbAdjacencyCache={};
+glbListOfUniqueComputers=[];
+glbListOfConnections=[];
 
 fn readInput()
 {
@@ -103,26 +109,37 @@ fn part1(input)
     findTripletsWithT(listOfUniqueComputers,listOfConnections);
 }
 
-fn areConnected(n0,n1,nodes,connections)
+fn areConnected(n0,n1)
 {
+    s=n0+n1;
+    if (glbAdjacencyCache.findKey(s)!=-1)
+    {
+        return glbAdjacencyCache[s];
+    }
+
     //print("checking if those are connected:",n0," ",n1);
 
-    n0idx=nodes.find(n0);
+    n0idx=glbListOfUniqueComputers.find(n0);
     //print("node ",n0," index:",n0idx);
-    conns=connections[n0idx];
+    conns=glbListOfConnections[n0idx];
     //print("Connections:",conns);
     //print(conns.find(n1));
 
+    connected=false;
     if (conns.find(n1)!=-1)
     {
-        //print("They are connected");
-        return true;
+        connected=true;
     }
 
-    return false;
+    if (glbAdjacencyCache.findKey(s)==-1)
+    {
+        glbAdjacencyCache[s]=connected;
+    }
+
+    return connected;
 }
 
-fn validateClique(c,nodes,connections)
+fn validateClique(c)
 {
     foreach (n0 in c)
     {
@@ -130,7 +147,7 @@ fn validateClique(c,nodes,connections)
         {
             if (n0!=n1)
             {
-                if (!areConnected(n0,n1,nodes,connections))
+                if (!areConnected(n0,n1))
                 {
                     return false;
                 }
@@ -143,28 +160,31 @@ fn validateClique(c,nodes,connections)
 
 fn findCliques(node,nodes,connections,clique,visited)
 {
-    if (clique.length>glbMaxCliqueLen)
-    {
-        print(clique);
-        glbMaxCliqueLen=clique.length;
-    }
+    print(clique," ",glbDiscarded);
 
     nodeIdx=nodes.find(node);
     subConns=connections[nodeIdx];
 
     foreach (n in subConns)
     {
-        if (visited.find(n)==-1)
+        if (glbDiscarded.find(n)==-1)
         {
-            newClique=clique;
-            newClique.add(n);
-
-            if (validateClique(newClique,nodes,connections))
+            if (visited.find(n)==-1)
             {
-                newVisited=visited;
-                newVisited.add(n);
+                newClique=clique;
+                newClique.add(n);
 
-                findCliques(n,nodes,connections,newClique,newVisited);
+                if (validateClique(newClique,nodes,connections))
+                {
+                    newVisited=visited;
+                    newVisited.add(n);
+
+                    findCliques(n,nodes,connections,newClique,newVisited);
+                }
+                else
+                {
+                    glbDiscarded.add(n);
+                }
             }
         }
     }
@@ -217,12 +237,14 @@ fn part2(input)
     foreach (node in listOfUniqueComputers)
     {
         print("Finding cliques for ",node);
-        //clique=[node];
-        //visited=[node];
-        //findCliques(node,listOfUniqueComputers,listOfConnections,clique,visited);
         
-        idxnode=listOfUniqueComputers.find(node);
-        connz=listOfConnections[idxnode];
+        clique=[node];
+        visited=[node];
+        glbDiscarded=[];
+        findCliques(node,listOfUniqueComputers,listOfConnections,clique,visited);
+        
+        //idxnode=listOfUniqueComputers.find(node);
+        //connz=listOfConnections[idxnode];
         //connz.add(node);
 
         foreach (el in connz)
@@ -248,9 +270,81 @@ fn part2(input)
     }
 }
 
+fn part2bis(input)
+{
+    foreach (complink in input)
+    {
+        comps=complink.split("-");
+        if (glbListOfUniqueComputers.find(comps[0])==-1)
+        {
+            glbListOfUniqueComputers.add(comps[0]);
+        }
+        if (glbListOfUniqueComputers.find(comps[1])==-1)
+        {
+            glbListOfUniqueComputers.add(comps[1]);
+        }
+    }
+
+    print(glbListOfUniqueComputers);
+
+    foreach (comp in glbListOfUniqueComputers)
+    {
+        konnections=[];
+        foreach (complink in input)
+        {
+            comps=complink.split("-");
+            if (comps[0]==comp)
+            {
+                konnections.add(comps[1]);
+                s=comp+comps[1];
+                glbAdjacencyCache[s]=true;
+            }
+            if (comps[1]==comp)
+            {
+                konnections.add(comps[0]);
+                s=comp+comps[0];
+                glbAdjacencyCache[s]=true;
+            }
+        }
+        glbListOfConnections.add(konnections);
+    }
+
+    foreach (node in glbListOfUniqueComputers)
+    {
+        print("Finding cliques for ",node);
+        
+        clique=[node];
+        visited=[node];
+        nodeIdx=glbListOfUniqueComputers.find(node);
+        neighbours=glbListOfConnections[nodeIdx];
+
+        foreach (n in neighbours)        
+        {
+            newClique=clique;
+            newClique.add(n);
+
+            if (validateClique(newClique))
+            {
+                clique=newClique;
+            }
+        }
+
+        if (clique.length>glbMaxCliqueLen)
+        {
+            print(clique);
+            glbMaxCliqueLen=clique.length;
+            glbMaxClique=clique;
+            glbMaxClique.sort();
+        }        
+    }
+
+    print("Max clique:",glbMaxClique);
+}
+
 fn main(params)
 {
     input=readInput();
     //part1(input);
-    part2(input);
+    //part2(input);
+    part2bis(input);
 }
