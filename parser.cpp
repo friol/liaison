@@ -24,6 +24,7 @@
 // foreach iterated is an Expression // DONE
 // one-line comments // DONE
 // multi-line comments // DONE
+// arr[x][y] gives error if arr[x] is a string
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // dictionaries // DONE
 // complex expressions (mathematical) // DONE

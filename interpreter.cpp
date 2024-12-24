@@ -2014,7 +2014,7 @@ void liaInterpreter::exeCuteRshiftStatement(const std::shared_ptr<peg::Ast>& the
 
 	liaVariable theVar;
 	size_t curLine=0;
-	int rshiftAmount = 0;
+	long long rshiftAmount = 0;
 
 	for (auto ch : theAst->nodes)
 	{
@@ -2032,7 +2032,15 @@ void liaInterpreter::exeCuteRshiftStatement(const std::shared_ptr<peg::Ast>& the
 			{
 				liaVariable vInc = evaluateExpression(ch, env);
 				assert(vInc.type == liaVariableType::integer);
-				rshiftAmount = std::get<int>(vInc.value);
+
+				if (vInc.type == liaVariableType::integer)
+				{
+					rshiftAmount = (long long)std::get<int>(vInc.value);
+				}
+				else
+				{
+					rshiftAmount = std::get<long long>(vInc.value);
+				}
 			}
 		}
 	}
@@ -2063,6 +2071,11 @@ void liaInterpreter::exeCuteRshiftStatement(const std::shared_ptr<peg::Ast>& the
 		{
 			int vv = std::get<int>(pvar->value);
 			pvar->value = vv>>rshiftAmount;
+		}
+		else if (pvar->type == liaVariableType::longint)
+		{
+			long long vv = std::get<long long>(pvar->value);
+			pvar->value = vv >> rshiftAmount;
 		}
 		else
 		{
