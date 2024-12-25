@@ -1,0 +1,130 @@
+/* AoC 2024 25 */
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc25.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc25.2024.txt");
+    return sarr;
+}
+
+fn makeList(s)
+{
+    pins=[];
+
+    col=0;
+    while (col<s[0].length)
+    {
+        pincount=0;
+        foreach (row in s)
+        {
+            if (row[col]=="#")
+            {
+                pincount+=1;
+            }
+        }
+        pins.add(pincount-1);
+
+        col+=1;
+    }
+
+    return pins;
+}
+
+fn readLocks(input)
+{
+    locks=[];
+
+    curScheme=[];
+    foreach (row in input)
+    {
+        if (row.length==0)
+        {
+            if (curScheme.length>0)
+            {
+                if (curScheme[0]=="#####")
+                {
+                    locks.add(makeList(curScheme));
+                }
+            }
+            curScheme=[];
+        }
+        else
+        {
+            curScheme.add(row);
+        }
+    }
+
+    return locks;
+}
+
+fn readKeys(input)
+{
+    keys=[];
+
+    curScheme=[];
+    foreach (row in input)
+    {
+        if (row.length==0)
+        {
+            if (curScheme.length>0)
+            {
+                if (curScheme[curScheme.length-1]=="#####")
+                {
+                    keys.add(makeList(curScheme));
+                }
+            }
+            curScheme=[];
+        }
+        else
+        {
+            curScheme.add(row);
+        }
+    }
+
+    return keys;
+}
+
+fn overLap(key,lock)
+{
+    idx=0;
+    foreach (pin in key)
+    {
+        if ((pin+lock[idx])>=6)
+        {
+            return true;
+        }
+        idx+=1;
+    }
+
+    return false;
+}
+
+fn part1(input)
+{
+    listOfLocks=readLocks(input);
+    listOfKeys=readKeys(input);
+
+    print(listOfLocks);
+    print(listOfKeys);
+
+    cntMatches=0;
+    foreach (lock in listOfLocks)
+    {
+        foreach (key in listOfKeys)
+        {
+            if (!overLap(key,lock))
+            {
+                cntMatches+=1;
+            }
+        }
+    }
+
+    print(cntMatches);
+}
+
+fn main(params)
+{
+    input=readInput();
+    part1(input);
+    //part2(input);
+}

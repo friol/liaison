@@ -8,7 +8,6 @@
 // we have implicit variable declaration, despite what "crafting interpreters" says
 // plain return without value // DONE
 // monodimensional array sorting // DONE
-// arr[x].function()
 // conditions with only booleans // DONE
 // if (!Expression) // DONE
 // regexs
@@ -16,6 +15,8 @@
 // convert function list to function hashmap
 // globals (yep) (but only if they start with 'glb') // DONE
 // allow v[x].length // DONE
+// v[x][y][...][z].length bugs
+// arr[x].function()
 // do this with infinite level of indirection
 // circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
@@ -24,7 +25,7 @@
 // foreach iterated is an Expression // DONE
 // one-line comments // DONE
 // multi-line comments // DONE
-// arr[x][y] gives error if arr[x] is a string
+// arr[x][y] gives error if arr[x] is a string // DONE
 // variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // dictionaries // DONE
 // complex expressions (mathematical) // DONE
@@ -43,7 +44,7 @@
 // if/else statement // DONE
 // return statement // DONE
 // while statement // DONE
-// for cycle
+// for cycle (who needs for cycles anyway?)
 // foreach v in array (with arrays and strings) // DONE
 // readTextFileLineByLine function (returns an array of strings) // DONE
 // toInteger function (converts a string to an int) // DONE

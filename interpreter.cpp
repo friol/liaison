@@ -889,9 +889,27 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 
 			for (auto& idx : vIdxArr)
 			{
-				int arrIdx = std::get<int>(idx.value);
+				//std::cout << "idx is " << std::get<int>(idx.value) << std::endl;
+				unsigned int arrIdx = std::get<int>(idx.value);
 
-				if (arrIdx >= pArr->vlist.size())
+				unsigned int limit;
+				if (pArr->type == liaVariableType::array)
+				{
+					limit = (unsigned int)pArr->vlist.size();
+				}
+				else if (pArr->type == liaVariableType::string)
+				{
+					limit = (unsigned int)std::get<std::string>(pArr->value).size();
+				}
+				else
+				{
+					std::string err;
+					err += "Unhandled type for sub-array indexing at " + std::to_string(lineNum) + ".";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				if (arrIdx >= limit)
 				{
 					std::string err;
 					err += "Array index out of range at " + std::to_string(lineNum) + ". Requested index: "+ 
@@ -900,13 +918,24 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 					fatalError(err);
 				}
 
-				pArr = &pArr->vlist[arrIdx];
+				if (pArr->type == liaVariableType::array)
+				{
+					pArr = &pArr->vlist[arrIdx];
+					retVar.type = pArr->type;
+					retVar.value = pArr->value;
+					retVar.vlist = pArr->vlist;
+					retVar.vMap = pArr->vMap;
+				}
+				else if (pArr->type == liaVariableType::string)
+				{
+					retVar.type = liaVariableType::string;
+					std::string s = std::get<std::string>(pArr->value);
+					std::string rv = s.substr(arrIdx, 1);
+					retVar.value = rv;
+					//retVar.vlist = pArr->vlist;
+					//retVar.vMap = pArr->vMap;
+				}
 			}
-
-			retVar.type = pArr->type;
-			retVar.value = pArr->value;
-			retVar.vlist = pArr->vlist;
-			retVar.vMap = pArr->vMap;
 		}
 		else if (pVar->type == liaVariableType::dictionary)
 		{
