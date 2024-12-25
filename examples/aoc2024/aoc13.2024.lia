@@ -1,4 +1,9 @@
-/* AoC 2024 13 */
+
+/* 
+    AoC 2024 13 
+    part2 is solved analytically
+    part2 input needs an additional carriage return at the end because I'm lazy
+*/
 
 fn readInput()
 {
@@ -123,7 +128,7 @@ fn findMinTokens(scenario)
 
             if ((xpoz==scenario[4])&&(ypoz==scenario[5]))
             {
-                print("New soln: ",aPresses," ",bPresses);
+                //print("New soln: ",aPresses," ",bPresses);
                 if (((aPresses*3L)+bPresses)<minTokens)
                 {
                     minTokens=(aPresses*3L)+bPresses;
@@ -151,12 +156,12 @@ fn findMinTokensAnalytic(scenario)
     px=scenario[4];
     py=scenario[5];
 
-    print("mx0:",mx0," my0:",my0," mx1:",mx1," my1:",my1," px:",px," py:",py);
+    //print("mx0:",mx0," my0:",my0," mx1:",mx1," my1:",my1," px:",px," py:",py);
 
     nb = ((mx0 * py) - (my0 * px)) / ((mx0 * my1) - (my0 * mx1));
     na = (px - (mx1 * nb)) / mx0;
 
-    print("na:",na," nb:",nb);
+    //print("na:",na," nb:",nb);
 
     if (((na*mx0)+(nb*mx1))!=px)
     {
@@ -174,44 +179,44 @@ fn part2(arr)
 {
     problemArr=readScenarios(arr,10000000000000L);
     //problemArr=readScenarios(arr,0L);
-    print(problemArr);
+    //print(problemArr);
 
     numTokens=0L;
     foreach (scenario in problemArr)
     {
         minTok=findMinTokensAnalytic(scenario);
-        print(minTok);
+        //print(minTok);
         if (minTok!=999999L)
         {
             numTokens+=minTok;
         }
     }
 
-    print("Num total tokens:",numTokens);
+    print("Part 2:",numTokens);
 }
 
 fn part1(arr)
 {
     problemArr=readScenarios(arr,0L);
-    print(problemArr);
+    //print(problemArr);
 
     numTokens=0L;
     foreach (scenario in problemArr)
     {
         minTok=findMinTokens(scenario);
-        print(minTok);
+        //print(minTok);
         if (minTok!=999999L)
         {
             numTokens+=minTok;
         }
     }
 
-    print(numTokens);
+    print("Part 1:",numTokens);
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

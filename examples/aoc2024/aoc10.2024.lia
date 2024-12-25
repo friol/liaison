@@ -1,4 +1,8 @@
-/* AoC 2024 10 */
+
+/* 
+    AoC 2024 10 
+    fast recursive solution, for both parts
+*/
 
 glbMap=[];
 glbTargets=[];
@@ -65,18 +69,24 @@ fn canGo(x,y,dir)
     return false;
 }
 
-fn findTrailheads(x,y,curHeight,path)
+fn findTrailheads(x,y,curHeight,path,part)
 {
     if (curHeight==9)
     {
-        /*target=[x,y];
-        if (glbTargets.find(target)==-1)
+        if (part==1)
         {
-            glbTargets.add(target);
+            target=[x,y];
+            if (glbTargets.find(target)==-1)
+            {
+                glbTargets.add(target);
+                return 1;
+            }
+            return 0;
+        }
+        else
+        {
             return 1;
         }
-        return 0;*/
-        return 1;
     }
     else
     {
@@ -91,7 +101,7 @@ fn findTrailheads(x,y,curHeight,path)
             {
                 newpath=path;
                 newpath.add(sdir[d]);
-                summ+=findTrailheads(x+directions[d][0],y+directions[d][1],curHeight+1,newpath);
+                summ+=findTrailheads(x+directions[d][0],y+directions[d][1],curHeight+1,newpath,part);
             }
             d+=1;
         }
@@ -102,7 +112,7 @@ fn findTrailheads(x,y,curHeight,path)
     return 0;
 }
 
-fn part1(arr)
+fn part1and2(arr)
 {
     foreach (row in arr)
     {
@@ -114,31 +124,36 @@ fn part1(arr)
         glbMap.add(mapRow);
     }
 
-    sumOfScores=0;
-    y=0;
-    foreach (row in glbMap)
+    p=0;
+    while (p<2)
     {
-        x=0;
-        foreach (c in row)
+        sumOfScores=0;
+        y=0;
+        foreach (row in glbMap)
         {
-            if (c==0)
+            x=0;
+            foreach (c in row)
             {
-                glbTargets=[];
-                newScore=findTrailheads(x,y,0,[]);
-                print("Trail starting at ",x," ",y," score:",newScore);
-                sumOfScores+=newScore;
+                if (c==0)
+                {
+                    glbTargets=[];
+                    newScore=findTrailheads(x,y,0,[],p+1);
+                    //print("Trail starting at ",x," ",y," score:",newScore);
+                    sumOfScores+=newScore;
+                }
+
+                x+=1;
             }
-
-            x+=1;
+            y+=1;
         }
-        y+=1;
-    }
 
-    print(sumOfScores);
+        print("Part ",p+1,":",sumOfScores);
+        p+=1;
+    }
 }
 
 fn main(params)
 {
     input=readInput();
-    part1(input);
+    part1and2(input);
 }

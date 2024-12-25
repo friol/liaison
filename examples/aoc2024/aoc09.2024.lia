@@ -1,4 +1,8 @@
-/* AoC 2024 09 */
+
+/* 
+    AoC 2024 09 
+    defragments the filesystem really slowly, as windows 3.1 did
+*/
 
 glbS=[];
 
@@ -81,7 +85,7 @@ fn compact(s)
     return s;
 }
 
-fn calcChecksum(s)
+fn calcChecksum(s,part)
 {
     pos=0;
     checkSum=0L;
@@ -100,14 +104,14 @@ fn calcChecksum(s)
         pos+=1;
     }
 
-    print(checkSum);
+    print(part,":",checkSum);
 }
 
 fn part1(line)
 {
     repr=fsToExtendedRepr(line);
     compacted=compact(repr);
-    calcChecksum(compacted);
+    calcChecksum(compacted,"Part 1");
 }
 
 fn findSpan(curFileId)
@@ -186,7 +190,7 @@ fn compact2()
         }
     }
 
-    print("Max file id: ",maxFileId);
+    //print("Max file id: ",maxFileId);
 
     //
 
@@ -196,12 +200,12 @@ fn compact2()
     {
         // find span of file with id curFileId
         fileSpan=findSpan(curFileId);
-        print("Span:",fileSpan);
+        //print("Span:",fileSpan);
 
         // find, if possible, a gap large enough to move file curFileId
         gapLen=fileSpan[1]-fileSpan[0]+1;
         gapSpan=findGap(gapLen);
-        print("Gap:",gapSpan);
+        //print("Gap:",gapSpan);
 
         // if found, move it
         if ((gapSpan[0]!=-1)&&(gapSpan[1])!=-1)
@@ -219,7 +223,7 @@ fn compact2()
                     idxSrc+=1;
                     lenMoved+=1;
                 }
-                print("MOVEd!");
+                //print("MOVEd!");
             }
         }
 
@@ -233,12 +237,12 @@ fn part2(line)
 {
     glbS=fsToExtendedRepr(line);
     compacted=compact2();
-    calcChecksum(compacted);
+    calcChecksum(compacted,"Part 2");
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input[0]);
+    part1(input[0]);
     part2(input[0]);
 }

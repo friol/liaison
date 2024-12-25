@@ -1,9 +1,13 @@
-/* aoc 05 2024 lia */
+
+/* 
+    aoc 05 2024 lia 
+    the usual AoC messy program. Had to adjust part 1 because to solve part 2 I made changes that broke it
+*/
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.05.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.05.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc05.2024.txt");
     return sarr;
 }
 
@@ -16,13 +20,13 @@ fn findMiddleNum(l)
 
 fn isCompliant(index,pl,rules)
 {
-    n0=pl[index];
+    n0=(pl[index]);
 
     foreach (rule in rules)
     {
         r0=(rule[0]);
         r1=(rule[1]);
-        //print(r0,",",r1,"-",pl);
+        //print("n0:",n0," r0:[",r0,"],",r1,"-",pl);
 
         if (n0==r0)
         {
@@ -93,13 +97,16 @@ fn part1(arr)
             }
             else
             {
-                pageLists.add(line.split(","));
+                lst=line.split(",");
+                newarr=[];
+                foreach (el in lst)
+                {
+                    newarr.add(toInteger(el));
+                }
+                pageLists.add(newarr);
             }
         }
     }
-
-    //print(rulesArr);
-    //print(pageLists);
 
     totSum=0;
     foreach (pl in pageLists)
@@ -107,13 +114,13 @@ fn part1(arr)
         //print("Checking ",pl);
         if (respectsRules(pl,rulesArr))
         {
-            print(pl," is valid");
+            //print(pl," is valid");
             middleNum=findMiddleNum(pl);
             totSum+=middleNum;
         }
     }
 
-    print(totSum);
+    print("Part 1:",totSum);
 }
 
 fn reorder(pl,rulesArr)
@@ -183,22 +190,22 @@ fn part2(arr)
         //print("Checking ",pl);
         if (!respectsRules(pl,rulesArr))
         {
-            print(pl," is not valid");
+            //print(pl," is not valid");
             reorderedList=reorder(pl,rulesArr);
 
-            print("Reordered: ",reorderedList);
+            //print("Reordered: ",reorderedList);
 
             middleNum=findMiddleNum(reorderedList);
             totSum+=middleNum;
         }
     }
 
-    print(totSum);
+    print("Part 2:",totSum);
 }
 
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
     part2(sarr);
 }

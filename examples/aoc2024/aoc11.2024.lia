@@ -1,4 +1,8 @@
-/* AoC 2024 11 */
+
+/* 
+    AoC 2024 11 
+    very fast solution with dictionary and saint findKey
+*/
 
 fn readInput()
 {
@@ -113,10 +117,10 @@ fn evolveDict(dict)
         l.add(toLong(key));
         mult=dict[key];
         l=evolve(l);
+
         foreach (el in l)
         {
-            kz=resDict.keys;
-            if (kz.find(toString(el))==-1)
+            if (resDict.findKey(toString(el))==-1)
             {
                 resDict[toString(el)]=mult;
             }
@@ -130,7 +134,7 @@ fn evolveDict(dict)
     return resDict;
 }
 
-fn part2(arr)
+fn part1and2(arr,limit,part)
 {
     stoneList=arr.split(" ");
     longList=[];
@@ -148,7 +152,7 @@ fn part2(arr)
     }
 
     blinkNum=0;
-    while (blinkNum<75)
+    while (blinkNum<limit)
     {
         dict=evolveDict(dict);
         blinkNum+=1;
@@ -159,7 +163,11 @@ fn part2(arr)
             total+=dict[k];
         }
         //print(dict);
-        print(total);
+
+        if (blinkNum==limit)
+        {
+            print(part,total);
+        }
     }
 
 }
@@ -167,8 +175,6 @@ fn part2(arr)
 fn main(params)
 {
     input=readInput();
-    //part1(input[0]);
-    //part1("7");
-    part2(input[0]);
-    //part2("125 17");
+    part1and2(input[0],25,"Part 1:");
+    part1and2(input[0],75,"Part 2:");
 }

@@ -1,9 +1,14 @@
-/* aoc 03 2024 lia */
+
+/* 
+    aoc 03 2024 lia 
+    just a complex and slow solution
+    my input had carriage returns in the middle of the string    
+*/
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.03.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.03.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc03.2024.txt");
     return sarr;
 }
 
@@ -36,11 +41,11 @@ fn cutout(s)
         idx+=1;
     }
 
-    print("cutout is [",s2parse,"]");
+    //print("cutout is [",s2parse,"]");
 
     if (s2parse.length>7) 
     { 
-        print(s2parse," discarded for len>7");
+        //print(s2parse," discarded for len>7");
         return 0; 
     }
 
@@ -58,8 +63,15 @@ fn cutout(s)
     return a*b;
 }
 
-fn part1(arr)
+fn part1(arrz)
 {
+    workingString="";
+    foreach (el in arrz)
+    {
+        workingString+=el;
+    }
+    arr=[workingString];
+    
     str=arr[0];
     idx=0;
     totMul=0L;
@@ -82,17 +94,17 @@ fn part1(arr)
             //print("ss is ",str);
             mulRez=cutout(str);
 
-            if (mulRez!=0)
-            {
-                print(mulRez);
-            }
+            //if (mulRez!=0)
+            //{
+            //    print(mulRez);
+            //}
             
             mulRezLong=toLong(toString(mulRez));
             totMul+=mulRezLong;
         }
     }
 
-    print(totMul);
+    print("Part 1:",totMul);
 }
 
 fn processSemaphores(isMulEnabled,str,idxMul)
@@ -104,7 +116,7 @@ fn processSemaphores(isMulEnabled,str,idxMul)
         idxDo=str.find("do()");
         if ((idxDo!=-1)&&(idxDo<idxMul))
         {
-            print("dofount");
+            //print("dofount");
             isMulEnabled=true;
             idxMul-=4;
             str=substr(str,idxDo);
@@ -114,7 +126,7 @@ fn processSemaphores(isMulEnabled,str,idxMul)
             idxDont=str.find("don't()");
             if ((idxDont!=-1)&&(idxDont<idxMul))
             {
-                print("don'tfount");
+                //print("don'tfount");
                 isMulEnabled=false;
                 idxMul-=7;
                 str=substr(str,idxDont);
@@ -126,12 +138,19 @@ fn processSemaphores(isMulEnabled,str,idxMul)
         }
     }
 
-    print("semaphore is ",isMulEnabled);
+    //print("semaphore is ",isMulEnabled);
     return isMulEnabled;
 }
 
-fn part2(arr)
+fn part2(arrz)
 {
+    workingString="";
+    foreach (el in arrz)
+    {
+        workingString+=el;
+    }
+    arr=[workingString];
+    
     str=arr[0];
     idx=0;
     totMul=0L;
@@ -159,10 +178,10 @@ fn part2(arr)
             //print("ss is ",str);
             mulRez=cutout(str);
 
-            if (mulRez!=0)
-            {
-                print(mulRez);
-            }
+            //if (mulRez!=0)
+            //{
+                //print(mulRez);
+            //}
             
             if (isMulEnabled)
             {
@@ -172,12 +191,12 @@ fn part2(arr)
         }
     }
 
-    print(totMul);
+    print("Part 2:",totMul);
 }
 
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
     part2(sarr);
 }

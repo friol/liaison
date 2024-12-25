@@ -1,9 +1,13 @@
-/* aoc 01 2024 lia */
+
+/* 
+    aoc 01 2024 lia 
+    just array sorting and basic sums
+*/
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2024.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2024.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc01.2024.txt");
     return sarr;
 }
 
@@ -39,12 +43,12 @@ fn part1(arr)
     while (idx<leftList.length)
     {
         dist=calcDistance(leftList[idx],rightList[idx]);
-        print(dist);
+        //print(dist);
         totalSum+=dist;
         idx+=1;
     }
 
-    print(totalSum);
+    print("Part 1:",totalSum);
 }
 
 fn countOccurrencies(n,arr)
@@ -81,12 +85,12 @@ fn part2(arr)
         totSimScore+=occ*num;
     }
 
-    print(totSimScore);
+    print("Part 2:",totSimScore);
 }
 
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
     part2(sarr);
 }

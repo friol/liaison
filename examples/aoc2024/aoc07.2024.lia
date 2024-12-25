@@ -1,9 +1,13 @@
-/* aoc 07 2024 lia */
+
+/* 
+    aoc 07 2024 lia 
+    slow solution, but not *that* slow
+*/
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.07.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.07.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc07.2024.txt");
     return sarr;
 }
 
@@ -43,11 +47,10 @@ fn evaluate(result,operands,operators)
     return false;
 }
 
-fn solve(result,operands,operators,runningResult)
+fn solve(result,operands,operators,runningResult,possibleOps)
 {
     if (operators.length<(operands.length-1))
     {
-        possibleOps=["+","*","||"];
         foreach (op in possibleOps)
         {
             newOp=operators;
@@ -72,20 +75,20 @@ fn solve(result,operands,operators,runningResult)
 
             if (rresCopy<=result)
             {
-                if (solve(result,operands,newOp,rresCopy)==true)
+                if (solve(result,operands,newOp,rresCopy,possibleOps)==true)
                 {
                     return true;
                 }
             }
             else
             {
-                print("Backtracking:",rresCopy," is > ",result);
+                //print("Backtracking:",rresCopy," is > ",result);
             }
         }
     }
     else
     {
-        print("Trying ",operands," ",operators);
+        //print("Trying ",operands," ",operators);
         if (evaluate(result,operands,operators))
         {
             return true;
@@ -95,12 +98,12 @@ fn solve(result,operands,operators,runningResult)
     return false;
 }
 
-fn canBeTrue(res,ops)
+fn canBeTrue(res,ops,possibleOps)
 {
     totVal=0;
     runningResult=ops[0];
 
-    if (solve(res,ops,[],runningResult)==true)
+    if (solve(res,ops,[],runningResult,possibleOps)==true)
     {
         return true;
     }
@@ -134,9 +137,11 @@ fn part1and2(arr)
 
     idx=0;
     totSum=0L;
+    possibleOps=["+","*"];
     foreach (res in rezArr)
     {
-        if (canBeTrue(res,opsArr[idx]))
+        //print("solving ",res);
+        if (canBeTrue(res,opsArr[idx],possibleOps))
         {
             totSum+=res;
         }
@@ -144,7 +149,25 @@ fn part1and2(arr)
         idx+=1;
     }
 
-    print(totSum);
+    print("Part 1:",totSum);
+
+    //
+
+    idx=0;
+    totSum=0L;
+    possibleOps=["+","*","||"];
+    foreach (res in rezArr)
+    {
+        //print("solving ",res);
+        if (canBeTrue(res,opsArr[idx],possibleOps))
+        {
+            totSum+=res;
+        }
+
+        idx+=1;
+    }
+
+    print("Part 2:",totSum);
 }
 
 fn main(params)

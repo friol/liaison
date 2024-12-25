@@ -1,11 +1,15 @@
-/* aoc 04 2024 lia */
+
+/* 
+    aoc 04 2024 lia 
+    those are sometimes called "crucipuzzles" in my country, so that's why the variables are called like that
+*/
 
 glbCruciPuzzle=[];
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.04.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc04.2024.txt");
     return sarr;
 }
 
@@ -140,7 +144,7 @@ fn countXmases()
         r+=1;
     }
 
-    print(totXmases);
+    print("Part 1:",totXmases);
 }
 
 fn part1(arr)
@@ -188,7 +192,7 @@ fn countMASCrossed()
         r+=1;
     }
 
-    print(totXmases);
+    print("Part 2:",totXmases);
 }
 
 fn part2(arr)
@@ -209,6 +213,7 @@ fn part2(arr)
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
+    glbCruciPuzzle=[];
     part2(sarr);
 }

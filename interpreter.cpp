@@ -1328,7 +1328,7 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 					if (p0.type != liaVariableType::string)
 					{
 						std::string err;
-						err += "toInteger/toLong accepts only string values. ";
+						err += "toInteger/toLong accepts only string values at line " + std::to_string(lineNum) + ". ";
 						err += "Terminating.";
 						fatalError(err);
 					}

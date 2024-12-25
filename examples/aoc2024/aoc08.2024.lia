@@ -1,9 +1,13 @@
-/* aoc 08 2024 lia */
+
+/* 
+    aoc 08 2024 lia 
+    at least this is fast
+*/
 
 fn readInput()
 {
     //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.08.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.08.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc08.2024.txt");
     return sarr;
 }
 
@@ -22,7 +26,7 @@ fn calcAntinode(p0,p1)
     anx=0;
     any=0;
 
-    print("Calculating antinode of ",p0," ",p1);
+    //print("Calculating antinode of ",p0," ",p1);
 
     dx=abs(p0[0]-p1[0]);
     dy=abs(p0[1]-p1[1]);
@@ -47,7 +51,7 @@ fn calcAntinode(p0,p1)
         any=p0[1]+dy;
     }
 
-    print("Antinode is ",[anx,any]);
+    //print("Antinode is ",[anx,any]);
 
     return [anx,any];
 }
@@ -198,8 +202,8 @@ fn part1(arr)
         }
     }
 
-    print(realAnList);
-    print(realAnList.length);
+    //print(realAnList);
+    print("Part 1:",realAnList.length);
 }
 
 fn part2(arr)
@@ -248,13 +252,13 @@ fn part2(arr)
         }
     }
 
-    print(realAnList);
-    print(realAnList.length);
+    //print(realAnList);
+    print("Part 2:",realAnList.length);
 }
 
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
     part2(sarr);
 }

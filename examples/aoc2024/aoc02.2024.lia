@@ -1,9 +1,12 @@
-/* aoc 02 2024 lia */
+
+/* 
+    aoc 02 2024 lia 
+    just basic trial and error
+*/
 
 fn readInput()
 {
-    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.02.test.txt");
-    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.02.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc02.2024.txt");
     return sarr;
 }
 
@@ -74,7 +77,7 @@ fn part1(arr)
         }
     }
 
-    print(totSafe);
+    print("Part 1:",totSafe);
 }
 
 fn arrWithoutNumberAtPos(p,arr)
@@ -131,12 +134,12 @@ fn part2(arr)
         }
     }
 
-    print(totSafe);
+    print("Part 2:",totSafe);
 }
 
 fn main(params)
 {
     sarr=readInput();
-    //part1(sarr);
+    part1(sarr);
     part2(sarr);
 }

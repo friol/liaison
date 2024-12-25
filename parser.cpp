@@ -6,27 +6,29 @@
 // will *have* to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
+
+// passing parameters to functions byref
+// regexs
+// if else if come on
+// v[x][y][...][z].length bugs
+// arr[x][...][z].function()
+// floats
+// circuit breaking if statements with && 
+// convert function list to function hashmap
+// convert (almost) all the assertions to ifs
+
+// allow v[x].length // DONE
+// globals (yep) (but only if they start with 'glb') // DONE
+// check if evaluating a function calls it two times // DONE
+// convert arraylist to expression list // DONE
+// foreach iterated is an Expression // DONE
 // plain return without value // DONE
 // monodimensional array sorting // DONE
 // conditions with only booleans // DONE
 // if (!Expression) // DONE
-// regexs
-// if else if come on
-// convert function list to function hashmap
-// globals (yep) (but only if they start with 'glb') // DONE
-// allow v[x].length // DONE
-// v[x][y][...][z].length bugs
-// arr[x].function()
-// do this with infinite level of indirection
-// circuit breaking if statements with && 
-// convert (almost) all the assertions to ifs
-// check if evaluating a function calls it two times // DONE
-// convert arraylist to expression list // DONE
-// foreach iterated is an Expression // DONE
 // one-line comments // DONE
 // multi-line comments // DONE
 // arr[x][y] gives error if arr[x] is a string // DONE
-// variable initialization -> a=2, b="string", c=-2, d=0.5, e=3*2, f=[]
 // dictionaries // DONE
 // complex expressions (mathematical) // DONE
 // logical expressions (and, or, etc.) // DONE
@@ -52,7 +54,7 @@
 // variable decrement // DONE
 // variable *= // DONE
 // >>= operator (integer division by 2 AKA right shift) // DONE
-// the ability to solve AOC problems, at least up to day 14 // DONE
+// the ability to solve AoC problems, at least up to day 25 // DONE
 // many other things that don't come to mind at the moment
 //
 

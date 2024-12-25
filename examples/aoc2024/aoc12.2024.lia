@@ -1,4 +1,8 @@
-/* AoC 2024 12 */
+
+/* 
+    AoC 2024 12 
+    a bit messy but works
+*/
 
 glbMap=[];
 glbFloodMap=[];
@@ -221,7 +225,7 @@ fn calcNumSpansHorz(arr,miny,maxy)
         {
             tmpArr.sort();
             cnt=countSpans(tmpArr);
-            print(tmpArr," has ",cnt," up sides");
+            //print(tmpArr," has ",cnt," up sides");
             numSpans+=cnt;
         }
 
@@ -237,7 +241,7 @@ fn calcNumSpansHorz(arr,miny,maxy)
         {
             tmpArr.sort();
             cnt=countSpans(tmpArr);
-            print(tmpArr," has ",cnt," downsides");
+            //print(tmpArr," has ",cnt," downsides");
             numSpans+=cnt;
         }
 
@@ -266,7 +270,7 @@ fn calcNumSpansVert(arr,minx,maxx)
         {
             tmpArr.sort();
             cnt=countSpans(tmpArr);
-            print(tmpArr," has ",cnt," vert leftsides");
+            //print(tmpArr," has ",cnt," vert leftsides");
             numSpans+=cnt;
         }
 
@@ -282,7 +286,7 @@ fn calcNumSpansVert(arr,minx,maxx)
         {
             tmpArr.sort();
             cnt=countSpans(tmpArr);
-            print(tmpArr," has ",cnt," vert roitsides");
+            //print(tmpArr," has ",cnt," vert roitsides");
             numSpans+=cnt;
         }
 
@@ -291,7 +295,6 @@ fn calcNumSpansVert(arr,minx,maxx)
 
     return numSpans;
 }
-
 
 fn calcNumOfSides(idx)
 {
@@ -334,7 +337,7 @@ fn calcNumOfSides(idx)
         y+=1;
     }
 
-    print("minx:",minX," maxX:",maxX," minY:",minY," maxY:",maxY);
+    //print("minx:",minX," maxX:",maxX," minY:",minY," maxY:",maxY);
 
     // scan horizontally and produce a list of spans
     horzSpanz=[];
@@ -437,7 +440,7 @@ fn calcNumOfSides(idx)
     return numOfHorzSpans+numOfVertSpans;
 }
 
-fn part1(arr)
+fn part1and2(arr)
 {
     maxShapeId=-1;
     foreach (row in arr)
@@ -455,10 +458,10 @@ fn part1(arr)
 
     // 
 
-    print("Building flood map");
+    //print("Building flood map");
     maxShapeId=buildFloodMap();
 
-    print("Max shape id:",maxShapeId);
+    //print("Max shape id:",maxShapeId);
 
     idees=[];
     foreach (rowz in glbFloodMap)
@@ -472,45 +475,59 @@ fn part1(arr)
         }
     }
 
-    print("Unique shapes:",idees.length);
+    //print("Unique shapes:",idees.length);
 
     total=0;
     idx=0;
     area=0;
     perm=0;
-
-    //idees=[0];
-
     foreach (idx in idees)
     {
-        print("id:",idx);
+        //print("id:",idx);
+
+        area=calcArea(idx);
+        if (area!=0)
+        {
+            perm=calcPerimeter(idx);
+            if (perm!=0)
+            {
+                prod=area*perm;
+                total+=prod;
+            }
+        }
+    }
+
+    print("Part 1:",total);
+
+    // 
+
+    total=0;
+    idx=0;
+    area=0;
+    perm=0;
+    foreach (idx in idees)
+    {
+        //print("id:",idx);
 
         area=calcArea(idx);
         if (area!=0)
         {
             perm=calcNumOfSides(idx);
-            //perm=calcPerimeter(idx);
-            //if (perm!=0)
-            //{
-            //    //print("Shape of id ",idx," with sperm ",perm);
-            //}
         }
 
         if ((area!=0)&&(perm!=0))
         {
-            print("area:",area," sides:",perm);
             prod=area*perm;
             total+=prod;
-            //print("Total: ",total," idx:",idx,"/",maxShapeId);
         }
 
     }
 
-    print(total);
+    print("Part 2:",total);
 }
 
 fn main(params)
 {
     input=readInput();
-    part1(input);
+    part1and2(input);
 }
