@@ -1,4 +1,8 @@
-/* AoC 2024 19 */
+
+/* 
+    AoC 2024 19 
+    fast solution with memoization and st.findKey
+*/
 
 glbListOfColors=[];
 glbNeededPatterns=[];
@@ -79,12 +83,9 @@ fn canBeMade(s)
 
 fn calcCombinations(s)
 {
-    foreach (k in glbCacheDict.keys)
+    if (glbCacheDict.findKey(s)!=-1)
     {
-        if (s==k)
-        {
-            return glbCacheDict[k];
-        }
+        return glbCacheDict[s];
     }
 
     totz=0L;
@@ -126,20 +127,30 @@ fn part1(arr)
 {
     parseInput(arr);
 
+    totCanBeMade=0;
     foreach (design in glbNeededPatterns)
     {
-        canBeMade(design);
+        if (canBeMade(design))
+        {
+            totCanBeMade+=1;
+        }
     }
+
+    print("Part 1:",totCanBeMade);
 }
 
 fn part2(arr)
 {
+    glbListOfColors=[];
+    glbNeededPatterns=[];
+    glbReducedSet=[];
+    glbCacheDict={};
     parseInput(arr);
 
     totKomb=0L;
     foreach (design in glbNeededPatterns)
     {
-        print("Testing ",design);
+        //print("Testing ",design);
         if (canBeMade(design))
         {
             glbReducedSet=[];
@@ -151,17 +162,17 @@ fn part2(arr)
                 }
             }
             nc=calcCombinations(design);
-            print(nc);
+            //print(nc);
             totKomb+=nc;
         }
     }
 
-    print(totKomb);
+    print("Part 2:",totKomb);
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

@@ -1,4 +1,8 @@
-/* AoC 2024 14 */
+
+/* 
+    AoC 2024 14 
+    nice funny problem
+*/
 
 fn readInput()
 {
@@ -49,6 +53,23 @@ fn parseRobots(arr)
     }
 
     return retarr;
+}
+
+fn myMod(n,m)
+{
+    if (n>=0)
+    {
+        n%=m;
+        return n;
+    }
+
+    n%=m;
+    if (n<0)
+    {
+        return (m+n);
+    }
+
+    return n;
 }
 
 fn simulate (dimx,dimy,l)
@@ -149,7 +170,7 @@ fn countQuadrants(l,tx,ty)
         prod*=n;
     }
 
-    print("Prod of quadrants:",prod);
+    return prod;
 }
 
 fn part1(arr)
@@ -162,40 +183,80 @@ fn part1(arr)
     tilesy=103;
 
     i=0;
-    while (i<7083)
+    while (i<100)
     {
-        print("simul8:",i);
+        //print("simul8:",i);
         listOfRobots=simulate(tilesx,tilesy,listOfRobots);
         i+=1;
     }
 
-    printGrid(listOfRobots,tilesx,tilesy);
+    //printGrid(listOfRobots,tilesx,tilesy);
 
-    //countQuadrants(listOfRobots,tilesx,tilesy);
+    print("Part 1:",countQuadrants(listOfRobots,tilesx,tilesy));
 }
 
-fn myMod(n,m)
+fn checkXmasTree(lr,maxConsecutivePoints)
 {
-    if (n>=0)
+    l=[];
+    foreach (el in lr)
     {
-        n%=m;
-        return n;
+        l.add([el[0],el[1]]);
     }
 
-    n%=m;
-    if (n<0)
+    foreach (pos in l)
     {
-        return (m+n);
+        idx=1;
+        nextOne=false;
+        while ((idx<maxConsecutivePoints)&&(!nextOne))
+        {
+            if (l.find([pos[0]+idx,pos[1]])!=-1)
+            {
+            }
+            else
+            {
+                nextOne=true;
+            }
+            idx+=1;
+        }
+
+        if (!nextOne)
+        {
+            return true;
+        }
     }
 
-    return n;
+    return false;
+}
+
+fn part2(arr)
+{
+    listOfRobots=parseRobots(arr);
+    //print(listOfRobots);
+
+    //tilesx=11;
+    //tilesy=7;
+    tilesx=101;
+    tilesy=103;
+
+    i=0;
+    while (true)
+    {
+        //print("simul8:",i);
+        listOfRobots=simulate(tilesx,tilesy,listOfRobots);
+        if (checkXmasTree(listOfRobots,10))
+        {
+            print("Part 2:",i+1);
+            printGrid(listOfRobots,tilesx,tilesy);
+            return;
+        }
+        i+=1;
+    }
+
 }
 
 fn main(params)
 {
     input=readInput();
     part1(input);
-    //part2(input);
-
-    //print(myMod(-10,11));
+    part2(input);
 }

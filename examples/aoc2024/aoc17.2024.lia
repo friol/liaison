@@ -1,4 +1,8 @@
-/* AoC 2024 17 - intcode! */
+
+/* 
+    AoC 2024 17 - intcode! 
+    prints part1 solution with a comma, but I'm lazy
+*/
 
 glbPC=0;
 glbRegA=0L;
@@ -245,17 +249,48 @@ fn part1(arr)
 {
     parseProgram(arr);
 
-    print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
+    //print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
     executeProgram();
 
-    print(glbOutBuf);
-    print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
+    print("Part 1:",glbOutBuf);
+    //print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
+}
+
+fn areEqual(s1,a1)
+{
+    bufarr=s1.split(",");
+
+    //print("buflen:",bufarr.length," arrlen",a1.length);
+    if ((bufarr.length-1)!=a1.length)
+    {
+        return false;
+    }
+
+    idx=0;
+    foreach (el in a1)
+    {
+        i=toLong(bufarr[idx]);
+        if (el!=i)
+        {
+            return false;
+        }
+        idx+=1;
+    }
+
+    return true;
 }
 
 fn part2(arr)
 {
+    glbPC=0;
+    glbRegA=0L;
+    glbRegB=0L;
+    glbRegC=0L;
+    glbProgram=[];
+    glbOutBuf="";
+
     parseProgram(arr);
-    print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
+    //print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
 
     sProg="";
     idx=0;
@@ -279,20 +314,29 @@ fn part2(arr)
             g=baseNum;
             g|=oct;
 
-            print("regA is ",g);
+            //print("regA is ",g);
             glbRegA=g;
             glbRegB=0L;
             glbRegC=0L;
             glbPC=0;
             glbOutBuf="";
             executeProgram();
-            print("Result:",glbOutBuf);
+            
+            //print("Result:",glbOutBuf);
+            //print("proggi:",glbProgram);
+
+            if (areEqual(glbOutBuf,glbProgram))
+            {
+                //print("finished!");
+                print("Part 2:",g);
+                return;
+            }
 
             sarr=glbOutBuf.split(",");
             c=toLong(sarr[0]);
             if (c==glbProgram[idx])
             {
-                print("found ",c);
+                //print("found ",c);
                 arrz.add(oct);
             }
 
@@ -316,6 +360,6 @@ fn part2(arr)
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

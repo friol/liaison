@@ -1,11 +1,15 @@
-/* AoC 2024 18 */
+
+/* 
+    AoC 2024 18 
+    a cool bisection solves the 2nd part
+*/
 
 glbMap=[];
 
 fn readInput()
 {
-    //sarr=readTextFileLineByLine("c:\prova\aoc2024\aoc18.2024.test.txt");
-    sarr=readTextFileLineByLine("c:\prova\aoc2024\aoc18.2024.txt");
+    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc18.2024.test.txt");
+    sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc18.2024.txt");
     return sarr;
 }
 
@@ -101,7 +105,7 @@ fn printPath(end)
 
         if ((parx==-1)&&(pary==-1))
         {
-            print(stepz);
+            print("Part 1:",stepz);
             return;
         }
         curv=[parx,pary];
@@ -120,7 +124,7 @@ fn addToFront(arr,el)
     return newarr;
 }
 
-fn findShortestPath(start,end)
+fn findShortestPath(start,end,part)
 {
     s=[];
     glbMap[start[1]][start[0]][1]=1;
@@ -133,8 +137,11 @@ fn findShortestPath(start,end)
 
         if ((v[0]==end[0])&&(v[1]==end[1]))
         {
-            print("Fount!",v);
-            printPath(end);
+            //print("Fount!",v);
+            if (part==1)
+            {
+                printPath(end);
+            }
             return true;
         }
 
@@ -173,7 +180,7 @@ fn part1(arr)
     start=[0,0];
     end=[gridXsize-1,gridYsize-1];
 
-    findShortestPath(start,end);
+    findShortestPath(start,end,1);
 }
 
 fn part2(arr)
@@ -184,38 +191,40 @@ fn part2(arr)
 
     gridXsize=71;
     gridYsize=71;
-    numBytes=2750;
+    numBytes=1024;
+    totalBytes=arr.length;
 
-    fallBytes(numBytes,gridXsize,gridYsize,arr);
+    min=numBytes;
+    inc=1024;
 
-    start=[0,0];
-    end=[gridXsize-1,gridYsize-1];
-
-    found=true;
-    while (found)
+    while (true)
     {
-        y=0;
-        foreach (row in glbMap)
+        //print(min," ",inc);
+
+        glbMap=[];
+        fallBytes(min,gridXsize,gridYsize,arr);
+
+        start=[0,0];
+        end=[gridXsize-1,gridYsize-1];
+
+        found=findShortestPath(start,end,2);
+        if (!found)
         {
-            x=0;
-            foreach (el in row)
+            if (inc>0)
             {
-                glbMap[y][x][1]=0;
-                glbMap[y][x][2]=[-1,-1];
-                x+=1;
+                inc/=2;
+                min-=inc;
             }
-            y+=1;
+            else
+            {
+                min-=1;
+                print("Part 2:",arr[min]);
+                return;
+            }
         }
-
-        found=findShortestPath(start,end);
-
-        if (found)
+        else
         {
-            coordArr=arr[numBytes];
-            print("adding new obstacle:",coordArr);
-            coordz=coordArr.split(",");
-            glbMap[toInteger(coordz[1])][toInteger(coordz[0])][0]=1;
-            numBytes+=1;
+            min+=inc;
         }
     }
 }
@@ -223,6 +232,6 @@ fn part2(arr)
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

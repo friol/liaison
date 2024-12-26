@@ -1,8 +1,13 @@
-/* AoC 2024 16 */
+
+/* 
+    AoC 2024 16 
+    part 1 is slow, part 2 takes ages, as it has to pass around the entire path (by value)
+*/
 
 glbMap=[];
 glbCostMap=[];
 glbSpots=[];
+glbMinCost=999999999;
 
 fn readInput()
 {
@@ -66,7 +71,7 @@ fn parseMap(arr)
                 curRow.add(0);
             }
         
-            costRow.add([999999,999999,999999,999999]);
+            costRow.add([999999999,999999999,999999999,999999999]);
             x+=1;
         }
 
@@ -159,19 +164,68 @@ fn artigianalDFS(curPos,end,visitedarr,directionarr,curdir,curCost)
     }
 }
 
-fn artigianalDjikstra(curPos,end,curdir,curCost,path)
+fn artigianalDjikstra(curPos,end,curdir,curCost)
 {
-    if (curCost>135512)
-    {
-        return;
-    }
-
     if ((curPos[0]==end[0])&&(curPos[1]==end[1]))
     {
-        if (curCost==135512)
+        if (curCost<glbMinCost)
         {
-            print("reached the end, cost:",curCost);
-            print("the path:",path);
+            glbMinCost=curCost;
+            //print("reached the end, cost:",curCost);
+        }
+        return true;
+    }
+
+    if (glbCostMap[curPos[1]][curPos[0]][0]>curCost)
+    {
+        glbCostMap[curPos[1]][curPos[0]][0]=curCost;
+    }
+    else
+    {
+        return false;
+    }
+
+    directions=[[0,-1],[1,0],[0,1],[-1,0]];
+    dirz=0;
+    foreach (d in directions)
+    {
+        if ( ((dirz==0)&&(curdir==2)) || ((dirz==1)&&(curdir==3)) || ((dirz==2)&&(curdir==0)) || ((dirz==3)&&(curdir==1)) )
+        {
+        }
+        else
+        {
+            if (canGo(curPos,d))
+            {
+                newCost=curCost+1;
+                if (dirz!=curdir)
+                {
+                    newCost+=1000;
+                }
+
+                if (newCost<glbMinCost)
+                {
+                    ret=artigianalDjikstra([curPos[0]+d[0],curPos[1]+d[1]],end,dirz,newCost);
+                    if (!ret)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        dirz+=1;
+    }
+
+    return true;
+}
+
+fn artigianalDjikstraP2(curPos,end,curdir,curCost,path)
+{
+    if ((curPos[0]==end[0])&&(curPos[1]==end[1]))
+    {
+        if (curCost==glbMinCost)
+        {
+            //print("reached the end, mincost:",curCost);
+            //print("the path:",path);
             foreach (p in path)
             {
                 if (glbSpots.find(p)==-1)
@@ -180,11 +234,7 @@ fn artigianalDjikstra(curPos,end,curdir,curCost,path)
                 }
             }
         }
-        else
-        {
-            print("otha");
-        }
-        return;
+        return true;
     }
 
     if (glbCostMap[curPos[1]][curPos[0]][curdir]>=curCost)
@@ -194,7 +244,7 @@ fn artigianalDjikstra(curPos,end,curdir,curCost,path)
     }
     else
     {
-        return;
+        return false;
     }
 
     directions=[[0,-1],[1,0],[0,1],[-1,0]];
@@ -209,41 +259,60 @@ fn artigianalDjikstra(curPos,end,curdir,curCost,path)
             if (canGo(curPos,d))
             {
                 newCost=curCost;
-                if (dirz==curdir)
+                newCost=curCost+1;
+                if (dirz!=curdir)
                 {
-                    newCost+=1;
-                }
-                else
-                {
-                    newCost+=1001;
+                    newCost+=1000;
                 }
 
-                artigianalDjikstra([curPos[0]+d[0],curPos[1]+d[1]],end,dirz,newCost,path);
+                if (newCost<=glbMinCost)
+                {
+                    ret=artigianalDjikstraP2([curPos[0]+d[0],curPos[1]+d[1]],end,dirz,newCost,path);
+                    if (ret==false)
+                    {
+                        return true;
+                    }
+                }
             }
         }
         dirz+=1;
     }
+
+    return true;
 }
 
 fn part1(arr)
 {
     startEnd=parseMap(arr);
-    printMap();
 
-    //artigianalDFS([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],[],[],1,0);
-    artigianalDjikstra([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],1,0,[]);
+    t0=getMillisecondsSinceEpoch();
+    artigianalDjikstra([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],1,0);
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
 
-    idx=0;
-    while (idx<glbSpots.length)
-    {
-        idx+=1;
-    }
-    print(idx+1);
+    //print("Execution time:",t1);
+    print("Part 1:",glbMinCost);
+}
+
+fn part2(arr)
+{
+    glbMap=[];
+    glbCostMap=[];
+    startEnd=parseMap(arr);
+
+    t0=getMillisecondsSinceEpoch();
+    artigianalDjikstraP2([startEnd[0],startEnd[1]],[startEnd[2],startEnd[3]],1,0,[]);
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+
+    //print("Execution time:",t1);
+    print("Part 2:",glbSpots.length+1);
 }
 
 fn main(params)
 {
     input=readInput();
     part1(input);
-    //part2(input);
+    part2(input);
 }

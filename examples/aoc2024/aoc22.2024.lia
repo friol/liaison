@@ -1,4 +1,8 @@
-/* AoC 2024 22 */
+
+/* 
+    AoC 2024 22 
+    very clean solution, not so fast indeed
+*/
 
 fn readInput()
 {
@@ -36,11 +40,11 @@ fn part1(input)
             idx+=1;
         }
 
-        print(ns);
+        //print(ns);
         bigSum+=ns;
     }
 
-    print(bigSum);
+    print("Part 1:",bigSum);
 }
 
 fn createChangeSequence(s)
@@ -65,7 +69,7 @@ fn part2(input)
     numz=0;
     foreach (nss in input)
     {
-        print("Processing ",nss," ",numz,"/",input.length);
+        //print("Processing ",nss," ",numz,"/",input.length);
 
         ns=toLong(nss);
         curSequence=[];
@@ -96,18 +100,10 @@ fn part2(input)
                 thisLineSequences.add(seq);
                 if (sequencesDict.findKey(seq)==-1)
                 {
-                    //if (seq=="-21-13")
-                    //{
-                    //    print("Sex creating:",curSequence[idx]);
-                    //}
                     sequencesDict[seq]=curSequence[idx];
                 }
                 else
                 {
-                    //if (seq=="-21-13")
-                    //{
-                    //    print("Sex adding:",curSequence[idx]);
-                    //}
                     sequencesDict[seq]=curSequence[idx]+sequencesDict[seq];
                 }
             }
@@ -126,23 +122,17 @@ fn part2(input)
             }
             numKeys+=1;
         }
-        print("Max Bananas is ",maxBananas," Current keys:",numKeys);
+        //print("Max Bananas is ",maxBananas," Current keys:",numKeys);
 
         numz+=1;
     }
 
-
+    print("Part 2:",maxBananas);
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
-
-    //myDict={};
-    //myDict["a"]=2;
-    //myDict["b"]=2;
-    //myDict["c"]=2;
-    //print(myDict.findKey("aab"));
 }

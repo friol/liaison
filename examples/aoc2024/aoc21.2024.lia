@@ -1,4 +1,8 @@
-/* AoC 2024 21 */
+
+/* 
+    AoC 2024 21 
+    warp-speed unified solution (after a lot of rewrites)
+*/
 
 glbTransCodeDir={};
 glbIteration=0;
@@ -521,8 +525,55 @@ fn recursiveSolve(seq,level,maxlev)
     return totLen;
 }
 
-fn part2bis(input)
+fn part1and2(input,part,numDkeypads)
 {
+    megaSum=0L;
+    foreach (curCode in input)
+    {
+        //print("Processing code ",curCode);
+        seqs=findNumkeypadSequences(curCode);
+        //print(seqs);
+
+        minLen=999999999999L;
+        foreach (seq in seqs)
+        {
+            shortestLen=recursiveSolve(seq,0,numDkeypads);
+            if (shortestLen<minLen)
+            {
+                minLen=shortestLen;
+            }
+        }
+
+        //print(minLen);
+
+        kode=toLong(curCode[0])*100L;
+        kode+=toLong(curCode[1])*10L;
+        kode+=toLong(curCode[2])*1L;
+
+        komplexity=kode*minLen;
+        //print(komplexity);
+        megaSum+=komplexity;
+    }
+
+    print("Part ",part,":",megaSum);
+}
+
+fn init()
+{
+    glbTransCodeDir={};
+    glbIteration=0;
+    glbMaxIterations=10000;
+
+    glbKeypad=[];
+    glbNumkeypadMinlen=999999;
+    glbNumpadPossiblePaths=[];
+
+    glbDirKeypad=[];
+    glbDirkeypadMinlen=999999;
+    glbDirpadPossiblePaths=[];
+
+    glbMemoDict={};
+
     glbTransCodeDir["^"]=0;
     glbTransCodeDir[">"]=1;
     glbTransCodeDir["v"]=2;
@@ -536,44 +587,14 @@ fn part2bis(input)
 
     glbDirKeypad.add([-1,0,11]);
     glbDirKeypad.add([3,2,1]);
-
-    //curCode=input[0];
-
-    megaSum=0L;
-    foreach (curCode in input)
-    {
-        print("Processing code ",curCode);
-        seqs=findNumkeypadSequences(curCode);
-        print(seqs);
-
-        minLen=999999999999L;
-        foreach (seq in seqs)
-        {
-            shortestLen=recursiveSolve(seq,0,25);
-            if (shortestLen<minLen)
-            {
-                minLen=shortestLen;
-            }
-        }
-
-        print(minLen);
-
-        kode=toLong(curCode[0])*100L;
-        kode+=toLong(curCode[1])*10L;
-        kode+=toLong(curCode[2])*1L;
-
-        komplexity=kode*minLen;
-        print(komplexity);
-        megaSum+=komplexity;
-    }
-
-    print(megaSum);
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
-    //part2(input);
-    part2bis(input);
+
+    init();
+    part1and2(input,1,2);
+    init();
+    part1and2(input,2,25);
 }

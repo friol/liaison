@@ -1,4 +1,8 @@
-/* AoC 2024 23 */
+
+/* 
+    AoC 2024 23 
+    this day I discovered "cliques" and an apparently fast algorithm to find them
+*/
 
 glbMaxClique=[];
 glbMaxCliqueLen=0;
@@ -53,12 +57,7 @@ fn findTripletsWithT(listOfUniqueComputers,listOfConnections)
         idxComp+=1;
     }
 
-    foreach (el in finalList)
-    {
-        print(el);
-    }
-
-    print(finalList.length);
+    print("Part 1:",finalList.length);
 }
 
 fn part1(input)
@@ -77,7 +76,7 @@ fn part1(input)
         }
     }
 
-    print(listOfUniqueComputers);
+    //print(listOfUniqueComputers);
 
     listOfConnections=[];
 
@@ -97,11 +96,6 @@ fn part1(input)
             }
         }
         listOfConnections.add(konnections);
-    }
-
-    foreach (conn in listOfConnections)
-    {
-        print(conn.length);
     }
 
     //
@@ -192,86 +186,14 @@ fn findCliques(node,nodes,connections,clique,visited)
 
 fn part2(input)
 {
-    listOfUniqueComputers=[];
-    foreach (complink in input)
-    {
-        comps=complink.split("-");
-        if (listOfUniqueComputers.find(comps[0])==-1)
-        {
-            listOfUniqueComputers.add(comps[0]);
-        }
-        if (listOfUniqueComputers.find(comps[1])==-1)
-        {
-            listOfUniqueComputers.add(comps[1]);
-        }
-    }
+    glbMaxClique=[];
+    glbMaxCliqueLen=0;
+    glbDiscarded=[];
 
-    print(listOfUniqueComputers);
+    glbAdjacencyCache={};
+    glbListOfUniqueComputers=[];
+    glbListOfConnections=[];
 
-    listOfConnections=[];
-
-    foreach (comp in listOfUniqueComputers)
-    {
-        konnections=[];
-        foreach (complink in input)
-        {
-            comps=complink.split("-");
-            if (comps[0]==comp)
-            {
-                konnections.add(comps[1]);
-            }
-            if (comps[1]==comp)
-            {
-                konnections.add(comps[0]);
-            }
-        }
-        listOfConnections.add(konnections);
-    }
-
-    //clique=["co"];
-    //visited=["co"];
-    //findCliques("co",listOfUniqueComputers,listOfConnections,clique,visited);
-
-    //areConnected("ta","ka",listOfUniqueComputers,listOfConnections);
-
-    foreach (node in listOfUniqueComputers)
-    {
-        print("Finding cliques for ",node);
-        
-        clique=[node];
-        visited=[node];
-        glbDiscarded=[];
-        findCliques(node,listOfUniqueComputers,listOfConnections,clique,visited);
-        
-        //idxnode=listOfUniqueComputers.find(node);
-        //connz=listOfConnections[idxnode];
-        //connz.add(node);
-
-        foreach (el in connz)
-        {
-            connz2=[];
-            foreach (el2 in connz)
-            {
-                if (el2!=el)
-                {
-                    connz2.add(el2);
-                }
-            }
-
-            if (validateClique(connz2,listOfUniqueComputers,listOfConnections))
-            {
-                print("fondzit! ",connz2);
-                connz2.add(node);
-                connz2.sort();
-                print(connz2);
-                return;
-            }
-        }
-    }
-}
-
-fn part2bis(input)
-{
     foreach (complink in input)
     {
         comps=complink.split("-");
@@ -285,7 +207,7 @@ fn part2bis(input)
         }
     }
 
-    print(glbListOfUniqueComputers);
+    //print(glbListOfUniqueComputers);
 
     foreach (comp in glbListOfUniqueComputers)
     {
@@ -311,7 +233,7 @@ fn part2bis(input)
 
     foreach (node in glbListOfUniqueComputers)
     {
-        print("Finding cliques for ",node);
+        //print("Finding cliques for ",node);
         
         clique=[node];
         visited=[node];
@@ -331,20 +253,19 @@ fn part2bis(input)
 
         if (clique.length>glbMaxCliqueLen)
         {
-            print(clique);
+            //print(clique);
             glbMaxCliqueLen=clique.length;
             glbMaxClique=clique;
             glbMaxClique.sort();
         }        
     }
 
-    print("Max clique:",glbMaxClique);
+    print("Part 2:",glbMaxClique);
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
-    //part2(input);
-    part2bis(input);
+    part1(input);
+    part2(input);
 }

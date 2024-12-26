@@ -1,4 +1,8 @@
-/* AoC 2024 15 */
+
+/* 
+    AoC 2024 15 
+    funny sunday problem
+*/
 
 glbMap=[];
 glbListOfMoves=[];
@@ -229,7 +233,7 @@ fn calcSumOfGPS(robotPos)
             {
                 if (el==2)
                 {
-                    print("summing x:",x," y:",y);
+                    //print("summing x:",x," y:",y);
                     sumgps+=(100*y)+x;
                 }
             }
@@ -238,28 +242,28 @@ fn calcSumOfGPS(robotPos)
         y+=1;
     }
 
-    print(sumgps);
+    return sumgps;
 }
 
 fn part1(arr)
 {
     parseTheInput(arr);
 
-    print(glbListOfMoves);
+    //print(glbListOfMoves);
     robotPos=findRobotStartPos();
-    print(robotPos);
-    printMap(robotPos);
+    //print(robotPos);
+    //printMap(robotPos);
 
     moveNum=0;
     while (moveNum<glbListOfMoves.length)
     {
-        print("Move:",glbListOfMoves[moveNum]);
+        //print("Move:",glbListOfMoves[moveNum]);
         robotPos=moveRobot(robotPos,moveNum);
         moveNum+=1;
-        printMap(robotPos);
+        //printMap(robotPos);
     }
 
-    calcSumOfGPS(robotPos);
+    print("Part 1:",calcSumOfGPS(robotPos));
 }
 
 fn parseTheInputp2(arr)
@@ -585,7 +589,7 @@ fn moveRobotp2(rpos,mn)
         if (canMoveBoxzees(curDir))
         {
             glbListOfImpactedBoxes=rearrangeImpactedBoxes(curDir);
-            print("boxzees can be muvd! ",glbListOfImpactedBoxes);
+            //print("boxzees can be muvd! ",glbListOfImpactedBoxes);
             
             foreach (boxid in glbListOfImpactedBoxes)
             {
@@ -627,33 +631,37 @@ fn calcNewGPSTotal()
         y+=1;
     }
 
-    print(totScore);
+    return totScore;
 }
 
 fn part2(arr)
 {
-    robotPos=parseTheInputp2(arr);
-    print(glbListOfMoves);
+    glbMap=[];
+    glbListOfMoves=[];
+    glbListOfImpactedBoxes=[];
 
-    printNewMap();
+    robotPos=parseTheInputp2(arr);
+    //print(glbListOfMoves);
+
+    //printNewMap();
     //print("Initial robot pos:",robotPos);
 
     moveNum=0;
     while (moveNum<glbListOfMoves.length)
     {
-        print("Move:",glbListOfMoves[moveNum]," ",moveNum,"/",glbListOfMoves.length);
+        //print("Move:",glbListOfMoves[moveNum]," ",moveNum,"/",glbListOfMoves.length);
         robotPos=moveRobotp2(robotPos,moveNum);
         glbMap[robotPos[1]][robotPos[0]]=3;
         moveNum+=1;
         //printNewMap();
     }
 
-    calcNewGPSTotal();
+    print("Part 2:",calcNewGPSTotal());
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

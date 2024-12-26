@@ -3,15 +3,16 @@
 // mandatory meaningless header
 // (c) friol 2023
 //
-// will *have* to support the following:
 // liaison is dynamically typed (and variables can't change type)
 // we have implicit variable declaration, despite what "crafting interpreters" says
+//
 
 // passing parameters to functions byref
 // regexs
 // if else if come on
 // v[x][y][...][z].length bugs
 // arr[x][...][z].function()
+// check why sub-indexing seems slow
 // floats
 // circuit breaking if statements with && 
 // convert function list to function hashmap

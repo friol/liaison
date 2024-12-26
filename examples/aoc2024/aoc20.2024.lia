@@ -1,4 +1,8 @@
-/* AoC 2024 20 */
+
+/* 
+    AoC 2024 20 
+    "optimized" (=slow) solution
+*/
 
 glbMap=[];
 glbNumTargets=0;
@@ -323,14 +327,19 @@ fn findCheatzzz(sp,target)
 {
     numCheats=0;
     idxcs=0;
-    while (idxcs<sp[0])
+    sp1=sp[1];
+    sp1len=sp1.length;
+    sp0=sp[0];
+
+    while (idxcs<sp0)
     {
-        idxce=idxcs+1;//sp[0];
-        while (idxce<sp[1].length)
+        idxce=idxcs+1;
+        cs=sp1[idxcs];
+
+        while (idxce<sp1len)
         {
             // are cheat-compatible?
-            cs=sp[1][idxcs];
-            ce=sp[1][idxce];
+            ce=sp1[idxce];
 
             //dist=calcManhattanDistance(cs,ce);
             d0=cs[0]-ce[0];
@@ -358,7 +367,7 @@ fn findCheatzzz(sp,target)
             idxce+=1;
         }
 
-        print(idxcs,"/",sp[0]);
+        //print(idxcs,"/",sp0);
         idxcs+=1;
     }
 
@@ -374,23 +383,31 @@ fn part1(arr)
 
     resetMap();
     sp=findShortestPath(start,end);
-    print(sp);
+    //print(sp);
 
-    print(findCheatzzz(sp,100));    
+    print("Part 1:",findCheatzzz(sp,100));    
 }
 
 fn findCheatzzz2(sp,target)
 {
     numCheats=0;
     idxcs=0;
-    while (idxcs<sp[0])
+    sp1len=sp[1].length;
+    sp1=sp[1];        
+    sp0=sp[0];
+
+    while (idxcs<sp0)
     {
+        //print("Iteration ",idxcs," limit ",sp[0]);
         idxce=idxcs+1;//sp[0];
-        while (idxce<sp[1].length)
+        cs=sp1[idxcs];
+
+        while (idxce<sp1len)
         {
+            //print("SubIteration ",idxce," limit ",sp[1].length);
+
             // are cheat-compatible?
-            cs=sp[1][idxcs];
-            ce=sp[1][idxce];
+            ce=sp1[idxce];
 
             //dist=calcManhattanDistance(cs,ce);
             d0=cs[0]-ce[0];
@@ -418,7 +435,7 @@ fn findCheatzzz2(sp,target)
             idxce+=1;
         }
 
-        print(idxcs,"/",sp[0]);
+        //print(idxcs,"/",sp0);
         idxcs+=1;
     }
 
@@ -427,6 +444,9 @@ fn findCheatzzz2(sp,target)
 
 fn part2(arr)
 {
+    glbMap=[];
+    glbNumTargets=0;
+
     startend=parseMap(arr);
 
     start=startend[0];
@@ -434,14 +454,14 @@ fn part2(arr)
 
     resetMap();
     sp=findShortestPath(start,end);
-    print(sp);
+    //print(sp);
 
-    print(findCheatzzz2(sp,100));    
+    print("Part 2:",findCheatzzz2(sp,100));    
 }
 
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
     part2(input);
 }

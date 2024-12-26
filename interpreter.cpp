@@ -1254,7 +1254,7 @@ liaVariable liaInterpreter::customFunctionCall(std::string& fname, std::vector<l
 			if (f.parameters.size() != parameters->size())
 			{
 				std::string err;
-				err += "Function " + fname + " called with wrong number of parameters. "+std::to_string(parameters->size())+" parameter(s) passed ";
+				err += "Function " + fname + " called with wrong number of parameters at "+std::to_string(lineNum)+". "+std::to_string(parameters->size())+" parameter(s) passed ";
 				err += "instead of "+std::to_string(f.parameters.size()) + ".";
 				err += "Terminating.";
 				fatalError(err);
