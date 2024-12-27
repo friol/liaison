@@ -493,6 +493,39 @@ fn longToBinary(n)
     return b;
 }
 
+fn findSwappee(nn,gatesList)
+{
+    // find xnn XOR ynn result
+    // swappee is result of result XOR something
+
+    xnn="x"+toString(nn);
+    ynn="y"+toString(nn);
+
+    result="";
+    foreach (gate in gatesList)
+    {
+        if ((gate[0]=="XOR") && ( ((gate[1]==xnn)||(gate[2]==xnn)) || ((gate[1]==ynn)||(gate[2]==ynn)) ) )
+        {
+            result=gate[3];
+        }
+    }
+
+    foreach (gate in gatesList)
+    {
+        if ((gate[0]=="XOR")&&((gate[1]==result)||(gate[2]==result)))
+        {
+            return gate[3];
+        }
+    }
+}
+
+fn getWireNum(w)
+{
+    s="";
+    s+=w[1]; s+=w[2];
+    return toInteger(s);
+}
+
 fn part2(input)
 {
     gatesList=[];
@@ -514,34 +547,20 @@ fn part2(input)
         }
     }
 
-    //print(glbWiresDict);
-    //print(gatesList);
-
     notXorred=findNotXorredZs(gatesList);
     //print("End wires (Z) not xorred:",notXorred);
+
+    swappees=[];
+    foreach (w in notXorred)
+    {
+        swappees.add(findSwappee(getWireNum(w),gatesList));
+    }
 
     compNotXor=findCompNotXor(gatesList,[]);
     //print("Component not xorred:",compNotXor);
 
-    compNotOr=findCompNotOr(gatesList,[]);
+    //compNotOr=findCompNotOr(gatesList,[]);
     //print("Component not orred:",compNotOr);
-
-    //
-
-    swapsCandidates=[];
-    foreach (el in notXorred)
-    {
-        swapsCandidates.add(el);
-    }
-    foreach (el in compNotXor)
-    {
-        swapsCandidates.add(el);
-    }
-    foreach (el in compNotOr)
-    {
-        swapsCandidates.add(el);
-    }
-    swapsCandidates.add("gvm");
 
     //
 
@@ -558,68 +577,34 @@ fn part2(input)
         }
     }
 
+    //
 
-    swap=["xx","xx","xx","xx","xx","xx","xx","xx"];
-    foreach (s0 in [notXorred[0]])
+    swap=[];
+    idx=0;
+    foreach (w in notXorred)
     {
-        swap[0]=s0;
-        foreach (s1 in swapsCandidates)
+        swap.add(w);
+        swap.add(swappees[idx]);
+        idx+=1;
+    }
+    swap.add(compNotXor[0]);
+
+    //print(swap);
+
+    // bruteforce the remaining one
+
+    foreach(gate in gatesList)
+    {
+        newSwap=swap;
+        newSwap.add(gate[3]);
+        glbWiresDict=initialWiresDict;
+
+        if (newSolve(gatesList,newSwap))
         {
-            if (s1!=s0)
-            {
-                swap[1]=s1;
-                foreach (s2 in [notXorred[1]])
-                {
-                    if ((s2!=s1)&&(s2!=s0))
-                    {
-                        swap[2]=s2;
-                        foreach (s3 in swapsCandidates)
-                        {
-                            if ((s3!=s2)&&(s3!=s1)&&(s3!=s0))
-                            {
-                                swap[3]=s3;
-                                foreach (s4 in [notXorred[2]])
-                                {
-                                    if ((s4!=s3)&&(s4!=s2)&&(s4!=s1)&&(s4!=s0))
-                                    {
-                                        swap[4]=s4;
-                                        foreach (s5 in swapsCandidates)
-                                        {
-                                            if ((s5!=s4)&&(s5!=s3)&&(s5!=s2)&&(s5!=s1)&&(s5!=s0))
-                                            {
-                                                swap[5]=s5;
-                                                foreach (s6 in swapsCandidates)
-                                                {
-                                                    if ((s6!=s5)&&(s6!=s4)&&(s6!=s3)&&(s6!=s2)&&(s6!=s1)&&(s6!=s0))
-                                                    {
-                                                        swap[6]=s6;
-                                                        foreach (s7 in swapsCandidates)
-                                                        {
-                                                            if ((s7!=s6)&&(s7!=s5)&&(s7!=s4)&&(s7!=s3)&&(s7!=s2)&&(s7!=s1)&&(s7!=s0))
-                                                            {
-                                                                swap[7]=s7;
-
-                                                                glbWiresDict=initialWiresDict;
-
-                                                                if (newSolve(gatesList,swap))
-                                                                {
-                                                                    swap.sort();
-                                                                    print("Part 2:",swap);
-                                                                    return;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            //print("ok:",newSwap);
+            newSwap.sort();
+            print("Part 2:",newSwap);
+            return;
         }
     }
 }
