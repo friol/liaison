@@ -1,4 +1,8 @@
-/* AoC 2024 24 */
+
+/* 
+    AoC 2024 24 
+    part 2 is extremely input-dependant
+*/
 
 glbWiresDict={};
 
@@ -93,8 +97,8 @@ fn part1(input)
         }
     }
 
-    print(glbWiresDict);
-    print(gatesList);
+    //print(glbWiresDict);
+    //print(gatesList);
 
     anotherOne=true;
     while (anotherOne)
@@ -108,14 +112,14 @@ fn part1(input)
     {
         if (key[0]=="z")
         {
-            print(key," ",glbWiresDict[key]);
+            //print(key," ",glbWiresDict[key]);
             kval=toLong(toString(glbWiresDict[key]));
             bigRez+=mult*kval;
             mult*=2L;
         }
     }
 
-    print(bigRez);
+    print("Part 1:",bigRez);
 }
 
 fn getBinNumber(l,start,end)
@@ -438,7 +442,7 @@ fn newSolve(gatesList,swaps)
         idx+=2;
     }
 
-    print("Solving:",swaps);
+    //print("Solving:",swaps);
     //print(gatesList);
     while (solve(gatesList))
     {
@@ -510,17 +514,17 @@ fn part2(input)
         }
     }
 
-    print(glbWiresDict);
-    print(gatesList);
+    //print(glbWiresDict);
+    //print(gatesList);
 
     notXorred=findNotXorredZs(gatesList);
-    print("End wires (Z) not xorred:",notXorred);
+    //print("End wires (Z) not xorred:",notXorred);
 
     compNotXor=findCompNotXor(gatesList,[]);
-    print("Component not xorred:",compNotXor);
+    //print("Component not xorred:",compNotXor);
 
     compNotOr=findCompNotOr(gatesList,[]);
-    print("Component not orred:",compNotOr);
+    //print("Component not orred:",compNotOr);
 
     //
 
@@ -600,7 +604,7 @@ fn part2(input)
                                                                 if (newSolve(gatesList,swap))
                                                                 {
                                                                     swap.sort();
-                                                                    print("Solution found:",swap);
+                                                                    print("Part 2:",swap);
                                                                     return;
                                                                 }
                                                             }
@@ -623,6 +627,7 @@ fn part2(input)
 fn main(params)
 {
     input=readInput();
-    //part1(input);
+    part1(input);
+    glbWiresDict={};
     part2(input);
 }

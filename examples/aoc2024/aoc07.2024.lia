@@ -1,7 +1,7 @@
 
 /* 
     aoc 07 2024 lia 
-    slow solution, but not *that* slow
+    slow solution, but not -that- slow
 */
 
 fn readInput()

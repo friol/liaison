@@ -887,10 +887,10 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 		{
 			liaVariable* pArr = pVar;
 
-			for (auto& idx : vIdxArr)
+			for (unsigned int aidx=0;aidx<vIdxArr.size();aidx++)
 			{
-				//std::cout << "idx is " << std::get<int>(idx.value) << std::endl;
-				unsigned int arrIdx = std::get<int>(idx.value);
+				//std::cout << "idx is " << std::get<int>(vIdxArr[aidx].value) << std::endl;
+				unsigned int arrIdx = std::get<int>(vIdxArr[aidx].value);
 
 				unsigned int limit;
 				if (pArr->type == liaVariableType::array)
@@ -921,19 +921,23 @@ liaVariable liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 				if (pArr->type == liaVariableType::array)
 				{
 					pArr = &pArr->vlist[arrIdx];
-					retVar.type = pArr->type;
-					retVar.value = pArr->value;
-					retVar.vlist = pArr->vlist;
-					retVar.vMap = pArr->vMap;
+
+					if (aidx == (vIdxArr.size() - 1))
+					{
+						retVar.type = pArr->type;
+						retVar.value = pArr->value;
+						retVar.vlist = pArr->vlist;
+						retVar.vMap = pArr->vMap;
+					}
 				}
 				else if (pArr->type == liaVariableType::string)
 				{
+					// we assume this is the last subscript of the array
+					// otherwise, everything will crash
 					retVar.type = liaVariableType::string;
 					std::string s = std::get<std::string>(pArr->value);
 					std::string rv = s.substr(arrIdx, 1);
 					retVar.value = rv;
-					//retVar.vlist = pArr->vlist;
-					//retVar.vMap = pArr->vMap;
 				}
 			}
 		}
