@@ -1,5 +1,12 @@
 # My Liaison with code
 
+### 2024 Update!
+
+I managed to solve the entire AoC 2024 in Liaison. You can find all the solutions in the examples/aoc2024 folder.
+<br/>
+
+### Liaison
+
 Each year, solving [Advent of Code](https://adventofcode.com/) is a sort of bet with myself. <br/><br/>
 I started with plain Python in 2015, and went through the editions, learning new languages I should not have learnt like Rust (which unfortunately I didn't fully got familiar with) and struggling with the usual bugs and whistles that Advent of Code problems bring.<br/>
 <br/>
