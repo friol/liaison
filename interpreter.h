@@ -101,7 +101,7 @@ private:
 
 	void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
-	liaVariable evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
+	void evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar);
 
 	liaVariable exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 
