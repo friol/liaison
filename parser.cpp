@@ -15,9 +15,9 @@
 // check why sub-indexing seems slow
 // floats
 // circuit breaking if statements with && 
-// convert function list to function hashmap
 // convert (almost) all the assertions to ifs
 
+// convert function list to function hashmap // DONE
 // allow v[x].length // DONE
 // globals (yep) (but only if they start with 'glb') // DONE
 // check if evaluating a function calls it two times // DONE

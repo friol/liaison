@@ -145,7 +145,8 @@ void liaInterpreter::getFunctions(std::shared_ptr<peg::Ast> theAst)
 
 					}
 
-					functionList.push_back(aFun);
+					functionMap[aFun.name] = aFun;
+					//functionList.push_back(aFun);
 				}
 			}
 		}
@@ -154,8 +155,10 @@ void liaInterpreter::getFunctions(std::shared_ptr<peg::Ast> theAst)
 
 void liaInterpreter::dumpFunctions()
 {
-	for (liaFunction f: functionList)
+	//for (liaFunction f: functionList)
+	for (auto& fx : functionMap)
 	{
+		liaFunction f = fx.second;
 		std::cout << f.name << std::endl;
 		for (liaFunctionParam fp : f.parameters)
 		{
@@ -215,9 +218,9 @@ bool compareStringVars(liaVariable i1, liaVariable i2)
 	return (iv1 < iv2);
 }
 
-liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, std::string varName)
+void liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, std::string varName,liaVariable& retVal)
 {
-	liaVariable retVal;
+	//liaVariable retVal;
 	std::vector<liaVariable> parameters;
 
 	size_t lineNum = theAst->line;
@@ -357,7 +360,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 								if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
 								{
 									retVal.value = idx;
-									return retVal;
+									//return retVal;
 								}
 							}
 							/*liaVariable l2f;
@@ -380,7 +383,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 								retVal.value = (int)(ptr-ptrbeg);
 							}
 
-							return retVal;
+							return;
 						}
 					}
 					else if (parameters[0].type == liaVariableType::integer)
@@ -402,7 +405,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 								if (std::get<int>(pvarValue->vlist[idx].value) == val2find)
 								{
 									retVal.value = idx;
-									return retVal;
+									return;
 								}
 							}
 						}
@@ -419,7 +422,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 								if (std::get<long long>(pvarValue->vlist[idx].value) == val2find)
 								{
 									retVal.value = idx;
-									return retVal;
+									return;
 								}
 							}
 						}
@@ -439,7 +442,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 							if (liaVariableArrayComparison(pvarValue->vlist[idx],parameters[0]))
 							{
 								retVal.value = idx;
-								return retVal;
+								return;
 							}
 						}
 					}
@@ -468,7 +471,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 
 					retVal.type = liaVariableType::string;
 					retVal.value = thes;
-					return retVal;
+					return;
 				}
 				else if (ch->token == "slice")
 				{
@@ -484,7 +487,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 						{
 							retVal.type = liaVariableType::string;
 							retVal.value = s;
-							return retVal;
+							return;
 						}
 
 						std::string s2;
@@ -500,7 +503,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 
 						retVal.type = liaVariableType::string;
 						retVal.value = s2;
-						return retVal;
+						return;
 					}
 					else if (pvarValue->type == liaVariableType::array)
 					{
@@ -515,7 +518,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 							idx += 1;
 						}
 
-						return retVal;
+						return;
 					}
 				}
 				else if (ch->token == "sort")
@@ -569,7 +572,7 @@ liaVariable liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg
 		}
 	}
 
-	return retVal;
+	//return retVal;
 }
 
 void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar)
@@ -724,7 +727,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 			}
 		}
 
-		retVar=exeCuteMethodCallStatement(theAst->nodes[0], env,varName);
+		exeCuteMethodCallStatement(theAst->nodes[0], env,varName, retVar);
 	}
 	else if (theAst->nodes[0]->name == "VariableWithProperty")
 	{
@@ -867,27 +870,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 			}
 		}
 
-		liaVariable* pVar = nullptr;
-		if (env->varMap.find(arrName) == env->varMap.end())
-		{
-			if (globalScope.varMap.find(arrName) == globalScope.varMap.end())
-			{
-				// variable name not found
-				std::string err;
-				err += "Variable [" + arrName + "] not found in method call at line " + std::to_string(lineNum) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-			else
-			{
-				pVar = &globalScope.varMap[arrName];
-			}
-		}
-		else
-		{
-			pVar = &env->varMap[arrName];
-		}
-
+		liaVariable* pVar = findVar(arrName, lineNum, env);
 		if (pVar->type == liaVariableType::array)
 		{
 			liaVariable* pArr = pVar;
@@ -1013,7 +996,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 	{
 		//std::cout << "funCall" << std::endl;
 		//std::cout << peg::ast_to_s(theAst);
-		retVar=exeCuteFuncCallStatement(theAst->nodes[0], env);
+		exeCuteFuncCallStatement(theAst->nodes[0], env, retVar);
 	}
 	else if (theAst->nodes[0]->name == "DictInitializer")
 	{
@@ -1218,9 +1201,9 @@ void liaInterpreter::exeCuteLibFunctionPrint(const std::shared_ptr<peg::Ast>& th
 	std::cout << std::endl;
 }
 
-liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname,int linenum)
+void liaInterpreter::exeCuteLibFunctionReadFile(std::string fname,int linenum, liaVariable& retVar)
 {
-	liaVariable retVar;
+	//liaVariable retVar;
 	retVar.type = liaVariableType::array;
 
 	std::string line;
@@ -1243,43 +1226,39 @@ liaVariable liaInterpreter::exeCuteLibFunctionReadFile(std::string fname,int lin
 		fatalError(err);
 	}
 
-	return retVar;
+	//return retVar;
 }
 
-liaVariable liaInterpreter::customFunctionCall(std::string& fname, std::vector<liaVariable>* parameters, liaEnvironment* env,size_t lineNum)
+void liaInterpreter::customFunctionCall(std::string& fname, std::vector<liaVariable>* parameters, liaEnvironment* env,size_t lineNum,liaVariable& retVal)
 {
-	liaVariable retVal;
+	//liaVariable retVal;
 
 	// check if function name exists
 	bool funFound = false;
 	std::shared_ptr<peg::Ast> pBlock;
 
-	for (auto f : functionList)
+	if (functionMap.find(fname) != functionMap.end())
 	{
-		if (fname == f.name)
+		liaFunction f = functionMap[fname];
+		pBlock = f.functionCodeBlockAst;
+
+		// check that number of parameters is the same of function call
+
+		if (f.parameters.size() != parameters->size())
 		{
-			funFound = true;
-			pBlock = f.functionCodeBlockAst;
+			std::string err;
+			err += "Function " + fname + " called with wrong number of parameters at "+std::to_string(lineNum)+". "+std::to_string(parameters->size())+" parameter(s) passed ";
+			err += "instead of "+std::to_string(f.parameters.size()) + ".";
+			err += "Terminating.";
+			fatalError(err);
+		}
 
-			// check that number of parameters is the same of function call
-
-			if (f.parameters.size() != parameters->size())
-			{
-				std::string err;
-				err += "Function " + fname + " called with wrong number of parameters at "+std::to_string(lineNum)+". "+std::to_string(parameters->size())+" parameter(s) passed ";
-				err += "instead of "+std::to_string(f.parameters.size()) + ".";
-				err += "Terminating.";
-				fatalError(err);
-			}
-
-			for (int p = 0;p < parameters->size();p++)
-			{
-				(*parameters)[p].name = f.parameters[p].name;
-			}
+		for (int p = 0;p < parameters->size();p++)
+		{
+			(*parameters)[p].name = f.parameters[p].name;
 		}
 	}
-
-	if (funFound != true)
+	else
 	{
 		std::string err;
 		err += "Unknown function name '" + fname + "' at line " + std::to_string(lineNum) + ". ";
@@ -1299,16 +1278,16 @@ liaVariable liaInterpreter::customFunctionCall(std::string& fname, std::vector<l
 		addvarOrUpdateEnvironment(&parm, &funEvn, 0);
 	}
 
-	retVal=exeCuteCodeBlock(pBlock, &funEvn);
+	exeCuteCodeBlock(pBlock, &funEvn,retVal);
 
-	return retVal;
+	//return retVal;
 }
 
-liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env)
+void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, liaVariable& retVal)
 {
 	//std::cout << peg::ast_to_s(theAst);
 
-	liaVariable retVal;
+	//liaVariable retVal;
 	std::vector<liaVariable> parameters;
 	size_t lineNum=theAst->line;
 
@@ -1329,7 +1308,7 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 					int linenum = (int)theAst->nodes[1]->nodes[0]->line;
 					liaVariable p0;
 					evaluateExpression(theAst->nodes[1]->nodes[0], env,p0);
-					retVal=exeCuteLibFunctionReadFile(std::get<std::string>(p0.value),linenum);
+					exeCuteLibFunctionReadFile(std::get<std::string>(p0.value),linenum,retVal);
 				}
 				else if ((ch->token == "toInteger")|| (ch->token == "toLong"))
 				{
@@ -1521,13 +1500,13 @@ liaVariable liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::
 
 					std::string funname;
 					funname += ch->token;
-					retVal = customFunctionCall(funname,&parameters,env,lineNum);
+					customFunctionCall(funname,&parameters,env,lineNum,retVal);
 				}
 			}
 		}
 	}
 
-	return retVal;
+	//return retVal;
 }
 
 void liaInterpreter::exeCuteVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env)
@@ -1535,30 +1514,12 @@ void liaInterpreter::exeCuteVarDeclStatement(const std::shared_ptr<peg::Ast>& th
 	//std::cout << peg::ast_to_s(theAst);
 
 	liaVariable theVar;
+	std::string vname;
 	size_t curLine=0;
-	for (auto ch : theAst->nodes)
-	{
-		if (ch->is_token)
-		{
-			if (ch->name == "VariableName")
-			{
-				theVar.name += ch->token;
-				curLine = ch->line;
-			}
-		}
-		else
-		{
-			if (ch->name == "Expression")
-			{
-				liaVariable retVar;
-				evaluateExpression(ch, env,retVar);
-				theVar.type = retVar.type;
-				theVar.value = retVar.value;
-				theVar.vlist = retVar.vlist;
-				theVar.vMap = retVar.vMap;
-			}
-		}
-	}
+	
+	vname += theAst->nodes[0]->token;
+	evaluateExpression(theAst->nodes[1], env, theVar);
+	theVar.name = vname;
 
 	// now, if variable is not in env, create it. otherwise, update it
 	addvarOrUpdateEnvironment(&theVar, env, curLine);
@@ -1710,26 +1671,7 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 		}
 	}
 	
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
-		{
-			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pvar = &env->varMap[theVar.name];
-		}
-	}
-	else
-	{
-		pvar = &globalScope.varMap[theVar.name];
-	}
-
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
@@ -1796,26 +1738,7 @@ void liaInterpreter::exeCuteDivideStatement(const std::shared_ptr<peg::Ast>& the
 		}
 	}
 
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
-		{
-			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pvar = &env->varMap[theVar.name];
-		}
-	}
-	else
-	{
-		pvar = &globalScope.varMap[theVar.name];
-	}
-
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
@@ -1882,26 +1805,7 @@ void liaInterpreter::exeCuteModuloStatement(const std::shared_ptr<peg::Ast>& the
 		}
 	}
 
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
-		{
-			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pvar = &env->varMap[theVar.name];
-		}
-	}
-	else
-	{
-		pvar = &globalScope.varMap[theVar.name];
-	}
-
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
@@ -1954,26 +1858,7 @@ void liaInterpreter::exeCuteLogicalAndStatement(const std::shared_ptr<peg::Ast>&
 		}
 	}
 
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
-		{
-			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pvar = &env->varMap[theVar.name];
-		}
-	}
-	else
-	{
-		pvar = &globalScope.varMap[theVar.name];
-	}
-
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
@@ -2026,26 +1911,7 @@ void liaInterpreter::exeCuteLogicalOrStatement(const std::shared_ptr<peg::Ast>& 
 		}
 	}
 
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
-		{
-			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pvar = &env->varMap[theVar.name];
-		}
-	}
-	else
-	{
-		pvar = &globalScope.varMap[theVar.name];
-	}
-
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if (pvar->type == liaVariableType::integer)
 	{
 		int vv = std::get<int>(pvar->value);
@@ -2106,26 +1972,7 @@ void liaInterpreter::exeCuteRshiftStatement(const std::shared_ptr<peg::Ast>& the
 
 	if (rshiftAmount != 0)
 	{
-		liaVariable* pvar = nullptr;
-		if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-		{
-			if (env->varMap.find(theVar.name) == env->varMap.end())
-			{
-				std::string err;
-				err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-			else
-			{
-				pvar = &env->varMap[theVar.name];
-			}
-		}
-		else
-		{
-			pvar = &globalScope.varMap[theVar.name];
-		}
-
+		liaVariable* pvar = findVar(theVar.name, curLine, env);
 		if (pvar->type == liaVariableType::integer)
 		{
 			int vv = std::get<int>(pvar->value);
@@ -2179,26 +2026,7 @@ void liaInterpreter::exeCuteLshiftStatement(const std::shared_ptr<peg::Ast>& the
 
 	if (lshiftAmount != 0)
 	{
-		liaVariable* pvar = nullptr;
-		if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-		{
-			if (env->varMap.find(theVar.name) == env->varMap.end())
-			{
-				std::string err;
-				err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-			else
-			{
-				pvar = &env->varMap[theVar.name];
-			}
-		}
-		else
-		{
-			pvar = &globalScope.varMap[theVar.name];
-		}
-
+		liaVariable* pvar = findVar(theVar.name, curLine, env);
 		if (pvar->type == liaVariableType::integer)
 		{
 			int vv = std::get<int>(pvar->value);
@@ -2215,64 +2043,54 @@ void liaInterpreter::exeCuteLshiftStatement(const std::shared_ptr<peg::Ast>& the
 	}
 }
 
-void liaInterpreter::exeCuteIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,int inc)
+liaVariable* liaInterpreter::findVar(std::string& varName, size_t& curLine, liaEnvironment* env)
 {
-	//std::cout << peg::ast_to_s(theAst);
-
-	liaVariable theVar;
-	size_t curLine=0;
-	liaVariable theInc;
-	liaVariable dictKey;
-	bool isSubscript = false;
-
-	for (auto& ch : theAst->nodes)
+	if (env->varMap.find(varName) == env->varMap.end())
 	{
-		if (ch->name == "ArraySubscript")
-		{
-			theVar.name += ch->nodes[0]->token;
-			evaluateExpression(ch->nodes[1], env,dictKey);
-			//std::cout << theVar.name << " " << std::get<std::string>(dictKey.value);
-			isSubscript = true;
-		}
-
-		if (ch->is_token)
-		{
-			if (ch->name == "VariableName")
-			{
-				theVar.name += ch->token;
-				curLine = ch->line;
-			}
-		}
-		else
-		{
-			if (ch->name == "Expression")
-			{
-				evaluateExpression(ch,env, theInc);
-				curLine = ch->line;
-			}
-		}
-	}
-
-	liaVariable* pvar = nullptr;
-	if (globalScope.varMap.find(theVar.name) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(theVar.name) == env->varMap.end())
+		if (globalScope.varMap.find(varName) == globalScope.varMap.end())
 		{
 			std::string err;
-			err += "Variable \"" + theVar.name + "\" not found at line " + std::to_string(curLine) + ". ";
+			err += "Variable \"" + varName + "\" not found at line " + std::to_string(curLine) + ". ";
 			err += "Terminating.";
 			fatalError(err);
 		}
 		else
 		{
-			pvar = &env->varMap[theVar.name];
+			return &globalScope.varMap[varName];
 		}
 	}
 	else
 	{
-		pvar = &globalScope.varMap[theVar.name];
+		return &env->varMap[varName];
 	}
 
+	return nullptr;
+}
+
+void liaInterpreter::exeCuteIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,int inc)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	liaVariable theVar;
+	size_t curLine=theAst->nodes[0]->line;
+	liaVariable theInc;
+	liaVariable dictKey;
+	bool isSubscript = false;
+
+	if (theAst->nodes[0]->name != "ArraySubscript")
+	{
+		theVar.name += theAst->nodes[0]->token;
+		evaluateExpression(theAst->nodes[1], env, theInc);
+	}
+	else
+	{
+		theVar.name += theAst->nodes[0]->nodes[0]->token;
+		evaluateExpression(theAst->nodes[0]->nodes[1], env, dictKey);
+		evaluateExpression(theAst->nodes[1], env, theInc);
+		isSubscript = true;
+	}
+
+	liaVariable* pvar = findVar(theVar.name, curLine, env);
 	if ((pvar->type != liaVariableType::array) && (pvar->type != liaVariableType::dictionary) && (pvar->type != theInc.type) )
 	{
 		std::string err;
@@ -2573,7 +2391,7 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 	return false;
 }
 
-liaVariable liaInterpreter::exeCuteWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env)
+bool liaInterpreter::exeCuteWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVal)
 {
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
@@ -2590,22 +2408,21 @@ liaVariable liaInterpreter::exeCuteWhileStatement(const std::shared_ptr<peg::Ast
 		}
 	}
 	
-	liaVariable retVal;
+	//liaVariable retVal;
 	while (evaluateCondition(pCond, env) == true)
 	{
-		retVal=exeCuteCodeBlock(pBlock, env);
-		if (retVal.name == "lia-ret-val")
+		if (exeCuteCodeBlock(pBlock, env, retVal))
 		{
-			return retVal;
+			return true;
 		}
 	}
 
-	return retVal;
+	return false;
 }
 
-liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env)
+bool liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVal)
 {
-	liaVariable retVal;
+	//liaVariable retVal;
 	//std::cout << peg::ast_to_s(theAst);
 	size_t lineNum = theAst->line;
 
@@ -2644,11 +2461,10 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 
 				env->varMap[tmpVarname] = tmpVar;
 
-				retVal = exeCuteCodeBlock(pBlock, env);
-				if (retVal.name == "lia-ret-val")
+				if (exeCuteCodeBlock(pBlock, env, retVal))
 				{
 					env->varMap.erase(tmpVarname);
-					return retVal;
+					return true;
 				}
 			}
 
@@ -2671,11 +2487,10 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 				tmpVar.value = std::string(1,curchar);
 				env->varMap[tmpVarname] = tmpVar;
 
-				retVal = exeCuteCodeBlock(pBlock, env);
-				if (retVal.name == "lia-ret-val")
+				if (exeCuteCodeBlock(pBlock, env, retVal))
 				{
 					env->varMap.erase(tmpVarname);
-					return retVal;
+					return true;
 				}
 			}
 
@@ -2691,12 +2506,12 @@ liaVariable liaInterpreter::exeCuteForeachStatement(const std::shared_ptr<peg::A
 		fatalError(err);
 	}
 
-	return retVal;
+	return false;
 }
 
-liaVariable liaInterpreter::exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env)
+bool liaInterpreter::exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVar)
 {
-	liaVariable retVar;
+	//liaVariable retVar;
 
 	std::shared_ptr<peg::Ast> pCond;
 	std::shared_ptr<peg::Ast> pBlock;
@@ -2710,10 +2525,9 @@ liaVariable liaInterpreter::exeCuteIfStatement(const std::shared_ptr<peg::Ast>& 
 		// simple if
 		if (evaluateCondition(pCond, env) == true)
 		{
-			retVar=exeCuteCodeBlock(pBlock, env);
-			if (retVar.name == "lia-ret-val")
+			if (exeCuteCodeBlock(pBlock, env, retVar))
 			{
-				return retVar;
+				return true;
 			}
 		}
 	}
@@ -2724,28 +2538,26 @@ liaVariable liaInterpreter::exeCuteIfStatement(const std::shared_ptr<peg::Ast>& 
 
 		if (evaluateCondition(pCond, env) == true)
 		{
-			retVar=exeCuteCodeBlock(pBlock, env);
-			if (retVar.name == "lia-ret-val")
+			if (exeCuteCodeBlock(pBlock, env, retVar))
 			{
-				return retVar;
+				return true;
 			}
 		}
 		else
 		{
-			retVar=exeCuteCodeBlock(pBlock2, env);
-			if (retVar.name == "lia-ret-val")
+			if (exeCuteCodeBlock(pBlock2, env, retVar))
 			{
-				return retVar;
+				return true;
 			}
 		}
 	}
 
-	return retVar;
+	return false;
 }
 
-liaVariable liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env)
+bool liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVal)
 {
-	liaVariable retVal;
+	//liaVariable retVal;
 
 	for (auto& stmt : theAst->nodes)
 	{
@@ -2754,33 +2566,31 @@ liaVariable liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& th
 		if (stmt->nodes[0]->name == "FuncCallStmt")
 		{
 			// user function or library function call
-			exeCuteFuncCallStatement(stmt->nodes[0],env);
+			liaVariable dummyVar;
+			exeCuteFuncCallStatement(stmt->nodes[0],env,dummyVar);
 		}
 		else if (stmt->nodes[0]->name == "WhileStmt")
 		{
 			// while statement, the cradle of all infinite loops
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
-			retVal = exeCuteWhileStatement(stmt->nodes[0], env);
-			if (retVal.name == "lia-ret-val")
+			if (exeCuteWhileStatement(stmt->nodes[0], env, retVal))
 			{
-				return retVal;
+				return true;
 			}
 		}
 		else if (stmt->nodes[0]->name == "ForeachStmt")
 		{
-			retVal = exeCuteForeachStatement(stmt->nodes[0], env);
-			if (retVal.name == "lia-ret-val")
+			if (exeCuteForeachStatement(stmt->nodes[0], env,retVal))
 			{
-				return retVal;
+				return true;
 			}
 		}
 		else if (stmt->nodes[0]->name == "IfStmt")
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
-			retVal = exeCuteIfStatement(stmt->nodes[0], env);
-			if (retVal.name == "lia-ret-val")
+			if (exeCuteIfStatement(stmt->nodes[0], env,retVal))
 			{
-				return retVal;
+				return true;
 			}
 		}
 		else if (stmt->nodes[0]->name == "VarFuncCallStmt")
@@ -2788,7 +2598,8 @@ liaVariable liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& th
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 			std::string variableName;
 			variableName += stmt->nodes[0]->nodes[0]->token;
-			exeCuteMethodCallStatement(stmt->nodes[0], env, variableName);
+			liaVariable dummyVar;
+			exeCuteMethodCallStatement(stmt->nodes[0], env, variableName,dummyVar);
 		}
 		else if (stmt->nodes[0]->name == "VarDeclStmt")
 		{
@@ -2839,22 +2650,17 @@ liaVariable liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& th
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 
-			if (stmt->nodes[0]->nodes.size() == 1)
-			{
-				// return without arguments
-			}
-			else
+			if (stmt->nodes[0]->nodes.size() != 1)
 			{
 				// return <expression>
 				evaluateExpression(stmt->nodes[0]->nodes[0], env, retVal);
 			}
 
-			retVal.name = "lia-ret-val"; // gah
-			return retVal;
+			return true;
 		}
 	}
 
-	return retVal;
+	return false;
 }
 
 int liaInterpreter::storeGlobalVariables(std::shared_ptr<peg::Ast> theAst)
@@ -2902,35 +2708,32 @@ void liaInterpreter::exeCute(const std::shared_ptr<peg::Ast>& theAst,std::vector
 	// in the mean time, we can create "environments" (scopes), that is list of variables, with types and values
 	// there should be a global scope, I guess. Even if global variables suck
 	// UPDATE: at the moment we don't handle the global scope
+	// UPDATE2: yes, we do
 
 	liaEnvironment curEnv;
 
-	for (liaFunction f : functionList)
-	{
-		if (f.name == "main")
-		{
-			// inject "params" into the environment
-			liaVariable parms;
+	liaFunction f = functionMap["main"];
+	// inject "params" into the environment
+	liaVariable parms;
 			
-			parms.name = "params";
-			parms.type = liaVariableType::array;
-			for (std::string s: params)
-			{
-				liaVariable p;
-				p.type = liaVariableType::string;
-				p.value = s;
-				parms.vlist.push_back(p);
-			}
-			addvarOrUpdateEnvironment(&parms, &curEnv, 0);
-
-			//std::cout << "Executing main" << std::endl;
-			//std::cout << peg::ast_to_s(f.functionCodeBlockAst);
-			assert(f.functionCodeBlockAst->name == "CodeBlock");
-
-			// execute each statement in code block
-			exeCuteCodeBlock(f.functionCodeBlockAst,&curEnv);
-		}
+	parms.name = "params";
+	parms.type = liaVariableType::array;
+	for (std::string s: params)
+	{
+		liaVariable p;
+		p.type = liaVariableType::string;
+		p.value = s;
+		parms.vlist.push_back(p);
 	}
+	addvarOrUpdateEnvironment(&parms, &curEnv, 0);
+
+	//std::cout << "Executing main" << std::endl;
+	//std::cout << peg::ast_to_s(f.functionCodeBlockAst);
+	assert(f.functionCodeBlockAst->name == "CodeBlock");
+
+	// execute each statement in code block
+	liaVariable dummRetVal;
+	exeCuteCodeBlock(f.functionCodeBlockAst,&curEnv, dummRetVal);
 }
 
 liaInterpreter::~liaInterpreter()

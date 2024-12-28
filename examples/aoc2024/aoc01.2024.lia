@@ -48,7 +48,7 @@ fn part1(arr)
         idx+=1;
     }
 
-    print("Part 1:",totalSum);
+    print("Part 1:",totalSum," (2166959)");
 }
 
 fn countOccurrencies(n,arr)
@@ -85,7 +85,7 @@ fn part2(arr)
         totSimScore+=occ*num;
     }
 
-    print("Part 2:",totSimScore);
+    print("Part 2:",totSimScore," (23741109)");
 }
 
 fn main(params)

@@ -77,7 +77,7 @@ fn part1(arr)
         }
     }
 
-    print("Part 1:",totSafe);
+    print("Part 1:",totSafe," (341)");
 }
 
 fn arrWithoutNumberAtPos(p,arr)
@@ -134,7 +134,7 @@ fn part2(arr)
         }
     }
 
-    print("Part 2:",totSafe);
+    print("Part 2:",totSafe," (404)");
 }
 
 fn main(params)

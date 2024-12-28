@@ -104,7 +104,7 @@ fn part1(arrz)
         }
     }
 
-    print("Part 1:",totMul);
+    print("Part 1:",totMul," (163931492)");
 }
 
 fn processSemaphores(isMulEnabled,str,idxMul)
@@ -191,12 +191,18 @@ fn part2(arrz)
         }
     }
 
-    print("Part 2:",totMul);
+    print("Part 2:",totMul," (76911921)");
 }
 
 fn main(params)
 {
+    t0=getMillisecondsSinceEpoch();
+
     sarr=readInput();
     part1(sarr);
     part2(sarr);
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
 }

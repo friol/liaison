@@ -166,7 +166,7 @@ fn part1(arr)
     simulate(glbinitialC,glbinitialR);
 
     //printMap();
-    print("Part 1:",countXs());
+    print("Part 1:",countXs()," (4826)");
 }
 
 fn clearMap()
@@ -238,12 +238,18 @@ fn part2()
         pnum+=1;
     }
 
-    print("Part 2:",numLoops);
+    print("Part 2:",numLoops," (1721)");
 }
 
 fn main(params)
 {
+    t0=getMillisecondsSinceEpoch();
+
     sarr=readInput();
     part1(sarr);
     part2();
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
 }

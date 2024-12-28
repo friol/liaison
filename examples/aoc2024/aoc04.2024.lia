@@ -144,7 +144,7 @@ fn countXmases()
         r+=1;
     }
 
-    print("Part 1:",totXmases);
+    print("Part 1:",totXmases," (2575)");
 }
 
 fn part1(arr)
@@ -192,7 +192,7 @@ fn countMASCrossed()
         r+=1;
     }
 
-    print("Part 2:",totXmases);
+    print("Part 2:",totXmases," (2041)");
 }
 
 fn part2(arr)

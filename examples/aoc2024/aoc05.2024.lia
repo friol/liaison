@@ -120,7 +120,7 @@ fn part1(arr)
         }
     }
 
-    print("Part 1:",totSum);
+    print("Part 1:",totSum," (5639)");
 }
 
 fn reorder(pl,rulesArr)
@@ -200,12 +200,18 @@ fn part2(arr)
         }
     }
 
-    print("Part 2:",totSum);
+    print("Part 2:",totSum," (5273)");
 }
 
 fn main(params)
 {
+    t0=getMillisecondsSinceEpoch();
+
     sarr=readInput();
     part1(sarr);
     part2(sarr);
+
+    t1=getMillisecondsSinceEpoch();
+    t1-=t0;
+    print("Execution time:",t1);
 }

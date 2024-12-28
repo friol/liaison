@@ -82,13 +82,12 @@ public:
 	}
 };
 
-
 class liaInterpreter
 {
 private:
 
 	liaEnvironment globalScope;
-	std::vector<liaFunction> functionList;
+	std::unordered_map<std::string, liaFunction> functionMap;
 
 	int validateMainFunction(std::shared_ptr<peg::Ast> theAst);
 
@@ -103,10 +102,8 @@ private:
 
 	void evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar);
 
-	liaVariable exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-
-	liaVariable exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,std::string varName);
-	liaVariable exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
+	void exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,std::string varName,liaVariable& retVal);
+	void exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVal);
 	void exeCuteVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	void exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
@@ -119,18 +116,20 @@ private:
 	void exeCuteDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	void exeCuteModuloStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
 	
-	liaVariable exeCuteWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	liaVariable exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	liaVariable exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env);
-	
+	bool exeCuteWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, liaVariable& retVal);
+	bool exeCuteForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, liaVariable& retVal);
+	bool exeCuteIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, liaVariable& retVar);
+	bool exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVal);
+
 	void innerPrint(liaVariable& var);
 	void exeCuteLibFunctionPrint(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env);
-	liaVariable exeCuteLibFunctionReadFile(std::string fname,int linenum);
+	void exeCuteLibFunctionReadFile(std::string fname,int linenum, liaVariable& retVar);
 
-	liaVariable customFunctionCall(std::string& fname, std::vector<liaVariable>* parameters, liaEnvironment* env,size_t lineNum);
+	void customFunctionCall(std::string& fname, std::vector<liaVariable>* parameters, liaEnvironment* env,size_t lineNum,liaVariable& retVal);
 
 	void addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine);
 
+	liaVariable* findVar(std::string& varName, size_t& curLine, liaEnvironment* env);
 	void fatalError(std::string err);
 
 public:
@@ -140,7 +139,7 @@ public:
 
 	int storeGlobalVariables(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
-	std::vector<liaFunction>& getLiaFunctions() { return functionList; }
+	std::unordered_map<std::string, liaFunction>& getLiaFunctions() { return functionMap; }
 	void dumpFunctions();
 	
 	void exeCute(const std::shared_ptr<peg::Ast>& theAst,std::vector<std::string> params);
