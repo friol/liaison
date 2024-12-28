@@ -46,9 +46,9 @@ int main(int argc,char** argv)
 		//sourceFileName = "d:\\prova\\aoc2023.17.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
-		sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc24.2024.lia";
+		//sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc24.2024.lia";
 		//sourceFileName = "d:\\prova\\piquest.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
