@@ -133,14 +133,11 @@ fn part1and2(arr)
         opsArr.add(opzz);
     }
 
-    //
-
     idx=0;
     totSum=0L;
     possibleOps=["+","*"];
     foreach (res in rezArr)
     {
-        //print("solving ",res);
         if (canBeTrue(res,opsArr[idx],possibleOps))
         {
             totSum+=res;
@@ -149,16 +146,13 @@ fn part1and2(arr)
         idx+=1;
     }
 
-    print("Part 1:",totSum);
-
-    //
+    print("Part 1:",totSum," (20665830408335)");
 
     idx=0;
     totSum=0L;
     possibleOps=["+","*","||"];
     foreach (res in rezArr)
     {
-        //print("solving ",res);
         if (canBeTrue(res,opsArr[idx],possibleOps))
         {
             totSum+=res;
@@ -167,7 +161,7 @@ fn part1and2(arr)
         idx+=1;
     }
 
-    print("Part 2:",totSum);
+    print("Part 2:",totSum," (354060705047464)");
 }
 
 fn main(params)

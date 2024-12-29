@@ -587,31 +587,10 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 	}
 	else if (theAst->nodes[0]->name == "VariableName")
 	{
-		std::string varName;
-		varName += theAst->nodes[0]->token;
+		size_t lineNum = theAst->nodes[0]->line;
+		std::string varName = theAst->nodes[0]->token_to_string();
 
-		liaVariable* v = nullptr;
-		if (env->varMap.find(varName) == env->varMap.end())
-		{
-			if (globalScope.varMap.find(varName) == globalScope.varMap.end())
-			{
-				// variable name not found
-				std::string err;
-				size_t lineNum = theAst->nodes[0]->line;
-				err += "Variable [" + varName + "] not found at line " + std::to_string(lineNum) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-			else
-			{
-				v = &globalScope.varMap[varName];
-			}
-		}
-		else
-		{
-			v = &env->varMap[varName];
-		}
-
+		liaVariable* v = findVar(varName, lineNum, env);
 		if (v->type == liaVariableType::integer)
 		{
 			int val2print = std::get<int>(v->value);
@@ -657,12 +636,8 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 	}
 	else if (theAst->nodes[0]->name == "StringLiteral")
 	{
-		std::string stringVal;
-		stringVal += theAst->nodes[0]->token;
-		std::regex quote_re("\"");
-
 		retVar.type = liaVariableType::string;
-		retVar.value = std::regex_replace(stringVal, quote_re, "");
+		retVar.value = theAst->nodes[0]->token_to_string();
 	}
 	else if (theAst->nodes[0]->name == "LongNumber")
 	{
@@ -856,38 +831,26 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		//std::cout << peg::ast_to_s(theAst->nodes[0]);
 		size_t lineNum = theAst->nodes[0]->line;
 
-		std::string arrName;
-		arrName += theAst->nodes[0]->nodes[0]->token;
-
-		std::vector<liaVariable> vIdxArr;
-		for (auto& node : theAst->nodes[0]->nodes)
-		{
-			if (node->name == "Expression")
-			{
-				liaVariable vIdx;
-				evaluateExpression(node, env,vIdx);
-				vIdxArr.push_back(vIdx);
-			}
-		}
-
+		std::string arrName=theAst->nodes[0]->nodes[0]->token_to_string();
 		liaVariable* pVar = findVar(arrName, lineNum, env);
+
 		if (pVar->type == liaVariableType::array)
 		{
-			liaVariable* pArr = pVar;
-
-			for (unsigned int aidx=0;aidx<vIdxArr.size();aidx++)
+			for (int aidx = 1;aidx < theAst->nodes[0]->nodes.size();aidx++)
 			{
 				//std::cout << "idx is " << std::get<int>(vIdxArr[aidx].value) << std::endl;
-				unsigned int arrIdx = std::get<int>(vIdxArr[aidx].value);
+				liaVariable vIdx;
+				evaluateExpression(theAst->nodes[0]->nodes[aidx], env, vIdx);
+				unsigned int arrIdx = std::get<int>(vIdx.value);
 
 				unsigned int limit;
-				if (pArr->type == liaVariableType::array)
+				if (pVar->type == liaVariableType::array)
 				{
-					limit = (unsigned int)pArr->vlist.size();
+					limit = (unsigned int)pVar->vlist.size();
 				}
-				else if (pArr->type == liaVariableType::string)
+				else if (pVar->type == liaVariableType::string)
 				{
-					limit = (unsigned int)std::get<std::string>(pArr->value).size();
+					limit = (unsigned int)std::get<std::string>(pVar->value).size();
 				}
 				else
 				{
@@ -901,29 +864,29 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 				{
 					std::string err;
 					err += "Array index out of range at " + std::to_string(lineNum) + ". Requested index: "+ 
-						std::to_string(arrIdx)+" size of array: "+ std::to_string(pArr->vlist.size())+". ";
+						std::to_string(arrIdx)+" size of array: "+ std::to_string(pVar->vlist.size())+". ";
 					err += "Terminating.";
 					fatalError(err);
 				}
 
-				if (pArr->type == liaVariableType::array)
+				if (pVar->type == liaVariableType::array)
 				{
-					pArr = &pArr->vlist[arrIdx];
+					pVar = &pVar->vlist[arrIdx];
 
-					if (aidx == (vIdxArr.size() - 1))
+					if (aidx == (theAst->nodes[0]->nodes.size() - 1))
 					{
-						retVar.type = pArr->type;
-						retVar.value = pArr->value;
-						retVar.vlist = pArr->vlist;
-						retVar.vMap = pArr->vMap;
+						retVar.type = pVar->type;
+						retVar.value = pVar->value;
+						retVar.vlist = pVar->vlist;
+						retVar.vMap = pVar->vMap;
 					}
 				}
-				else if (pArr->type == liaVariableType::string)
+				else if (pVar->type == liaVariableType::string)
 				{
 					// we assume this is the last subscript of the array
 					// otherwise, everything will crash
 					retVar.type = liaVariableType::string;
-					std::string s = std::get<std::string>(pArr->value);
+					std::string s = std::get<std::string>(pVar->value);
 					std::string rv = s.substr(arrIdx, 1);
 					retVar.value = rv;
 				}
@@ -931,6 +894,14 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		}
 		else if (pVar->type == liaVariableType::dictionary)
 		{
+			std::vector<liaVariable> vIdxArr;
+			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
+			{
+				liaVariable vIdx;
+				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
+				vIdxArr.push_back(vIdx);
+			}
+
 			if (vIdxArr.size() != 1)
 			{
 				std::string err;
@@ -959,6 +930,14 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		}
 		else if (pVar->type == liaVariableType::string)
 		{
+			std::vector<liaVariable> vIdxArr;
+			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
+			{
+				liaVariable vIdx;
+				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
+				vIdxArr.push_back(vIdx);
+			}
+
 			if (vIdxArr.size() != 1)
 			{
 				std::string err;
@@ -1536,53 +1515,24 @@ void liaInterpreter::exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::
 
 	liaVariable value2assign;
 	evaluateExpression(theAst->nodes[1], env,value2assign);
+
 	std::string arrayName;
 	arrayName+=theAst->nodes[0]->nodes[0]->token;
-
-	liaVariable* pArr = nullptr;
-	if (globalScope.varMap.find(arrayName) == globalScope.varMap.end())
-	{
-		if (env->varMap.find(arrayName) == env->varMap.end())
-		{
-			std::string err;
-			err += "Array \"" + arrayName + "\" not found at line " + std::to_string(lineNum) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-		else
-		{
-			pArr = &env->varMap[arrayName];
-		}
-	}
-	else
-	{
-		pArr = &globalScope.varMap[arrayName];
-	}
-
-	liaVariable arrayIndex;
-	evaluateExpression(theAst->nodes[0]->nodes[1], env,arrayIndex);
+	liaVariable* pArr = findVar(arrayName, lineNum, env);
 
 	if (pArr->type == liaVariableType::array)
 	{
-		std::vector<liaVariable> vIdxArr;
-		for (auto& node : theAst->nodes[0]->nodes)
+		liaVariable vIdx;
+		int arrIdx;
+		for (int idx=1;idx<theAst->nodes[0]->nodes.size();idx++)
 		{
-			if (node->name == "Expression")
-			{
-				liaVariable vIdx;
-				evaluateExpression(node, env,vIdx);
-				vIdxArr.push_back(vIdx);
-			}
-		}
-
-		for (auto& idx : vIdxArr)
-		{
-			int arrIdx = std::get<int>(idx.value);
+			evaluateExpression(theAst->nodes[0]->nodes[idx], env, vIdx);
+			arrIdx = std::get<int>(vIdx.value);
 
 			if (arrIdx >= pArr->vlist.size())
 			{
 				std::string err;
-				err += "Array index out of range at " + std::to_string(lineNum) + ". ";
+				err += "Array index out of range in array assignment at " + std::to_string(lineNum) + ". ";
 				err += "Terminating.";
 				fatalError(err);
 			}
@@ -1590,19 +1540,20 @@ void liaInterpreter::exeCuteArrayAssignmentStatement(const std::shared_ptr<peg::
 			pArr = &pArr->vlist[arrIdx];
 		}
 
-		assert(arrayIndex.type == liaVariableType::integer);
-		//assert(std::get<int>(arrayIndex.value) < pArr->vlist.size());
-
 		pArr->value = value2assign.value;
 		pArr->vlist = value2assign.vlist;
 	}
 	else if (pArr->type == liaVariableType::dictionary)
 	{
+		liaVariable arrayIndex;
+		evaluateExpression(theAst->nodes[0]->nodes[1], env,arrayIndex);
 		assert(arrayIndex.type == liaVariableType::string);
 		pArr->vMap[std::get<std::string>(arrayIndex.value)] = value2assign;
 	}
 	else if (pArr->type == liaVariableType::string)
 	{
+		liaVariable arrayIndex;
+		evaluateExpression(theAst->nodes[0]->nodes[1], env, arrayIndex);
 		assert(arrayIndex.type == liaVariableType::integer);
 		int iidx = std::get<int>(arrayIndex.value);
 		std::string theString = std::get<std::string>(pArr->value);
@@ -2650,7 +2601,7 @@ bool liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,li
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
 
-			if (stmt->nodes[0]->nodes.size() != 1)
+			if (stmt->nodes[0]->nodes.size() != 0)
 			{
 				// return <expression>
 				evaluateExpression(stmt->nodes[0]->nodes[0], env, retVal);

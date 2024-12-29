@@ -65,36 +65,37 @@ liaParser::liaParser()
 {
 	// instantiate your grammar here
 
-	auto grammar=(R"(
+	auto grammar (R"(
 	LiaProgram <- ( TopLevelStmt )*
 
-	TopLevelStmt <- FuncDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / GlobalVarDecl / EndLine
+	TopLevelStmt <- FuncDeclStmt / MultiLineCommentStmt / SingleLineCommentStmt / GlobalVarDecl 
 
-	Stmt <- IfStmt / ReturnStmt / FuncCallStmt / VarDeclStmt / SingleLineCommentStmt / MultiLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
+	Stmt <- IfStmt / ReturnStmt / FuncCallStmt / VarDeclStmt / MultiLineCommentStmt / SingleLineCommentStmt / IncrementStmt / DecrementStmt / VarFuncCallStmt / 
 			RshiftStmt / LshiftStmt / MultiplyStmt / LogicalAndStmt / LogicalOrStmt / WhileStmt / ForeachStmt / ArrayAssignmentStmt / 
-			DivideStmt / ModuloStmt / EndLine
+			DivideStmt / ModuloStmt 
 
-	CodeBlock <- [ \t]* '{' ( Stmt )* [ \t]* '}'
+	CodeBlock <- '{' ( Stmt )* '}'
 
-	SingleLineCommentStmt <- [ \t]* '//' [^\r\n]* EndLine
-	MultiLineCommentStmt <- [ \t]* '/*' [^*/]* '*/' EndLine
+    LineEnd      <-  '\n'
+    SingleLineCommentStmt  <-  '//\n' / '//' (!LineEnd .)* LineEnd
+	MultiLineCommentStmt <- '/*' [^*/]* '*/' 
 
-	GlobalVarDecl <- [ \t]* VariableName '=' Expression ';'  EndLine?
+	GlobalVarDecl <- VariableName '=' Expression ';'  
 
-	IfStmt <- [ \t]* 'if' '(' Condition ')' [\r\n]? CodeBlock '\n' ('else' [\r\n]? CodeBlock)?
+	IfStmt <- 'if' '(' Condition ')' CodeBlock ('else' CodeBlock)?
 
-	IncrementStmt <- [ \t]* (ArraySubscript / VariableName) '+=' Expression ';' EndLine?
-	DecrementStmt <- [ \t]* VariableName '-=' Expression ';' EndLine?
-	RshiftStmt <- [ \t]* VariableName '>>=' Expression ';' EndLine?
-	LshiftStmt <- [ \t]* VariableName '<<=' Expression ';' EndLine? 
-	MultiplyStmt <- [ \t]* VariableName '*=' Expression ';' EndLine? 
-	DivideStmt <- [ \t]* VariableName '/=' Expression ';' EndLine? 
-	ModuloStmt <- [ \t]* VariableName '%=' Expression ';' EndLine? 
-	LogicalAndStmt <- [ \t]* VariableName '&=' Expression ';' EndLine? 
-	LogicalOrStmt <- [ \t]* VariableName '|=' Expression ';' EndLine? 
+	IncrementStmt <- (ArraySubscript / VariableName) '+=' Expression ';' 
+	DecrementStmt <- VariableName '-=' Expression ';' 
+	RshiftStmt <- VariableName '>>=' Expression ';' 
+	LshiftStmt <- VariableName '<<=' Expression ';'  
+	MultiplyStmt <- VariableName '*=' Expression ';'  
+	DivideStmt <- VariableName '/=' Expression ';'  
+	ModuloStmt <- VariableName '%=' Expression ';'  
+	LogicalAndStmt <- VariableName '&=' Expression ';'  
+	LogicalOrStmt <- VariableName '|=' Expression ';'  
 
-	WhileStmt <- [ \t]* 'while' '(' Condition ')' [\r\n]? CodeBlock
-	ForeachStmt <- [ \t]* 'foreach' '(' VariableName 'in' Expression ')' [\r\n]? CodeBlock
+	WhileStmt <- 'while' '(' Condition ')' CodeBlock
+	ForeachStmt <- 'foreach' '(' VariableName 'in' Expression ')' CodeBlock
 
 	Condition <- InnerCondition ( CondOperator Condition )*
 	InnerCondition <- Expression (Relop Expression)* / '(' Condition ')'
@@ -102,14 +103,14 @@ liaParser::liaParser()
 
 	Relop <- '==' / '<=' / '<' / '>=' / '>' / '!='
 
-	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' [\r\n]? CodeBlock
+	FuncDeclStmt <- 'fn' FuncName '(' ( FuncParamList )* ')' CodeBlock
 	FuncParamList <- FuncParam ( ',' FuncParam )*
 	FuncParam <- < [a-zA-Z][0-9a-zA-Z_]* >
 
-	VarFuncCallStmt <- [ \t]* VariableName '.' FuncName '(' ( ArgList )* ')' ';' EndLine?
+	VarFuncCallStmt <- VariableName '.' FuncName '(' ( ArgList )* ')' ';' 
 
-	ArrayAssignmentStmt <- [ \t]* ArraySubscript '=' Expression ';' EndLine?
-	VarDeclStmt <- [ \t]* VariableName '=' Expression ';'  EndLine?
+	ArrayAssignmentStmt <- ArraySubscript '=' Expression ';' 
+	VarDeclStmt <- VariableName '=' Expression ';'  
 	VariableName <- < [a-zA-Z][0-9a-zA-Z_]* >
 
 	Expression <- InnerExpression ( ExprOperator InnerExpression )*
@@ -120,7 +121,7 @@ liaParser::liaParser()
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >
 	LongNumber <- < ('-')?[0-9]+[L] >
-	StringLiteral <- < '\"' [^\r\n\"]* '\"' >
+	StringLiteral <- '\"' < [^\r\n\"]* > '\"'
 	ArrayInitializer <- '[' ExpressionList? ']'
 	DictInitializer <- '{' (DictList)* '}'
 	BitwiseNot <- '~' Expression
@@ -137,15 +138,14 @@ liaParser::liaParser()
 	Property <- 'length' / 'keys'
 	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
 
-	FuncCallStmt <- [ \t]* FuncName '(' ( ArgList )* ')' ';' EndLine?
-	RFuncCall <- [ \t]* FuncName '(' ( ArgList )* ')'
+	FuncCallStmt <- FuncName '(' ( ArgList )* ')' ';' 
+	RFuncCall <- FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z_][0-9a-zA-Z_]* >
 	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
-	ReturnStmt <- [ \t]* 'return' Expression? ';' EndLine?
+	ReturnStmt <- 'return' Expression? ';' 
 
-	EndLine <- [ \t]* [\r\n]
-	%whitespace <- [ \t]*
+	%whitespace  <-  [ \t\r\n]*
 	)");
 
 	pegParser = new peg::parser();
@@ -161,6 +161,19 @@ liaParser::liaParser()
 		std::cout << "Error: grammar loading failed." << std::endl;
 	}
 	assert(grammarIsOk);
+	
+	/*(*pegParser)["IntegerNumber"] = [](const peg::SemanticValues& vs)
+	{
+		//std::cout << "ttn" << vs.token_to_number<int>() << std::endl;
+		return vs.token();
+	};*/
+
+	//(*pegParser)["IntegerNumber"]=[](const peg::SemanticValues& vs, std::any& dt) 
+	//{
+	//	std::cout << "action!" << std::endl;
+	//};
+
+	//pegParser = ppar;
 }
 
 int liaParser::parseCode(std::string c)
@@ -172,6 +185,7 @@ int liaParser::parseCode(std::string c)
 		std::cout << "liaison was unable to parse the provided code." << std::endl;
 		return 1;
 	}
+	pegParser->optimize_ast(theAst);
 
 	return 0;
 }

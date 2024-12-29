@@ -417,7 +417,7 @@ fn test23()
 
 fn test24()
 {
-    // minus expression
+    /* minus expression */
     n=-2;
     m=-n;
     if (m==2)
@@ -448,7 +448,7 @@ fn test25helper()
 
 fn test25()
 {
-    // circuit breaking while/if statements
+    /* circuit breaking while-if statements */
     val=test25helper();
     if (val==5)
     {
@@ -480,7 +480,7 @@ fn test26()
 
 fn test27()
 {
-    // slice function
+    /* slice function */
     s="1234567890";
 
     s2=s.slice(1,3);
@@ -561,5 +561,5 @@ fn main(params)
 
     print(res,"/27 tests passed.");
     print("Execution time:",t1);
-    // exec. time around 472ms in debug on my pc
+    /* exec. time around 472ms in debug on my pc */
 }

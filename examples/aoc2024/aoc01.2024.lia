@@ -6,7 +6,6 @@
 
 fn readInput()
 {
-    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc01.2024.test.txt");
     sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc01.2024.txt");
     return sarr;
 }
@@ -36,14 +35,11 @@ fn part1(arr)
     leftList.sort();
     rightList.sort();
 
-    //
-
     totalSum=0;
     idx=0;
     while (idx<leftList.length)
     {
         dist=calcDistance(leftList[idx],rightList[idx]);
-        //print(dist);
         totalSum+=dist;
         idx+=1;
     }

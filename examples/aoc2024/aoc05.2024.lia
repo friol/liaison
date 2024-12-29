@@ -6,7 +6,6 @@
 
 fn readInput()
 {
-    //sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc2024.05.test.txt");
     sarr=readTextFileLineByLine("d:\prova\aoc2024\aoc05.2024.txt");
     return sarr;
 }
@@ -14,7 +13,6 @@ fn readInput()
 fn findMiddleNum(l)
 {
     idx=l.length/2;
-    //print("idx is ",idx);
     return l[idx];
 }
 
@@ -26,11 +24,9 @@ fn isCompliant(index,pl,rules)
     {
         r0=(rule[0]);
         r1=(rule[1]);
-        //print("n0:",n0," r0:[",r0,"],",r1,"-",pl);
 
         if (n0==r0)
         {
-            //print(pl,"-",r1);
             idxr1=pl.find(r1);
             if (idxr1!=-1)
             {
@@ -43,7 +39,6 @@ fn isCompliant(index,pl,rules)
 
         if (n0==r1)
         {
-            //print(pl,"-",r0);
             idxr0=pl.find(r0);
             if (idxr0!=-1)
             {
@@ -111,10 +106,8 @@ fn part1(arr)
     totSum=0;
     foreach (pl in pageLists)
     {
-        //print("Checking ",pl);
         if (respectsRules(pl,rulesArr))
         {
-            //print(pl," is valid");
             middleNum=findMiddleNum(pl);
             totSum+=middleNum;
         }
@@ -187,13 +180,9 @@ fn part2(arr)
     totSum=0;
     foreach (pl in pageLists)
     {
-        //print("Checking ",pl);
         if (!respectsRules(pl,rulesArr))
         {
-            //print(pl," is not valid");
             reorderedList=reorder(pl,rulesArr);
-
-            //print("Reordered: ",reorderedList);
 
             middleNum=findMiddleNum(reorderedList);
             totSum+=middleNum;
