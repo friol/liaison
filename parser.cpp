@@ -12,11 +12,11 @@
 // if else if come on
 // v[x][y][...][z].length bugs
 // arr[x][...][z].function()
-// check why sub-indexing seems slow
 // floats
 // circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
 
+// check why sub-indexing seems slow // DONE
 // convert function list to function hashmap // DONE
 // allow v[x].length // DONE
 // globals (yep) (but only if they start with 'glb') // DONE
@@ -121,7 +121,7 @@ liaParser::liaParser()
 	BooleanConst <- < 'true' > / < 'false' >
 	IntegerNumber <- < ('-')?[0-9]+ >
 	LongNumber <- < ('-')?[0-9]+[L] >
-	StringLiteral <- '\"' < [^\r\n\"]* > '\"'
+	StringLiteral <- < '\"' < [^\r\n\"]* > '\"' >
 	ArrayInitializer <- '[' ExpressionList? ']'
 	DictInitializer <- '{' (DictList)* '}'
 	BitwiseNot <- '~' Expression

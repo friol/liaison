@@ -1151,17 +1151,9 @@ void liaInterpreter::innerPrint(liaVariable& var)
 	}
 	else
 	{
-		if (var.type == liaVariableType::string)
-		{
-			std::string vv;
-			vv += std::get<std::string>(var.value);
-		}
-
 		std::visit([](const auto& x) { std::cout << x; }, var.value);
 		//std::cout << " ";
 	}
-
-
 }
 
 void liaInterpreter::exeCuteLibFunctionPrint(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env)
