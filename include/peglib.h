@@ -4202,6 +4202,8 @@ template <typename Annotation> struct AstBase : public Annotation {
   const size_t column = 1;
 
   const std::string name;
+  int iName=0; // friol 20241229
+
   size_t position;
   size_t length;
   const size_t choice_count;
@@ -4214,6 +4216,7 @@ template <typename Annotation> struct AstBase : public Annotation {
 
   const bool is_token;
   const std::string_view token;
+  int iNumber;
 
   std::vector<std::shared_ptr<AstBase<Annotation>>> nodes;
   std::weak_ptr<AstBase<Annotation>> parent;

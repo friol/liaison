@@ -176,6 +176,85 @@ liaParser::liaParser()
 	//pegParser = ppar;
 }
 
+void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
+{
+	std::map<std::string, grammarElement> grammarMap;
+
+	grammarMap["TopLevelStmt"] = grammarElement::NotUsed;
+	grammarMap["Stmt"] = grammarElement::NotUsed;
+	grammarMap["Relop"] = grammarElement::NotUsed;
+	grammarMap["SingleLineCommentStmt"] = grammarElement::NotUsed;
+	grammarMap["MultiLineCommentStmt"] = grammarElement::NotUsed;
+	grammarMap["LineEnd"] = grammarElement::NotUsed;
+	grammarMap["ExprOperator"] = grammarElement::NotUsed;
+	grammarMap["FuncParam"] = grammarElement::NotUsed;
+	grammarMap["Property"] = grammarElement::NotUsed;
+	grammarMap["CondOperator"] = grammarElement::NotUsed;
+	
+	grammarMap["IntegerNumber"] = grammarElement::IntegerNumber;
+	grammarMap["LongNumber"] = grammarElement::LongNumber;
+	grammarMap["BooleanConst"] = grammarElement::BooleanConst;
+	grammarMap["StringLiteral"] = grammarElement::StringLiteral;
+	grammarMap["ArrayInitializer"] = grammarElement::ArrayInitializer;
+	grammarMap["DictInitializer"] = grammarElement::DictInitializer;
+	grammarMap["FuncParamList"] = grammarElement::FuncParamList;
+	grammarMap["ExpressionList"] = grammarElement::ExpressionList;
+
+	grammarMap["FuncDeclStmt"] = grammarElement::FuncDeclStmt;
+	grammarMap["ForeachStmt"] = grammarElement::ForeachStmt;
+	grammarMap["WhileStmt"] = grammarElement::WhileStmt;
+	grammarMap["IncrementStmt"] = grammarElement::IncrementStmt;
+	grammarMap["DecrementStmt"] = grammarElement::DecrementStmt;
+	grammarMap["FuncCallStmt"] = grammarElement::FuncCallStmt;
+	grammarMap["BitwiseNot"] = grammarElement::BitwiseNot;
+	grammarMap["VarDeclStmt"] = grammarElement::VarDeclStmt;
+	grammarMap["ReturnStmt"] = grammarElement::ReturnStmt;
+	grammarMap["VarFuncCallStmt"] = grammarElement::VarFuncCallStmt;
+	grammarMap["ArrayAssignmentStmt"] = grammarElement::ArrayAssignmentStmt;
+	grammarMap["RFuncCall"] = grammarElement::RFuncCall;
+	grammarMap["IfStmt"] = grammarElement::IfStmt;
+
+	grammarMap["RshiftStmt"] = grammarElement::RshiftStmt;
+	grammarMap["LshiftStmt"] = grammarElement::LshiftStmt;
+	grammarMap["ModuloStmt"] = grammarElement::ModuloStmt;
+	grammarMap["LogicalAndStmt"] = grammarElement::LogicalAndStmt;
+	grammarMap["LogicalOrStmt"] = grammarElement::LogicalOrStmt;
+	grammarMap["MultiplyStmt"] = grammarElement::MultiplyStmt;
+	grammarMap["DivideStmt"] = grammarElement::DivideStmt;
+
+	grammarMap["CodeBlock"] = grammarElement::CodeBlock;
+	grammarMap["FuncName"] = grammarElement::FuncName;
+	grammarMap["ArgList"] = grammarElement::ArgList;
+	grammarMap["Expression"] = grammarElement::Expression;
+	grammarMap["NotExpression"] = grammarElement::NotExpression;
+	grammarMap["InnerExpression"] = grammarElement::InnerExpression;
+	grammarMap["MinusExpression"] = grammarElement::MinusExpression;
+	grammarMap["VariableName"] = grammarElement::VariableName;
+	grammarMap["ArraySubscript"] = grammarElement::ArraySubscript;
+	grammarMap["InnerCondition"] = grammarElement::InnerCondition;
+	grammarMap["Condition"] = grammarElement::Condition;
+	grammarMap["VariableWithFunction"] = grammarElement::VariableWithFunction;
+	grammarMap["VariableWithProperty"] = grammarElement::VariableWithProperty;
+
+	for (auto& node : ast->nodes)
+	{
+		if (grammarMap.find(node->name) == grammarMap.end())
+		{
+			std::cout << node->name << " not found in preprocessor array " << std::endl;
+
+		}
+
+		node->iName = grammarMap[node->name];
+		
+		if (node->iName == grammarElement::IntegerNumber)
+		{
+			node->iNumber = node->token_to_number<int>();
+		}
+
+		postProcessAst(node);
+	}
+}
+
 int liaParser::parseCode(std::string c)
 {
 	pegParser->enable_ast();
@@ -186,6 +265,9 @@ int liaParser::parseCode(std::string c)
 		return 1;
 	}
 	pegParser->optimize_ast(theAst);
+
+	// post-process grammar
+	postProcessAst(theAst);
 
 	return 0;
 }
