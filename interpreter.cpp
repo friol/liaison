@@ -25,7 +25,7 @@ int liaInterpreter::validateMainFunction(std::shared_ptr<peg::Ast> theAst)
 	bool paramsFound = false;
 	for (auto node : theAst->nodes)
 	{
-		if (node->name == "TopLevelStmt")
+		if (node->iName == grammarElement::TopLevelStmt)
 		{
 			for (auto innerNode : node->nodes)
 			{
@@ -106,7 +106,7 @@ void liaInterpreter::getFunctions(std::shared_ptr<peg::Ast> theAst)
 
 	for (auto node : theAst->nodes)
 	{
-		if (node->name == "TopLevelStmt")
+		if (node->iName == grammarElement::TopLevelStmt)
 		{
 			for (auto innerNode : node->nodes)
 			{
@@ -221,372 +221,348 @@ bool compareStringVars(liaVariable i1, liaVariable i2)
 
 void liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env, std::string varName,liaVariable& retVal)
 {
-	//liaVariable retVal;
+	//std::cout << peg::ast_to_s(theAst);
+
 	std::vector<liaVariable> parameters;
 
 	size_t lineNum = theAst->line;
 
-	// get variable value
-	liaVariable* pvarValue=nullptr;
+	// get variable
+	liaVariable* pvarValue = findVar(varName, lineNum, env);
 
-	if (env->varMap.find(varName) == env->varMap.end())
+	if (theAst->nodes.size() == 3)
 	{
-		if (globalScope.varMap.find(varName) == globalScope.varMap.end())
+		for (auto& expr : theAst->nodes[2]->nodes)
 		{
-			// variable name not found
+			assert(expr->iName == grammarElement::Expression);
+			liaVariable arg;
+			evaluateExpression(expr, env, arg);
+			parameters.push_back(arg);
+		}
+	}
+
+	const int funId = theAst->nodes[1]->tokenId;
+
+	if (funId == libMethodId::MethodSplit)
+	{
+		if (pvarValue->type != liaVariableType::string)
+		{
 			std::string err;
-			err += "Variable [" + varName + "] not found in method call at line " + std::to_string(lineNum) + ". ";
+			err += "Split can be applied only to strings. ";
 			err += "Terminating.";
 			fatalError(err);
 		}
+					
+		assert(parameters.size() == 1);
+
+		retVal.type = liaVariableType::array;
+
+		std::string string2split = std::get<std::string>(pvarValue->value);
+		std::string delimiter = std::get<std::string>(parameters[0].value);
+		//std::cout << delimiter << std::endl;
+
+		size_t pos = 0;
+		std::string token;
+		while ((pos = string2split.find(delimiter)) != std::string::npos)
+		{
+			token = string2split.substr(0, pos);
+			liaVariable varEl;
+			varEl.type = liaVariableType::string;
+			varEl.value = token;
+			retVal.vlist.push_back(varEl);
+			string2split.erase(0, pos + delimiter.length());
+		}
+
+		token = string2split.substr(0, pos);
+		liaVariable varEl;
+		varEl.type = liaVariableType::string;
+		varEl.value = token;
+		retVal.vlist.push_back(varEl);
+	}
+	else if (funId == libMethodId::MethodAdd)
+	{
+		// add element to an array
+		assert(pvarValue->type == liaVariableType::array);
+		assert(parameters.size() == 1);
+
+		pvarValue->vlist.push_back(parameters[0]);
+	}
+	else if (funId == libMethodId::MethodFindkey)
+	{
+		assert(parameters.size() == 1);
+		assert(pvarValue->type == liaVariableType::dictionary);
+
+		retVal.type = liaVariableType::integer;
+		retVal.value = -1;
+
+		if (parameters[0].type == liaVariableType::string)
+		{
+			std::string key2find = std::get<std::string>(parameters[0].value);
+			if (pvarValue->vMap.find(key2find) != pvarValue->vMap.end())
+			{
+				retVal.value = 1;
+			}
+		}
 		else
 		{
-			pvarValue = &globalScope.varMap[varName];
+			std::string err;
+			err += "Unhandled findKey type at " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+	}
+	else if (funId == libMethodId::MethodFind)
+	{
+		// s.find("value"), returns idx of found element, or -1 if not found
+		//assert(pvarValue->type == liaVariableType::array);
+		assert(parameters.size() == 1);
+
+		retVal.type = liaVariableType::integer;
+		retVal.value = -1;
+
+		if (parameters[0].type == liaVariableType::string)
+		{
+			std::string val2find=std::get<std::string>(parameters[0].value);
+
+			if (pvarValue->type == liaVariableType::array)
+			{
+				for (int idx = 0;idx < pvarValue->vlist.size();idx++)
+				{
+					if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
+					{
+						retVal.value = idx;
+						//return retVal;
+					}
+				}
+				/*liaVariable l2f;
+				l2f.value = val2find;
+				auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
+				//std::cout << pvarValue->vlist.end()-df << std::endl;
+				retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
+			}
+			else if (pvarValue->type == liaVariableType::string)
+			{
+				std::string s = std::get<std::string>(pvarValue->value);
+				const char* ptr = strstr(s.c_str(), val2find.c_str());
+				if (ptr == NULL)
+				{
+					retVal.value = -1;
+				}
+				else
+				{
+					const char* ptrbeg = s.c_str();
+					retVal.value = (int)(ptr-ptrbeg);
+				}
+
+				return;
+			}
+		}
+		else if (parameters[0].type == liaVariableType::integer)
+		{
+			int val2find = std::get<int>(parameters[0].value);
+			if (pvarValue->vlist.size() > 0)
+			{
+				//assert(pvarValue->vlist[0].type == liaVariableType::integer);
+				if (pvarValue->vlist[0].type != liaVariableType::integer)
+				{
+					std::string err;
+					err += "Searching an integer in an array with elements not of type integer at " + std::to_string(lineNum) + ". ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				/*for (int idx = 0;idx < pvarValue->vlist.size();idx++)
+				{
+					if (std::get<int>(pvarValue->vlist[idx].value) == val2find)
+					{
+						retVal.value = idx;
+						return;
+					}
+				}*/
+
+				liaVariable l2f;
+				l2f.value = val2find;
+				ptrdiff_t pos = std::distance(pvarValue->vlist.begin(), std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(), l2f));
+				if (pos >= (signed int)pvarValue->vlist.size())
+				{
+					retVal.value = -1;
+					return;
+				}
+				retVal.value = (int)pos;
+				return;
+			}
+		}
+		else if (parameters[0].type == liaVariableType::longint)
+		{
+			long long val2find = std::get<long long>(parameters[0].value);
+			if (pvarValue->vlist.size() > 0)
+			{
+				assert(pvarValue->vlist[0].type == liaVariableType::longint);
+
+				for (int idx = 0;idx < pvarValue->vlist.size();idx++)
+				{
+					if (std::get<long long>(pvarValue->vlist[idx].value) == val2find)
+					{
+						retVal.value = idx;
+						return;
+					}
+				}
+			}
+		}
+		else if (parameters[0].type == liaVariableType::array)
+		{
+			if (pvarValue->type != liaVariableType::array)
+			{
+				std::string err;
+				err += "You can only search an array inside an array at "+std::to_string(lineNum)+". ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			for (int idx = 0;idx < pvarValue->vlist.size();idx++)
+			{
+				if (liaVariableArrayComparison(pvarValue->vlist[idx],parameters[0]))
+				{
+					retVal.value = idx;
+					return;
+				}
+			}
+		}
+		else
+		{
+			std::string err;
+			err += "Unhandled find type at " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+	}
+	else if (funId == libMethodId::MethodReplace)
+	{
+		// s.replace(<string to replace>,<what to replace with>)
+		// replace all the occurrencies of a string with another string
+		assert(parameters.size() == 2);
+		assert(pvarValue->type == liaVariableType::string);
+
+		//std::cout << peg::ast_to_s(theAst);
+
+		std::string thes = std::get<std::string>(pvarValue->value);
+		std::string replaceWhat = std::get<std::string>(parameters[0].value);
+		std::string replaceWith = std::get<std::string>(parameters[1].value);
+
+		replaceAll(thes, replaceWhat, replaceWith);
+
+		retVal.type = liaVariableType::string;
+		retVal.value = thes;
+		return;
+	}
+	else if (funId == libMethodId::MethodSlice)
+	{
+		assert(parameters.size() == 2);
+		int beg = std::get<int>(parameters[0].value);
+		int end = std::get<int>(parameters[1].value);
+
+		if (pvarValue->type == liaVariableType::string)
+		{
+			std::string s = std::get<std::string>(pvarValue->value);
+
+			if (s.size() == 0)
+			{
+				retVal.type = liaVariableType::string;
+				retVal.value = s;
+				return;
+			}
+
+			std::string s2;
+			int idx = 0;
+			while ((idx < end) && (idx < s.size()))
+			{
+				if (idx >= beg)
+				{
+					s2 += s[idx];
+				}
+				idx += 1;
+			}
+
+			retVal.type = liaVariableType::string;
+			retVal.value = s2;
+			return;
+		}
+		else if (pvarValue->type == liaVariableType::array)
+		{
+			retVal.type = liaVariableType::array;
+			int idx = 0;
+			while (idx < end)
+			{
+				if (idx >= beg)
+				{
+					retVal.vlist.push_back(pvarValue->vlist[idx]);
+				}
+				idx += 1;
+			}
+
+			return;
+		}
+	}
+	else if (funId == libMethodId::MethodSort)
+	{
+		// sort monodimensional array
+		assert(pvarValue->type == liaVariableType::array);
+
+		if (parameters.size() != 0)
+		{
+			std::string err;
+			err += "Sort function doesn't accept parameters. ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
+		if (pvarValue->vlist.size() != 0)
+		{
+			if (pvarValue->vlist[0].type == liaVariableType::integer)
+			{
+				std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareIntVars);
+			}
+			else if (pvarValue->vlist[0].type == liaVariableType::string)
+			{
+				std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareStringVars);
+			}
+			else
+			{
+				// TODO: unsupported type in sort
+			}
+		}
+	}
+	else if (funId == libMethodId::MethodClear)
+	{
+		// clear something
+		if (pvarValue->type == liaVariableType::dictionary)
+		{
+			pvarValue->vMap.clear();
 		}
 	}
 	else
 	{
-		pvarValue = &env->varMap[varName];
+		// unknown method called
+		std::string err;
+		err += "Method name [" + theAst->nodes[1]->token_to_string() + "] not found. ";
+		err += "Terminating.";
+		fatalError(err);
 	}
-
-	for (auto& ch : theAst->nodes)
-	{
-		if (!ch->is_token)
-		{
-			if (ch->name == "ArgList")
-			{
-				for (auto& expr : ch->nodes)
-				{
-					assert(expr->name == "Expression");
-					liaVariable arg;
-					evaluateExpression(expr, env,arg);
-					parameters.push_back(arg);
-				}
-			}
-		}
-	}
-
-	for (auto& ch : theAst->nodes)
-	{
-		if (ch->is_token)
-		{
-			if (ch->name == "FuncName")
-			{
-				if (ch->token == "split")
-				{
-					if (pvarValue->type != liaVariableType::string)
-					{
-						std::string err;
-						err += "Split can be applied only to strings. ";
-						err += "Terminating.";
-						fatalError(err);
-					}
-					
-					assert(parameters.size() == 1);
-
-					retVal.type = liaVariableType::array;
-
-					std::string string2split = std::get<std::string>(pvarValue->value);
-					std::string delimiter = std::get<std::string>(parameters[0].value);
-					//std::cout << delimiter << std::endl;
-
-					size_t pos = 0;
-					std::string token;
-					while ((pos = string2split.find(delimiter)) != std::string::npos)
-					{
-						token = string2split.substr(0, pos);
-						liaVariable varEl;
-						varEl.type = liaVariableType::string;
-						varEl.value = token;
-						retVal.vlist.push_back(varEl);
-						string2split.erase(0, pos + delimiter.length());
-					}
-
-					token = string2split.substr(0, pos);
-					liaVariable varEl;
-					varEl.type = liaVariableType::string;
-					varEl.value = token;
-					retVal.vlist.push_back(varEl);
-				}
-				else if (ch->token == "add")
-				{
-					// add element to an array
-					assert(pvarValue->type == liaVariableType::array);
-					assert(parameters.size() == 1);
-
-					pvarValue->vlist.push_back(parameters[0]);
-				}
-				else if (ch->token == "findKey")
-				{
-					assert(parameters.size() == 1);
-					assert(pvarValue->type == liaVariableType::dictionary);
-
-					retVal.type = liaVariableType::integer;
-					retVal.value = -1;
-
-					if (parameters[0].type == liaVariableType::string)
-					{
-						std::string key2find = std::get<std::string>(parameters[0].value);
-						if (pvarValue->vMap.find(key2find) != pvarValue->vMap.end())
-						{
-							retVal.value = 1;
-						}
-					}
-					else
-					{
-						std::string err;
-						err += "Unhandled findKey type at " + std::to_string(lineNum) + ". ";
-						err += "Terminating.";
-						fatalError(err);
-					}
-				}
-				else if (ch->token == "find")
-				{
-					// s.find("value"), returns idx of found element, or -1 if not found
-					//assert(pvarValue->type == liaVariableType::array);
-					assert(parameters.size() == 1);
-
-					retVal.type = liaVariableType::integer;
-					retVal.value = -1;
-
-					if (parameters[0].type == liaVariableType::string)
-					{
-						std::string val2find;
-						val2find += std::get<std::string>(parameters[0].value);
-
-						if (pvarValue->type == liaVariableType::array)
-						{
-							for (int idx = 0;idx < pvarValue->vlist.size();idx++)
-							{
-								if (std::get<std::string>(pvarValue->vlist[idx].value) == val2find)
-								{
-									retVal.value = idx;
-									//return retVal;
-								}
-							}
-							/*liaVariable l2f;
-							l2f.value = val2find;
-							auto df=std::find(pvarValue->vlist.begin(), pvarValue->vlist.end(),l2f);
-							//std::cout << pvarValue->vlist.end()-df << std::endl;
-							retVal.value=(int)(pvarValue->vlist.end()-df-1);*/
-						}
-						else if (pvarValue->type == liaVariableType::string)
-						{
-							std::string s = std::get<std::string>(pvarValue->value);
-							const char* ptr = strstr(s.c_str(), val2find.c_str());
-							if (ptr == NULL)
-							{
-								retVal.value = -1;
-							}
-							else
-							{
-								const char* ptrbeg = s.c_str();
-								retVal.value = (int)(ptr-ptrbeg);
-							}
-
-							return;
-						}
-					}
-					else if (parameters[0].type == liaVariableType::integer)
-					{
-						int val2find = std::get<int>(parameters[0].value);
-						if (pvarValue->vlist.size() > 0)
-						{
-							//assert(pvarValue->vlist[0].type == liaVariableType::integer);
-							if (pvarValue->vlist[0].type != liaVariableType::integer)
-							{
-								std::string err;
-								err += "Searching an integer in an array with elements not of type integer at " + std::to_string(lineNum) + ". ";
-								err += "Terminating.";
-								fatalError(err);
-							}
-
-							for (int idx = 0;idx < pvarValue->vlist.size();idx++)
-							{
-								if (std::get<int>(pvarValue->vlist[idx].value) == val2find)
-								{
-									retVal.value = idx;
-									return;
-								}
-							}
-						}
-					}
-					else if (parameters[0].type == liaVariableType::longint)
-					{
-						long long val2find = std::get<long long>(parameters[0].value);
-						if (pvarValue->vlist.size() > 0)
-						{
-							assert(pvarValue->vlist[0].type == liaVariableType::longint);
-
-							for (int idx = 0;idx < pvarValue->vlist.size();idx++)
-							{
-								if (std::get<long long>(pvarValue->vlist[idx].value) == val2find)
-								{
-									retVal.value = idx;
-									return;
-								}
-							}
-						}
-					}
-					else if (parameters[0].type == liaVariableType::array)
-					{
-						if (pvarValue->type != liaVariableType::array)
-						{
-							std::string err;
-							err += "You can only search an array inside an array at "+std::to_string(lineNum)+". ";
-							err += "Terminating.";
-							fatalError(err);
-						}
-
-						for (int idx = 0;idx < pvarValue->vlist.size();idx++)
-						{
-							if (liaVariableArrayComparison(pvarValue->vlist[idx],parameters[0]))
-							{
-								retVal.value = idx;
-								return;
-							}
-						}
-					}
-					else
-					{
-						std::string err;
-						err += "Unhandled find type at " + std::to_string(lineNum) + ". ";
-						err += "Terminating.";
-						fatalError(err);
-					}
-				}
-				else if (ch->token == "replace")
-				{
-					// s.replace(<string to replace>,<what to replace with>)
-					// replace all the occurrencies of a string with another string
-					assert(parameters.size() == 2);
-					assert(pvarValue->type == liaVariableType::string);
-
-					//std::cout << peg::ast_to_s(theAst);
-
-					std::string thes = std::get<std::string>(pvarValue->value);
-					std::string replaceWhat = std::get<std::string>(parameters[0].value);
-					std::string replaceWith = std::get<std::string>(parameters[1].value);
-
-					replaceAll(thes, replaceWhat, replaceWith);
-
-					retVal.type = liaVariableType::string;
-					retVal.value = thes;
-					return;
-				}
-				else if (ch->token == "slice")
-				{
-					assert(parameters.size() == 2);
-					int beg = std::get<int>(parameters[0].value);
-					int end = std::get<int>(parameters[1].value);
-
-					if (pvarValue->type == liaVariableType::string)
-					{
-						std::string s = std::get<std::string>(pvarValue->value);
-
-						if (s.size() == 0)
-						{
-							retVal.type = liaVariableType::string;
-							retVal.value = s;
-							return;
-						}
-
-						std::string s2;
-						int idx = 0;
-						while ((idx < end) && (idx < s.size()))
-						{
-							if (idx >= beg)
-							{
-								s2 += s[idx];
-							}
-							idx += 1;
-						}
-
-						retVal.type = liaVariableType::string;
-						retVal.value = s2;
-						return;
-					}
-					else if (pvarValue->type == liaVariableType::array)
-					{
-						retVal.type = liaVariableType::array;
-						int idx = 0;
-						while (idx < end)
-						{
-							if (idx >= beg)
-							{
-								retVal.vlist.push_back(pvarValue->vlist[idx]);
-							}
-							idx += 1;
-						}
-
-						return;
-					}
-				}
-				else if (ch->token == "sort")
-				{
-					// sort monodimensional array
-					assert(pvarValue->type == liaVariableType::array);
-
-					if (parameters.size() != 0)
-					{
-						std::string err;
-						err += "Sort function doesn't accept parameters. ";
-						err += "Terminating.";
-						fatalError(err);
-					}
-
-					if (pvarValue->vlist.size() != 0)
-					{
-						if (pvarValue->vlist[0].type == liaVariableType::integer)
-						{
-							std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareIntVars);
-						}
-						else if (pvarValue->vlist[0].type == liaVariableType::string)
-						{
-							std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareStringVars);
-						}
-						else
-						{
-							// TODO: unsupported type in sort
-						}
-					}
-				}
-				else if (ch->token == "clear")
-				{
-					// clear something
-					if (pvarValue->type == liaVariableType::dictionary)
-					{
-						pvarValue->vMap.clear();
-					}
-				}
-				else
-				{
-					// unknown method called
-					std::string m;
-					m += ch->token;
-					std::string err;
-					err += "Method name [" + m + "] not found. ";
-					err += "Terminating.";
-					fatalError(err);
-				}
-			}
-		}
-	}
-
-	//return retVal;
 }
 
-void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar)
+void inline liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar)
 {
 	//std::cout << peg::ast_to_s(theAst);
 	//size_t lineNum = theAst->nodes[0]->line;
 
-	if (theAst->nodes[0]->iName == grammarElement::IntegerNumber)
+	const int iName = theAst->nodes[0]->iName;
+
+	if (iName == grammarElement::IntegerNumber)
 	{
 		retVar.type = liaVariableType::integer;
 		retVar.value = theAst->nodes[0]->iNumber;
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::VariableName)
+	else if (iName == grammarElement::VariableName)
 	{
 		size_t lineNum = theAst->nodes[0]->line;
 		std::string varName = theAst->nodes[0]->token_to_string();
@@ -635,19 +611,165 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 			}
 		}
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::StringLiteral)
+	else if (iName == grammarElement::StringLiteral)
 	{
 		retVar.type = liaVariableType::string;
 		retVar.value = theAst->nodes[0]->token_to_string();
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::LongNumber)
+	else if (iName == grammarElement::ArraySubscript)
+	{
+		//std::cout << peg::ast_to_s(theAst->nodes[0]);
+		size_t lineNum = theAst->nodes[0]->line;
+
+		std::string arrName = theAst->nodes[0]->nodes[0]->token_to_string();
+		liaVariable* pVar = findVar(arrName, lineNum, env);
+
+		if (pVar->type == liaVariableType::array)
+		{
+			liaVariable vIdx;
+			unsigned int limit;
+
+			for (int aidx = 1;aidx < theAst->nodes[0]->nodes.size();aidx++)
+			{
+				//std::cout << "idx is " << std::get<int>(vIdxArr[aidx].value) << std::endl;
+				evaluateExpression(theAst->nodes[0]->nodes[aidx], env, vIdx);
+				unsigned int arrIdx = std::get<int>(vIdx.value);
+
+				if (pVar->type == liaVariableType::array)
+				{
+					limit = (unsigned int)pVar->vlist.size();
+				}
+				else if (pVar->type == liaVariableType::string)
+				{
+					limit = (unsigned int)std::get<std::string>(pVar->value).size();
+				}
+				else
+				{
+					std::string err;
+					err += "Unhandled type for sub-array indexing at " + std::to_string(lineNum) + ".";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				if (arrIdx >= limit)
+				{
+					std::string err;
+					err += "Array index out of range at " + std::to_string(lineNum) + ". Requested index: " +
+						std::to_string(arrIdx) + " size of array: " + std::to_string(pVar->vlist.size()) + ". ";
+					err += "Terminating.";
+					fatalError(err);
+				}
+
+				if (pVar->type == liaVariableType::array)
+				{
+					pVar = &pVar->vlist[arrIdx];
+
+					if (aidx == (theAst->nodes[0]->nodes.size() - 1))
+					{
+						retVar.type = pVar->type;
+						retVar.value = pVar->value;
+						retVar.vlist = pVar->vlist;
+						retVar.vMap = pVar->vMap;
+					}
+				}
+				else if (pVar->type == liaVariableType::string)
+				{
+					// we assume this is the last subscript of the array
+					// otherwise, everything will crash
+					retVar.type = liaVariableType::string;
+					std::string s = std::get<std::string>(pVar->value);
+					std::string rv = s.substr(arrIdx, 1);
+					retVar.value = rv;
+				}
+			}
+		}
+		else if (pVar->type == liaVariableType::dictionary)
+		{
+			std::vector<liaVariable> vIdxArr;
+			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
+			{
+				liaVariable vIdx;
+				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
+				vIdxArr.push_back(vIdx);
+			}
+
+			if (vIdxArr.size() != 1)
+			{
+				std::string err;
+				err += "Dictionaries can only be indexed once. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			std::string key = std::get<std::string>(vIdxArr[0].value);
+
+			// check if key is in dictionary keys
+			if (pVar->vMap.find(key) == pVar->vMap.end())
+			{
+				std::string err;
+				err += "Key " + key + " not found in dictionary. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+			else
+			{
+				retVar.type = pVar->vMap[key].type;
+				retVar.value = pVar->vMap[key].value;
+				retVar.vlist = pVar->vMap[key].vlist;
+				retVar.vMap = pVar->vMap[key].vMap;
+			}
+		}
+		else if (pVar->type == liaVariableType::string)
+		{
+			std::vector<liaVariable> vIdxArr;
+			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
+			{
+				liaVariable vIdx;
+				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
+				vIdxArr.push_back(vIdx);
+			}
+
+			if (vIdxArr.size() != 1)
+			{
+				std::string err;
+				err += "Strings are mono-dimensional. ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			int arrIdx = std::get<int>(vIdxArr[0].value);
+			std::string tmp = std::get<std::string>(pVar->value);
+
+			if (arrIdx >= tmp.size())
+			{
+				std::string err;
+				err += "String index out of range at " + std::to_string(lineNum) + ". ";
+				err += "Terminating.";
+				fatalError(err);
+			}
+
+			retVar.type = liaVariableType::string;
+			char c = tmp.at(arrIdx);
+			std::string sc;
+			sc += c;
+			retVar.value = sc;
+		}
+		else
+		{
+			std::string err;
+			err += "Subscript is applicable only to arrays, strings and dictionaries at " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+	}
+	else if (iName == grammarElement::LongNumber)
 	{
 		std::string tmp;
 		tmp += theAst->nodes[0]->token;
 		retVar.type = liaVariableType::longint;
 		retVar.value = std::stoll(tmp);
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::BooleanConst)
+	else if (iName == grammarElement::BooleanConst)
 	{
 		std::string tmp;
 		tmp += theAst->nodes[0]->token;
@@ -655,7 +777,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		if (tmp=="true") retVar.value = true;
 		else retVar.value = false;
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::BitwiseNot)
+	else if (iName == grammarElement::BitwiseNot)
 	{
 		//std::cout << "NOT/RJ" << peg::ast_to_s(theAst);
 
@@ -669,7 +791,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		retVar.type = liaVariableType::integer;
 		retVar.value = ~std::get<int>(expr.value);
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::MinusExpression)
+	else if (iName == grammarElement::MinusExpression)
 	{
 		assert(theAst->nodes[0]->nodes.size() == 1);
 		assert(theAst->nodes[0]->nodes[0]->iName == grammarElement::Expression);
@@ -681,31 +803,14 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		retVar.type = liaVariableType::integer;
 		retVar.value = -std::get<int>(expr.value);
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::VariableWithFunction)
+	else if (iName == grammarElement::VariableWithFunction)
 	{
 		//std::cout << peg::ast_to_s(theAst);
 
-		std::string varName;
-		varName += theAst->nodes[0]->nodes[0]->token;
-
-		liaVariable* pvarValue = nullptr;
-
-		if (env->varMap.find(varName) == env->varMap.end())
-		{
-			if (globalScope.varMap.find(varName) == globalScope.varMap.end())
-			{
-				// variable name not found
-				std::string err;
-				size_t lineNum = theAst->nodes[0]->line;
-				err += "Variable [" + varName + "] not found in method call at line " + std::to_string(lineNum) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-		}
-
+		std::string varName=theAst->nodes[0]->nodes[0]->token_to_string();
 		exeCuteMethodCallStatement(theAst->nodes[0], env,varName, retVar);
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::VariableWithProperty)
+	else if (iName == grammarElement::VariableWithProperty)
 	{
 		//std::cout << peg::ast_to_s(theAst);
 
@@ -812,7 +917,7 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 		}
 
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::ArrayInitializer)
+	else if (iName == grammarElement::ArrayInitializer)
 	{
 		retVar.type = liaVariableType::array;
 		if (theAst->nodes[0]->nodes.size() != 0)
@@ -827,159 +932,13 @@ void liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,
 			}
 		}
 	}
-	else if (theAst->nodes[0]->iName == grammarElement::ArraySubscript)
-	{
-		//std::cout << peg::ast_to_s(theAst->nodes[0]);
-		size_t lineNum = theAst->nodes[0]->line;
-
-		std::string arrName=theAst->nodes[0]->nodes[0]->token_to_string();
-		liaVariable* pVar = findVar(arrName, lineNum, env);
-
-		if (pVar->type == liaVariableType::array)
-		{
-			liaVariable vIdx;
-			unsigned int limit;
-
-			for (int aidx = 1;aidx < theAst->nodes[0]->nodes.size();aidx++)
-			{
-				//std::cout << "idx is " << std::get<int>(vIdxArr[aidx].value) << std::endl;
-				evaluateExpression(theAst->nodes[0]->nodes[aidx], env, vIdx);
-				unsigned int arrIdx = std::get<int>(vIdx.value);
-
-				if (pVar->type == liaVariableType::array)
-				{
-					limit = (unsigned int)pVar->vlist.size();
-				}
-				else if (pVar->type == liaVariableType::string)
-				{
-					limit = (unsigned int)std::get<std::string>(pVar->value).size();
-				}
-				else
-				{
-					std::string err;
-					err += "Unhandled type for sub-array indexing at " + std::to_string(lineNum) + ".";
-					err += "Terminating.";
-					fatalError(err);
-				}
-
-				if (arrIdx >= limit)
-				{
-					std::string err;
-					err += "Array index out of range at " + std::to_string(lineNum) + ". Requested index: "+ 
-						std::to_string(arrIdx)+" size of array: "+ std::to_string(pVar->vlist.size())+". ";
-					err += "Terminating.";
-					fatalError(err);
-				}
-
-				if (pVar->type == liaVariableType::array)
-				{
-					pVar = &pVar->vlist[arrIdx];
-
-					if (aidx == (theAst->nodes[0]->nodes.size() - 1))
-					{
-						retVar.type = pVar->type;
-						retVar.value = pVar->value;
-						retVar.vlist = pVar->vlist;
-						retVar.vMap = pVar->vMap;
-					}
-				}
-				else if (pVar->type == liaVariableType::string)
-				{
-					// we assume this is the last subscript of the array
-					// otherwise, everything will crash
-					retVar.type = liaVariableType::string;
-					std::string s = std::get<std::string>(pVar->value);
-					std::string rv = s.substr(arrIdx, 1);
-					retVar.value = rv;
-				}
-			}
-		}
-		else if (pVar->type == liaVariableType::dictionary)
-		{
-			std::vector<liaVariable> vIdxArr;
-			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
-			{
-				liaVariable vIdx;
-				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
-				vIdxArr.push_back(vIdx);
-			}
-
-			if (vIdxArr.size() != 1)
-			{
-				std::string err;
-				err += "Dictionaries can only be indexed once. ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-
-			std::string key = std::get<std::string>(vIdxArr[0].value);
-
-			// check if key is in dictionary keys
-			if (pVar->vMap.find(key) == pVar->vMap.end()) 
-			{
-				std::string err;
-				err += "Key "+key+" not found in dictionary. ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-			else 
-			{
-				retVar.type = pVar->vMap[key].type;
-				retVar.value = pVar->vMap[key].value;
-				retVar.vlist = pVar->vMap[key].vlist;
-				retVar.vMap = pVar->vMap[key].vMap;
-			}
-		}
-		else if (pVar->type == liaVariableType::string)
-		{
-			std::vector<liaVariable> vIdxArr;
-			for (int i = 1;i < theAst->nodes[0]->nodes.size();i++)
-			{
-				liaVariable vIdx;
-				evaluateExpression(theAst->nodes[0]->nodes[i], env, vIdx);
-				vIdxArr.push_back(vIdx);
-			}
-
-			if (vIdxArr.size() != 1)
-			{
-				std::string err;
-				err += "Strings are mono-dimensional. ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-
-			int arrIdx = std::get<int>(vIdxArr[0].value);
-			std::string tmp = std::get<std::string>(pVar->value);
-
-			if (arrIdx >= tmp.size())
-			{
-				std::string err;
-				err += "String index out of range at " + std::to_string(lineNum) + ". ";
-				err += "Terminating.";
-				fatalError(err);
-			}
-
-			retVar.type = liaVariableType::string;
-			char c = tmp.at(arrIdx);
-			std::string sc;
-			sc += c;
-			retVar.value = sc;
-		}
-		else
-		{
-			std::string err;
-			err += "Subscript is applicable only to arrays, strings and dictionaries at " + std::to_string(lineNum) + ". ";
-			err += "Terminating.";
-			fatalError(err);
-		}
-	}
-	else if (theAst->nodes[0]->iName == grammarElement::RFuncCall)
+	else if (iName == grammarElement::RFuncCall)
 	{
 		//std::cout << "funCall" << std::endl;
 		//std::cout << peg::ast_to_s(theAst);
 		exeCuteFuncCallStatement(theAst->nodes[0], env, retVar);
 	}
-	else if (theAst->nodes[0]->iName ==grammarElement::DictInitializer)
+	else if (iName ==grammarElement::DictInitializer)
 	{
 		//std::cout << peg::ast_to_s(theAst);
 		retVar.type = liaVariableType::dictionary;
@@ -1245,10 +1204,11 @@ void liaInterpreter::customFunctionCall(std::string& fname, std::vector<liaVaria
 	liaEnvironment funEvn;
 
 	// add to the local function environment the function parameters
-	for (auto parm : *parameters)
+	for (auto& parm : *parameters)
 	{
 		//std::cout << parm.name << std::endl;
-		addvarOrUpdateEnvironment(&parm, &funEvn, 0);
+	//	addvarOrUpdateEnvironment(&parm, &funEvn, 0);
+		funEvn.varMap[parm.name] = parm;
 	}
 
 	exeCuteCodeBlock(pBlock, &funEvn,retVal);
@@ -1262,13 +1222,33 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 	std::vector<liaVariable> parameters;
 	size_t lineNum=theAst->line;
 
-	std::string funName = theAst->nodes[0]->token_to_string();
+	const int funId = theAst->nodes[0]->tokenId;
+	if (funId==0)
+	{
+		// should be a custom function
+		// evaluate and store the parameters
 
-	if (funName == "print")
+		//std::cout << peg::ast_to_s(theAst);
+		std::string funName = theAst->nodes[0]->token_to_string();
+
+		if (theAst->nodes.size() > 1)
+		{
+			for (auto& funparm : theAst->nodes[1]->nodes)
+			{
+				assert(funparm->iName == grammarElement::Expression);
+				liaVariable arg;
+				evaluateExpression(funparm, env, arg);
+				parameters.push_back(arg);
+			}
+		}
+
+		customFunctionCall(funName, &parameters, env, lineNum, retVal);
+	}
+	else if (funId == StdFunctionId::FunctionPrint)
 	{
 		exeCuteLibFunctionPrint(theAst->nodes[1],env);
 	}
-	else if (funName == "readTextFileLineByLine")
+	else if (funId == StdFunctionId::FunctionReadTextFileLineByLine)
 	{
 		assert(theAst->nodes[1]->name == "ArgList");
 		assert(theAst->nodes[1]->nodes[0]->name == "Expression");
@@ -1277,10 +1257,10 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		evaluateExpression(theAst->nodes[1]->nodes[0], env,p0);
 		exeCuteLibFunctionReadFile(std::get<std::string>(p0.value),linenum,retVal);
 	}
-	else if ((funName == "toInteger")|| (funName == "toLong"))
+	else if (funId == StdFunctionId::FunctionToInteger)
 	{
-		assert(theAst->nodes[1]->name == "ArgList");
-		assert(theAst->nodes[1]->nodes[0]->name == "Expression");
+		assert(theAst->nodes[1]->iName == grammarElement::ArgList);
+		assert(theAst->nodes[1]->nodes[0]->iName == grammarElement::Expression);
 		liaVariable p0;
 		evaluateExpression(theAst->nodes[1]->nodes[0], env,p0);
 					
@@ -1288,46 +1268,64 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		if (p0.type != liaVariableType::string)
 		{
 			std::string err;
-			err += "toInteger/toLong accepts only string values at line " + std::to_string(lineNum) + ". ";
+			err += "toInteger accepts only string values at line " + std::to_string(lineNum) + ". ";
 			err += "Terminating.";
 			fatalError(err);
 		}
 
-		if (funName == "toInteger")
-		{
-			retVal.type = liaVariableType::integer;
-		}
-		else if (funName == "toLong")
-		{
-			retVal.type = liaVariableType::longint;
-		}
+		retVal.type = liaVariableType::integer;
 
 		std::string sVal = std::get<std::string>(p0.value);
 
 		try
 		{
-			if (funName == "toInteger")
-			{
-				retVal.value = std::stoi(sVal);
-			}
-			else if (funName == "toLong")
-			{
-				retVal.value = std::stoll(sVal);
-			}
+			retVal.value = std::stoi(sVal);
 		}
 		catch (...)
 		{
 			// unable to convert to integer
 			std::string err;
-			err += "Can't convert [" + sVal + "] to integer/long at line "+std::to_string(lineNum)+". ";
+			err += "Can't convert [" + sVal + "] to integer at line "+std::to_string(lineNum)+". ";
 			err += "Terminating.";
 			fatalError(err);
 		}
 
-		//std::visit([](const auto& x) { std::cout << x; }, p0.value);
-		//retVal = exeCuteLibFunctionReadFile(std::get<std::string>(p0.value));
 	}
-	else if (funName == "toString")
+	else if (funId == StdFunctionId::FunctionToLong)
+	{
+		assert(theAst->nodes[1]->iName == grammarElement::ArgList);
+		assert(theAst->nodes[1]->nodes[0]->iName == grammarElement::Expression);
+		liaVariable p0;
+		evaluateExpression(theAst->nodes[1]->nodes[0], env, p0);
+
+		// parameter to convert must be a string
+		if (p0.type != liaVariableType::string)
+		{
+			std::string err;
+			err += "toLong accepts only string values at line " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
+		retVal.type = liaVariableType::longint;
+
+		std::string sVal = std::get<std::string>(p0.value);
+
+		try
+		{
+			retVal.value = std::stoll(sVal);
+		}
+		catch (...)
+		{
+			// unable to convert to integer
+			std::string err;
+			err += "Can't convert [" + sVal + "] to long at line " + std::to_string(lineNum) + ". ";
+			err += "Terminating.";
+			fatalError(err);
+		}
+
+	}
+	else if (funId == StdFunctionId::FunctionToString)
 	{
 		assert(theAst->nodes[1]->name == "ArgList");
 		assert(theAst->nodes[1]->nodes[0]->name == "Expression");
@@ -1355,7 +1353,7 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 			fatalError(err);
 		}
 	}
-	else if (funName == "ord")
+	else if (funId == StdFunctionId::FunctionOrd)
 	{
 		// char to its ascii code
 		liaVariable p0;
@@ -1374,7 +1372,7 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		std::string sVal = std::get<std::string>(p0.value);
 		retVal.value = (int)sVal.at(0);
 	}
-	else if (funName == "chr")
+	else if (funId == StdFunctionId::FunctionChr)
 	{
 		// the opposite
 		liaVariable p0;
@@ -1395,7 +1393,7 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		ss = (char)sVal;
 		retVal.value = ss;
 	}
-	else if (funName == "lSqrt")
+	else if (funId == StdFunctionId::FunctionLsqrt)
 	{
 		// integer sqrt
 		liaVariable p0;
@@ -1415,7 +1413,7 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		double fsq = sqrt(iVal);
 		retVal.value = (long long)fsq;
 	}
-	else if (funName == "rnd")
+	else if (funId == StdFunctionId::FunctionRnd)
 	{
 		// generate a random number from zero to parameter 0
 		liaVariable p0;
@@ -1433,7 +1431,7 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 		retVal.type = liaVariableType::integer;
 		retVal.value = rand() % std::get<int>(p0.value);
 	}
-	else if (funName == "getMillisecondsSinceEpoch")
+	else if (funId == StdFunctionId::FunctionGetMillisecondsSinceEpoch)
 	{
 		// another function with an infinite name
 		long long now =(long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -1441,26 +1439,6 @@ void liaInterpreter::exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& t
 
 		retVal.type = liaVariableType::longint;
 		retVal.value = now;
-	}
-	else
-	{
-		// should be a custom function
-		// evaluate and store the parameters
-
-		//std::cout << peg::ast_to_s(theAst);
-
-		if (theAst->nodes.size() > 1)
-		{
-			for (auto& funparm : theAst->nodes[1]->nodes)
-			{
-				assert(funparm->iName == grammarElement::Expression);
-				liaVariable arg;
-				evaluateExpression(funparm, env, arg);
-				parameters.push_back(arg);
-			}
-		}
-
-		customFunctionCall(funName, &parameters, env, lineNum, retVal);
 	}
 }
 
@@ -1566,7 +1544,7 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 	{
 		if (ch->is_token)
 		{
-			if (ch->name == "VariableName")
+			if (ch->iName == grammarElement::VariableName)
 			{
 				theVar.name += ch->token;
 				curLine = ch->line;
@@ -1574,7 +1552,7 @@ void liaInterpreter::exeCuteMultiplyStatement(const std::shared_ptr<peg::Ast>& t
 		}
 		else
 		{
-			if (ch->name == "Expression")
+			if (ch->iName == grammarElement::Expression)
 			{
 				liaVariable vInc;
 				evaluateExpression(ch, env,vInc);
@@ -1633,7 +1611,7 @@ void liaInterpreter::exeCuteDivideStatement(const std::shared_ptr<peg::Ast>& the
 	{
 		if (ch->is_token)
 		{
-			if (ch->name == "VariableName")
+			if (ch->iName == grammarElement::VariableName)
 			{
 				theVar.name += ch->token;
 				curLine = ch->line;
@@ -1641,7 +1619,7 @@ void liaInterpreter::exeCuteDivideStatement(const std::shared_ptr<peg::Ast>& the
 		}
 		else
 		{
-			if (ch->name == "Expression")
+			if (ch->iName == grammarElement::Expression)
 			{
 				liaVariable vInc;
 				evaluateExpression(ch, env,vInc);
@@ -2093,7 +2071,7 @@ void liaInterpreter::exeCuteIncrementStatement(const std::shared_ptr<peg::Ast>& 
 
 void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* env,size_t curLine)
 {
-	liaVariable* pVar=nullptr;
+	liaVariable* pVar;
 	
 	// check first in the global environment
 	if (globalScope.varMap.find(v->name) != globalScope.varMap.end())
@@ -2150,44 +2128,44 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 	}
 }
 
-template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T rightop, std::string relOp)
+template <typename T> bool liaInterpreter::primitiveComparison(T& leftop, T& rightop, relopId& relop)
 {
-	if (relOp == "==")
+	if (relop == relopId::RelopEqual)
 	{
 		if (leftop == rightop)
 		{
 			return true;
 		}
 	}
-	else if (relOp == "<")
+	else if (relop == relopId::RelopLess)
 	{
 		if (leftop < rightop)
 		{
 			return true;
 		}
 	}
-	else if (relOp == ">")
+	else if (relop == relopId::RelopGreater)
 	{
 		if (leftop > rightop)
 		{
 			return true;
 		}
 	}
-	else if (relOp == "<=")
+	else if (relop == relopId::RelopLessEqual)
 	{
 		if (leftop <= rightop)
 		{
 			return true;
 		}
 	}
-	else if (relOp == ">=")
+	else if (relop == relopId::RelopGreaterEqual)
 	{
 		if (leftop >= rightop)
 		{
 			return true;
 		}
 	}
-	else if (relOp == "!=")
+	else if (relop == relopId::RelopNotEqual)
 	{
 		if (leftop != rightop)
 		{
@@ -2198,16 +2176,16 @@ template <typename T> bool liaInterpreter::primitiveComparison(T leftop, T right
 	return false;
 }
 
-template bool liaInterpreter::primitiveComparison<int>(int leftop,int rightop,std::string relOp);
+template bool liaInterpreter::primitiveComparison<int>(int& leftop,int& rightop, relopId& relop);
 
-bool liaInterpreter::arrayComparison(std::vector<liaVariable> leftop, std::vector<liaVariable> rightop, std::string relOp)
+bool liaInterpreter::arrayComparison(std::vector<liaVariable> leftop, std::vector<liaVariable> rightop, relopId& relop)
 {
 	if (leftop.size() != rightop.size()) return false;
 
 	int idx = 0;
 	while (idx<leftop.size())
 	{
-		if (!primitiveComparison(leftop[idx].value, rightop[idx].value, relOp))
+		if (!primitiveComparison(leftop[idx].value, rightop[idx].value, relop))
 		{
 			return false;
 		}
@@ -2254,8 +2232,7 @@ bool liaInterpreter::evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvi
 			}
 			else if (theAst->nodes[0]->iName == grammarElement::Expression)
 			{
-				std::string relOp;
-				relOp += theAst->nodes[1]->token;
+				relopId relOp=(relopId)theAst->nodes[1]->tokenId;
 
 				liaVariable lExpr;
 				evaluateExpression(theAst->nodes[0], env,lExpr);
@@ -2449,6 +2426,7 @@ bool liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,li
 	for (auto& stmt : theAst->nodes)
 	{
 		//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
+		//std::cout << stmt->name << std::endl;
 		const int nodeId = stmt->nodes[0]->iName;
 		
 		if (nodeId == grammarElement::FuncCallStmt)
@@ -2481,6 +2459,11 @@ bool liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,li
 				return true;
 			}
 		}
+		else if (nodeId == grammarElement::ArrayAssignmentStmt)
+		{
+			// assignment to array element
+			exeCuteArrayAssignmentStatement(stmt->nodes[0], env);
+		}
 		else if (nodeId == grammarElement::VarFuncCallStmt)
 		{
 			//std::cout << peg::ast_to_s(stmt->nodes[0]);
@@ -2494,11 +2477,6 @@ bool liaInterpreter::exeCuteCodeBlock(const std::shared_ptr<peg::Ast>& theAst,li
 			// variable declaration/assignment
 			//std::cout << stmt->name << " " << stmt->nodes.size() << "-" << stmt->nodes[0]->name << std::endl;
 			exeCuteVarDeclStatement(stmt->nodes[0],env);
-		}
-		else if (nodeId == grammarElement::ArrayAssignmentStmt)
-		{
-			// assignment to array element
-			exeCuteArrayAssignmentStatement(stmt->nodes[0], env);
 		}
 		else if (nodeId == grammarElement::IncrementStmt)
 		{
@@ -2557,11 +2535,11 @@ int liaInterpreter::storeGlobalVariables(std::shared_ptr<peg::Ast> theAst)
 {
 	for (auto node : theAst->nodes)
 	{
-		if (node->name == "TopLevelStmt")
+		if (node->iName == grammarElement::TopLevelStmt)
 		{
 			for (auto innerNode : node->nodes)
 			{
-				if (innerNode->name == "GlobalVarDecl")
+				if (innerNode->iName == grammarElement::GlobalVarDecl)
 				{
 					liaVariable glbVar;
 					//std::cout << peg::ast_to_s(innerNode);

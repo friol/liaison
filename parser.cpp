@@ -107,7 +107,7 @@ liaParser::liaParser()
 	FuncParamList <- FuncParam ( ',' FuncParam )*
 	FuncParam <- < [a-zA-Z][0-9a-zA-Z_]* >
 
-	VarFuncCallStmt <- VariableName '.' FuncName '(' ( ArgList )* ')' ';' 
+	VarFuncCallStmt <- VariableName '.' MethodName '(' ( ArgList )* ')' ';' 
 
 	ArrayAssignmentStmt <- ArraySubscript '=' Expression ';' 
 	VarDeclStmt <- VariableName '=' Expression ';'  
@@ -136,11 +136,12 @@ liaParser::liaParser()
 
 	VariableWithProperty <- VariableName '.' Property /  ArraySubscript '.' Property
 	Property <- 'length' / 'keys'
-	VariableWithFunction <- VariableName '.' FuncName '(' ( ArgList )* ')'
+	VariableWithFunction <- VariableName '.' MethodName '(' ( ArgList )* ')'
 
 	FuncCallStmt <- FuncName '(' ( ArgList )* ')' ';' 
 	RFuncCall <- FuncName '(' ( ArgList )* ')'
 	FuncName <- < [a-zA-Z_][0-9a-zA-Z_]* >
+	MethodName <- < [a-zA-Z_][0-9a-zA-Z_]* >
 	ArgList <- ('byref')? Expression ( ',' ('byref')? Expression )*
 
 	ReturnStmt <- 'return' Expression? ';' 
@@ -161,26 +162,11 @@ liaParser::liaParser()
 		std::cout << "Error: grammar loading failed." << std::endl;
 	}
 	assert(grammarIsOk);
-	
-	/*(*pegParser)["IntegerNumber"] = [](const peg::SemanticValues& vs)
-	{
-		//std::cout << "ttn" << vs.token_to_number<int>() << std::endl;
-		return vs.token();
-	};*/
-
-	//(*pegParser)["IntegerNumber"]=[](const peg::SemanticValues& vs, std::any& dt) 
-	//{
-	//	std::cout << "action!" << std::endl;
-	//};
-
-	//pegParser = ppar;
 }
 
 void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 {
 	std::map<std::string, grammarElement> grammarMap;
-
-	grammarMap["TopLevelStmt"] = grammarElement::NotUsed;
 	grammarMap["Stmt"] = grammarElement::NotUsed;
 	grammarMap["Relop"] = grammarElement::NotUsed;
 	grammarMap["SingleLineCommentStmt"] = grammarElement::NotUsed;
@@ -200,6 +186,7 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 	grammarMap["FuncParamList"] = grammarElement::FuncParamList;
 	grammarMap["ExpressionList"] = grammarElement::ExpressionList;
 
+	grammarMap["TopLevelStmt"] = grammarElement::TopLevelStmt;
 	grammarMap["FuncDeclStmt"] = grammarElement::FuncDeclStmt;
 	grammarMap["ForeachStmt"] = grammarElement::ForeachStmt;
 	grammarMap["WhileStmt"] = grammarElement::WhileStmt;
@@ -208,6 +195,7 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 	grammarMap["FuncCallStmt"] = grammarElement::FuncCallStmt;
 	grammarMap["BitwiseNot"] = grammarElement::BitwiseNot;
 	grammarMap["VarDeclStmt"] = grammarElement::VarDeclStmt;
+	grammarMap["GlobalVarDecl"] = grammarElement::GlobalVarDecl;
 	grammarMap["ReturnStmt"] = grammarElement::ReturnStmt;
 	grammarMap["VarFuncCallStmt"] = grammarElement::VarFuncCallStmt;
 	grammarMap["ArrayAssignmentStmt"] = grammarElement::ArrayAssignmentStmt;
@@ -224,6 +212,7 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 
 	grammarMap["CodeBlock"] = grammarElement::CodeBlock;
 	grammarMap["FuncName"] = grammarElement::FuncName;
+	grammarMap["MethodName"] = grammarElement::MethodName;
 	grammarMap["ArgList"] = grammarElement::ArgList;
 	grammarMap["Expression"] = grammarElement::Expression;
 	grammarMap["NotExpression"] = grammarElement::NotExpression;
@@ -235,6 +224,36 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 	grammarMap["Condition"] = grammarElement::Condition;
 	grammarMap["VariableWithFunction"] = grammarElement::VariableWithFunction;
 	grammarMap["VariableWithProperty"] = grammarElement::VariableWithProperty;
+
+	std::map<std::string, relopId> relopMap;
+	relopMap["=="] = relopId::RelopEqual;
+	relopMap["<"] = relopId::RelopLess;
+	relopMap[">"] = relopId::RelopGreater;
+	relopMap[">="] = relopId::RelopGreaterEqual;
+	relopMap["<="] = relopId::RelopLessEqual;
+	relopMap["!="] = relopId::RelopNotEqual;
+
+	std::map<std::string, libMethodId> methodMap;
+	methodMap["add"] = libMethodId::MethodAdd;
+	methodMap["clear"] = libMethodId::MethodClear;
+	methodMap["find"] = libMethodId::MethodFind;
+	methodMap["findKey"] = libMethodId::MethodFindkey;
+	methodMap["replace"] = libMethodId::MethodReplace;
+	methodMap["slice"] = libMethodId::MethodSlice;
+	methodMap["sort"] = libMethodId::MethodSort;
+	methodMap["split"] = libMethodId::MethodSplit;
+
+	std::map<std::string, StdFunctionId> functionMap;
+	functionMap["print"] = StdFunctionId::FunctionPrint;
+	functionMap["readTextFileLineByLine"] = StdFunctionId::FunctionReadTextFileLineByLine;
+	functionMap["toInteger"] = StdFunctionId::FunctionToInteger;
+	functionMap["toLong"] = StdFunctionId::FunctionToLong;
+	functionMap["toString"] = StdFunctionId::FunctionToString;
+	functionMap["ord"] = StdFunctionId::FunctionOrd;
+	functionMap["chr"] = StdFunctionId::FunctionChr;
+	functionMap["lSqrt"] = StdFunctionId::FunctionLsqrt;
+	functionMap["rnd"] = StdFunctionId::FunctionRnd;
+	functionMap["getMillisecondsSinceEpoch"] = StdFunctionId::FunctionGetMillisecondsSinceEpoch;
 
 	for (auto& node : ast->nodes)
 	{
@@ -249,6 +268,21 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 		if (node->iName == grammarElement::IntegerNumber)
 		{
 			node->iNumber = node->token_to_number<int>();
+		}
+
+		if (node->name == "Relop")
+		{
+			node->tokenId = relopMap[node->token_to_string()];
+		}
+
+		if (node->name == "MethodName")
+		{
+			node->tokenId = methodMap[node->token_to_string()];
+		}
+
+		if (node->name == "FuncName")
+		{
+			node->tokenId = functionMap[node->token_to_string()];
 		}
 
 		postProcessAst(node);

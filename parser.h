@@ -6,6 +6,42 @@
 #include <string>
 #include "include/peglib.h"
 
+enum relopId
+{
+	RelopEqual=1,
+	RelopLess,
+	RelopGreater,
+	RelopNotEqual,
+	RelopLessEqual,
+	RelopGreaterEqual
+};
+
+enum libMethodId
+{
+	MethodSplit=1,
+	MethodAdd,
+	MethodFindkey,
+	MethodFind,
+	MethodReplace,
+	MethodSlice,
+	MethodSort,
+	MethodClear,
+};
+
+enum StdFunctionId
+{
+	FunctionPrint=1,
+	FunctionReadTextFileLineByLine,
+	FunctionToInteger,
+	FunctionToLong,
+	FunctionToString,
+	FunctionOrd,
+	FunctionLsqrt,
+	FunctionChr,
+	FunctionRnd,
+	FunctionGetMillisecondsSinceEpoch,
+};
+
 enum grammarElement
 {
 	NotUsed=0,
@@ -18,6 +54,7 @@ enum grammarElement
 	FuncParamList,
 	ExpressionList,
 
+	TopLevelStmt,
 	FuncDeclStmt,
 	WhileStmt,
 	ForeachStmt,
@@ -25,6 +62,7 @@ enum grammarElement
 	DecrementStmt,
 	FuncCallStmt,
 	VarDeclStmt,
+	GlobalVarDecl,
 	BitwiseNot,
 	ReturnStmt,
 	VarFuncCallStmt,
@@ -41,6 +79,7 @@ enum grammarElement
 
 	CodeBlock,
 	FuncName,
+	MethodName,
 	ArgList,
 	Expression,
 	InnerExpression,

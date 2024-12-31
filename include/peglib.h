@@ -4202,7 +4202,7 @@ template <typename Annotation> struct AstBase : public Annotation {
   const size_t column = 1;
 
   const std::string name;
-  int iName=0; // friol 20241229
+  int iName=0; // friol 20241229 - code of the grammar element instead of a string
 
   size_t position;
   size_t length;
@@ -4216,7 +4216,8 @@ template <typename Annotation> struct AstBase : public Annotation {
 
   const bool is_token;
   const std::string_view token;
-  int iNumber;
+  int iNumber; // friol 20241229 - cached number costant value
+  int tokenId=0; // token as integer code (for relops, etc.)
 
   std::vector<std::shared_ptr<AstBase<Annotation>>> nodes;
   std::weak_ptr<AstBase<Annotation>> parent;

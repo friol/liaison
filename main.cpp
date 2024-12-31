@@ -19,7 +19,7 @@
 //
 //
 
-const std::string appVersion = "0.7";
+const std::string appVersion = "0.8";
 
 void usage()
 {

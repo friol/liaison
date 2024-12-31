@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include "include/peglib.h"
 
+#include "parser.h"
+
 enum liaVariableType
 {
 	boolean,
@@ -92,15 +94,15 @@ private:
 	int validateMainFunction(std::shared_ptr<peg::Ast> theAst);
 
 	bool evaluateCondition(std::shared_ptr<peg::Ast> theAst, liaEnvironment* env);
-	template <typename T> bool primitiveComparison(T leftop, T rightop, std::string relOp);
+	template <typename T> bool primitiveComparison(T& leftop, T& rightop, relopId& relop);
 
-	bool arrayComparison(std::vector<liaVariable> leftop, std::vector<liaVariable> rightop, std::string relOp);
+	bool arrayComparison(std::vector<liaVariable> leftop, std::vector<liaVariable> rightop, relopId& relop);
 
 	bool liaVariableArrayComparison(liaVariable& v0, liaVariable& v1);
 
 	void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
-	void evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar);
+	void inline evaluateExpression(const std::shared_ptr<peg::Ast>& theAst,liaEnvironment* env,liaVariable& retVar);
 
 	void exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,std::string varName,liaVariable& retVal);
 	void exeCuteFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaEnvironment* env,liaVariable& retVal);
