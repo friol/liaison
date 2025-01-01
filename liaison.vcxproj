@@ -220,6 +220,7 @@
     <ClCompile Include="liaCompiler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parser.cpp" />
+    <ClCompile Include="vm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asmjit\a64.h" />
@@ -314,6 +315,7 @@
     <ClInclude Include="asmjit\x86\x86opcode_p.h" />
     <ClInclude Include="asmjit\x86\x86operand.h" />
     <ClInclude Include="asmjit\x86\x86rapass_p.h" />
+    <ClInclude Include="vm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

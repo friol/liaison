@@ -1075,15 +1075,6 @@ void liaInterpreter::innerPrint(liaVariable& var)
 		{
 			if (!first) std::cout << ",";
 			innerPrint(el);
-
-			/*if (el.type == liaVariableType::string)
-			{
-				std::visit([](const auto& x) { std::cout << "\"" << x << "\""; }, el.value);
-			}
-			else
-			{
-				std::visit([](const auto& x) { std::cout << x; }, el.value);
-			}*/
 			first = false;
 		}
 		std::cout << "]";

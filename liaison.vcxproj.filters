@@ -207,6 +207,9 @@
     <ClCompile Include="liaCompiler.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
+    <ClCompile Include="vm.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asmjit\a64.h">
@@ -484,6 +487,9 @@
     </ClInclude>
     <ClInclude Include="asmjit\core\zonevector.h">
       <Filter>File di origine\asmjit</Filter>
+    </ClInclude>
+    <ClInclude Include="vm.h">
+      <Filter>File di origine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

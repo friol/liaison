@@ -1,7 +1,7 @@
 
 //
 // liaison - interpreter&compiler for the language with the same name
-// (c) friol 2023-2024
+// (c) friol 2023-2024-2025
 //
 
 
@@ -12,8 +12,9 @@
 #include "parser.h"
 #include "interpreter.h"
 #include "compiler.h"
+#include "vm.h"
 
-//#define COMPILE_IT
+#define COMPILE_IT
 
 //
 //
@@ -47,7 +48,8 @@ int main(int argc,char** argv)
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
 		//sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc01.2024.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\vmtest.lia";
 	}
 
 	std::ifstream infile(sourceFileName);
@@ -88,9 +90,13 @@ int main(int argc,char** argv)
 		}
 
 #ifdef COMPILE_IT
-		liaCompiler theCompiler;
-		theCompiler.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
-		theCompiler.exeCute();
+		//liaCompiler theCompiler;
+		//theCompiler.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
+		//theCompiler.exeCute();
+
+		liaVM theVM;
+		theVM.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
+		theVM.exeCuteProgram();
 #else
 		try
 		{
