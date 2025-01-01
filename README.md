@@ -2,7 +2,7 @@
 
 ### 2024 Update!
 
-I managed to solve the entire AoC 2024 in Liaison. You can find all the solutions in the examples/aoc2024 folder.
+I managed to solve the entire AoC 2024 in Liaison. You can find all the solutions in the [examples/aoc2024](https://github.com/friol/liaison/tree/master/examples/aoc2024) folder.
 <br/>
 
 ### Liaison
