@@ -91,6 +91,9 @@ enum grammarElement
 	VariableWithFunction,
 	VariableWithProperty,
 	NotExpression,
+
+	SingleLineComment,
+	MultiLineComment,
 };
 
 class liaParser

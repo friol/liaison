@@ -27,20 +27,20 @@ enum liaOpcode
 	opJump=0x0b,
 	opJumpIfGreaterEqual=0x0c,
 	opArrayInitializer=0x0d,
+	opArraySubscript=0x0e,
+	opSetArrayElement=0x0f,
+	opLibFunctionCall=0x10,
 };
 
-struct liaConstantPool
+class vmException : public std::exception
 {
-	std::vector<liaVariable> pool;
+public:
+	char* what()
+	{
+		return (char*)"VM exception!";
+	}
 };
 
-struct liaVMVariable
-{
-	unsigned int id;
-	std::string name;
-	liaVariableType type;
-	std::variant<bool, int, long long, std::string> value;
-};
 
 struct liaCodeChunk
 {
@@ -66,22 +66,26 @@ class liaVM
 {
 private:
 
-	liaConstantPool constantPool;
+	std::vector<liaVariable> constantPool;
 	std::stack<liaVariable> vmstack;
 	std::vector<liaCodeChunk> chunks;
+
+	void fatalError(std::string err);
 
 	unsigned char findOrAddConstantToConstantPool(liaVariable& constz);
 
 	void innerPrint(liaVariable& var);
 	void compileJumpTo(unsigned short int addr, liaCodeChunk& chunk);
-	liaVariable getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead);
+	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable& retvar);
 
 	unsigned short int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	liaVariableType compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 

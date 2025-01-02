@@ -6,20 +6,22 @@ liaVM::liaVM()
 {
 }
 
-liaVariable liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigned int& bytesRead)
+void liaVM::fatalError(std::string err)
 {
-	liaVariable retvar;
+	std::cout << "Error: " << err << std::endl;
+	throw vmException();
+}
 
+void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigned int& bytesRead, liaVariable& retvar)
+{
 	if (chunk.code[pos] == liaOpcode::opConstant)
 	{
-		const unsigned char constId = chunk.code[pos + 1];
-		retvar = constantPool.pool[constId];
+		retvar = constantPool[chunk.code[pos + 1]];
 		bytesRead = 2;
 	}
 	else if (chunk.code[pos] == liaOpcode::opGetLocalVariable)
 	{
-		const unsigned char varId = chunk.code[pos + 1];
-		retvar = chunk.env[varId];
+		retvar = chunk.env[chunk.code[pos + 1]];
 		bytesRead = 2;
 	}
 	else if (chunk.code[pos] == liaOpcode::opArrayInitializer)
@@ -29,14 +31,58 @@ liaVariable liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, 
 		bytesRead = 2;
 		for (unsigned int i = 0;i < numElements;i++)
 		{
-			liaVariable element = getExpressionFromCode(chunk, pos + 2, br);
+			liaVariable element;
+			getExpressionFromCode(chunk, pos + 2, br,element);
 			retvar.vlist.push_back(element);
 			bytesRead += br;
 			pos += br;
 		}
-	}
 
-	return retvar;
+		retvar.type = liaVariableType::array;
+	}
+	else if (chunk.code[pos] == liaOpcode::opArraySubscript)
+	{
+		const unsigned char varId = chunk.code[pos + 1];
+		const unsigned char numSubscripts = chunk.code[pos + 2];
+
+		bytesRead = 3;
+		liaVariable* pVar=&chunk.env[varId];
+		for (unsigned int sub = 0;sub < numSubscripts;sub++)
+		{
+			unsigned int br = 0;
+			// TODO: check bounds
+			liaVariable asub;
+			getExpressionFromCode(chunk, pos + bytesRead, br,asub);
+			pVar = &pVar->vlist[std::get<int>(asub.value)];
+			bytesRead += br;
+		}
+
+		retvar.type = pVar->type;
+		retvar.value = pVar->value;
+
+		if (pVar->type == liaVariableType::array)
+		{
+			retvar.vlist = pVar->vlist;
+		}
+	}
+	else if (chunk.code[pos] == liaOpcode::opLibFunctionCall)
+	{
+		unsigned char funId = chunk.code[pos + 1];
+		if (funId == StdFunctionId::FunctionGetMillisecondsSinceEpoch)
+		{
+			long long now = (long long)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			retvar.value = now;
+			bytesRead = 2;
+		}
+		else
+		{
+			fatalError("Unknown lib function called");
+		}
+	}
+	else
+	{
+		fatalError("Unknown getExpressionFromCode");
+	}
 }
 
 void liaVM::innerPrint(liaVariable& var)
@@ -69,23 +115,12 @@ void liaVM::exeCuteProgram()
 	{
 		unsigned char opcode = chunk.code[ip];
 
-		if (opcode == liaOpcode::opConstant)
-		{
-			// push the constant on the stack
-			const unsigned char constId = chunk.code[ip + 1];
-
-			vmstack.push(constantPool.pool[constId]);
-			ip += 2;
-		}
-		else if (opcode == liaOpcode::opSetLocalVariable)
+		if (opcode == liaOpcode::opSetLocalVariable)
 		{
 			// set variable value to stack pop
 			const unsigned char varId = chunk.code[ip + 1];
-
 			unsigned int br;
-			liaVariable val2set = getExpressionFromCode(chunk, ip + 2, br);
-			chunk.env[varId].value = val2set.value;
-			chunk.env[varId].vlist= val2set.vlist;
+			getExpressionFromCode(chunk, ip + 2, br, chunk.env[varId]);
 
 			ip += 2+br;
 		}
@@ -97,46 +132,38 @@ void liaVM::exeCuteProgram()
 			{
 				unsigned char numArgz = chunk.code[ip + 2];
 				unsigned int pos = ip + 3;
+
+				unsigned int bytesRead = 0;
 				for (int argNum = 0;argNum < numArgz;argNum++)
 				{
 					if (chunk.code[pos] == liaOpcode::opConstant)
 					{
 						unsigned char constId = chunk.code[pos + 1];
-						liaVariable c = constantPool.pool[constId];
-						if (c.type == liaVariableType::integer)
-						{
-							std::cout << std::get<int>(c.value);
-						}
-						else if (c.type == liaVariableType::string)
-						{
-							std::cout << std::get<std::string>(c.value);
-						}
+						innerPrint(constantPool[constId]);
+						pos += 2;
+						bytesRead += 2;
 					}
 					else if (chunk.code[pos] == liaOpcode::opGetLocalVariable)
 					{
 						unsigned char varId = chunk.code[pos + 1];
-						liaVariable v = chunk.env[varId];
-						if (v.type == liaVariableType::integer)
-						{
-							std::cout << std::get<int>(v.value);
-						}
-						else if (v.type == liaVariableType::string)
-						{
-							std::cout << std::get<std::string>(v.value);
-						}
-						else if (v.type == liaVariableType::array)
-						{
-							innerPrint(v);
-						}
+						innerPrint(chunk.env[varId]);
+						pos += 2;
+						bytesRead += 2;
 					}
-
-					pos += 2;
+					else if (chunk.code[pos] == liaOpcode::opArraySubscript)
+					{
+						unsigned int br = 0;
+						liaVariable v;
+						getExpressionFromCode(chunk, pos, br,v);
+						innerPrint(v);
+						pos += br;
+						bytesRead += br;
+					}
 				}
 				std::cout << std::endl;
 
-				ip += 3 + numArgz * 2;
+				ip += 3 + bytesRead;
 			}
-
 		}
 		else if (opcode == liaOpcode::opPostIncrement)
 		{
@@ -144,7 +171,8 @@ void liaVM::exeCuteProgram()
 
 			liaVariableType incType = chunk.env[varId].type;
 			unsigned int bytesRead;
-			liaVariable incAmount = getExpressionFromCode(chunk, ip + 2,bytesRead);
+			liaVariable incAmount;
+			getExpressionFromCode(chunk, ip + 2, bytesRead,incAmount);
 
 			if (incType == liaVariableType::integer)
 			{
@@ -152,8 +180,44 @@ void liaVM::exeCuteProgram()
 				int inc = std::get<int>(incAmount.value);
 				chunk.env[varId].value = val+inc;
 			}
+			else if (incType == liaVariableType::longint)
+			{
+				long long val = std::get<long long>(chunk.env[varId].value);
+				long long inc = std::get<long long>(incAmount.value);
+				chunk.env[varId].value = val + inc;
+			}
+			else if (incType == liaVariableType::string)
+			{
+				std::string val = std::get<std::string>(chunk.env[varId].value);
+				std::string inc = std::get<std::string>(incAmount.value);
+				chunk.env[varId].value = val + inc;
+			}
 
 			ip += 2+bytesRead;
+		}
+		else if (opcode == liaOpcode::opPostDecrement)
+		{
+			const unsigned char varId = chunk.code[ip + 1];
+
+			liaVariableType incType = chunk.env[varId].type;
+			unsigned int bytesRead;
+			liaVariable incAmount;
+			getExpressionFromCode(chunk, ip + 2, bytesRead, incAmount);
+
+			if (incType == liaVariableType::integer)
+			{
+				int val = std::get<int>(chunk.env[varId].value);
+				int inc = std::get<int>(incAmount.value);
+				chunk.env[varId].value = val - inc;
+			}
+			else if (incType == liaVariableType::longint)
+			{
+				long long val = std::get<long long>(chunk.env[varId].value);
+				long long inc = std::get<long long>(incAmount.value);
+				chunk.env[varId].value = val - inc;
+			}
+
+			ip += 2 + bytesRead;
 		}
 		else if (opcode == liaOpcode::opJumpIfGreaterEqual)
 		{
@@ -162,8 +226,10 @@ void liaVM::exeCuteProgram()
 			addrToJump |= chunk.code[ip + 2] << 8;
 
 			unsigned int br,br2;
-			liaVariable lexpr = getExpressionFromCode(chunk, ip + 3, br);
-			liaVariable rexpr = getExpressionFromCode(chunk, ip + 3+br, br2);
+			liaVariable lexpr;
+			getExpressionFromCode(chunk, ip + 3, br,lexpr);
+			liaVariable rexpr;
+			getExpressionFromCode(chunk, ip + 3 + br, br2,rexpr);
 
 			if (lexpr.value >= rexpr.value)
 			{
@@ -176,22 +242,48 @@ void liaVM::exeCuteProgram()
 		}
 		else if (opcode == liaOpcode::opJump)
 		{
-			unsigned short int addrToJump;
-			addrToJump = chunk.code[ip + 1];
-			addrToJump |= chunk.code[ip + 2] << 8;
+			unsigned short int addrToJumpTo;
+			addrToJumpTo = chunk.code[ip + 1];
+			addrToJumpTo |= chunk.code[ip + 2] << 8;
 
-			ip = addrToJump;
+			ip = addrToJumpTo;
+		}
+		else if (opcode == liaOpcode::opSetArrayElement)
+		{
+			const unsigned char arrId = chunk.code[ip + 1];
+			unsigned int numSubscripts = chunk.code[ip + 2];
+
+			liaVariable* pVar = &chunk.env[arrId];
+			unsigned int bytesRead = 0;
+			for (unsigned int sub = 0;sub < numSubscripts;sub++)
+			{
+				// TODO: check bounds
+				unsigned int br=0;
+				liaVariable asub;
+				getExpressionFromCode(chunk, ip + 3 + bytesRead, br,asub);
+				pVar = &pVar->vlist[std::get<int>(asub.value)];
+				bytesRead += br;
+			}
+
+			unsigned int br2 = 0;
+			getExpressionFromCode(chunk, ip + 3 + bytesRead, br2,*pVar);
+
+			ip += 3 + bytesRead+br2;
+		}
+		else
+		{
+			fatalError("Unknown opcode");
 		}
 	}
 }
 
 unsigned char liaVM::findOrAddConstantToConstantPool(liaVariable& constz)
 {
-	ptrdiff_t pos = std::distance(constantPool.pool.begin(), std::find(constantPool.pool.begin(), constantPool.pool.end(), constz));
-	if (pos >= (signed int)constantPool.pool.size())
+	ptrdiff_t pos = std::distance(constantPool.begin(), std::find(constantPool.begin(), constantPool.end(), constz));
+	if (pos >= (signed int)constantPool.size())
 	{
-		constantPool.pool.push_back(constz);
-		return (unsigned char)(constantPool.pool.size() - 1);
+		constantPool.push_back(constz);
+		return (unsigned char)(constantPool.size() - 1);
 	}
 	else
 	{
@@ -235,19 +327,50 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	else if (theAst->iName == grammarElement::ArrayInitializer)
 	{
 		chunk.code.push_back(liaOpcode::opArrayInitializer);
-		chunk.code.push_back((unsigned char)theAst->nodes[0]->nodes.size());
 
-		if (theAst->nodes[0]->nodes.size() != 0)
+		if (theAst->nodes.size() == 0)
 		{
-			assert(theAst->nodes[0]->iName == grammarElement::ExpressionList);
-
-			for (auto& el : theAst->nodes[0]->nodes)
+			// empty array 
+			chunk.code.push_back(0);
+		}
+		else
+		{
+			chunk.code.push_back((unsigned char)theAst->nodes[0]->nodes.size());
+			if (theAst->nodes[0]->nodes.size() != 0)
 			{
-				compileExpression(el, chunk);
+				assert(theAst->nodes[0]->iName == grammarElement::ExpressionList);
+
+				for (auto& el : theAst->nodes[0]->nodes)
+				{
+					compileExpression(el, chunk);
+				}
 			}
 		}
 
 		return liaVariableType::array;
+	}
+	else if (theAst->iName == grammarElement::ArraySubscript)
+	{
+		//std::cout << peg::ast_to_s(theAst);
+
+		chunk.code.push_back(liaOpcode::opArraySubscript);
+
+		std::string varName = theAst->nodes[0]->token_to_string();
+		unsigned int varId;
+		chunk.findVar(varName, varId);
+
+		chunk.code.push_back(varId);
+
+		unsigned int numSubscripts = (unsigned int)(theAst->nodes.size() - 1);
+		chunk.code.push_back(numSubscripts);
+
+		for (auto& sub : theAst->nodes)
+		{
+			if (sub->iName == grammarElement::Expression)
+			{
+				compileExpression(sub, chunk);
+			}
+		}
 	}
 	else if (theAst->iName == grammarElement::VariableName)
 	{
@@ -260,12 +383,31 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 		return chunk.env[varId].type;
 	}
+	else if (theAst->iName == grammarElement::RFuncCall)
+	{
+		//std::cout << peg::ast_to_s(theAst);
+
+		if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionGetMillisecondsSinceEpoch)
+		{
+			chunk.code.push_back(liaOpcode::opLibFunctionCall);
+			chunk.code.push_back(StdFunctionId::FunctionGetMillisecondsSinceEpoch);
+			return liaVariableType::longint;
+		}
+		else
+		{
+			fatalError("Unsupported Rfunction call:" + theAst->nodes[0]->token_to_string());
+		}
+	}
 	else if ((theAst->iName == grammarElement::InnerExpression) || (theAst->iName == grammarElement::Expression))
 	{
 		return compileExpression(theAst->nodes[0], chunk);
 	}
+	else
+	{
+		std::cout << "Error: unknown expression type:" << theAst->name << std::endl;
+	}
 
-	// unreachable
+	// "unreachable"
 	return liaVariableType::integer;
 }
 
@@ -379,13 +521,62 @@ void liaVM::compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAs
 	if (!chunk.findVar(varName, varId))
 	{
 		// var not declared before
-		// TODO: fatal error
+		fatalError("Trying to postincrement undeclared variable " + varName);
 	}
 
 	chunk.code.push_back(liaOpcode::opPostIncrement);
 	chunk.code.push_back(varId);
 
 	compileExpression(theAst->nodes[1], chunk);
+}
+
+void liaVM::compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	std::string varName = theAst->nodes[0]->token_to_string();
+	unsigned int varId;
+
+	if (!chunk.findVar(varName, varId))
+	{
+		// var not declared before
+		fatalError("Trying to postdecrement undeclared variable " + varName);
+	}
+
+	chunk.code.push_back(liaOpcode::opPostDecrement);
+	chunk.code.push_back(varId);
+
+	compileExpression(theAst->nodes[1], chunk);
+}
+
+void liaVM::compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	std::string varName = theAst->nodes[0]->nodes[0]->token_to_string();
+	unsigned int varId;
+
+	if (!chunk.findVar(varName, varId))
+	{
+		// TODO: non-existant array assignment
+		fatalError("Array named " + varName + " not declared at line " + std::to_string(theAst->line));
+	}
+
+	assert(theAst->nodes[1]->iName == grammarElement::Expression);
+
+	chunk.code.push_back(liaOpcode::opSetArrayElement);
+	chunk.code.push_back(varId);
+
+	unsigned int numSubscripts = (unsigned int)(theAst->nodes[0]->nodes.size() - 1);
+	chunk.code.push_back(numSubscripts);
+
+	for (unsigned int sub = 0;sub < numSubscripts;sub++)
+	{
+		compileExpression(theAst->nodes[0]->nodes[sub+1], chunk);
+	}
+
+	liaVariableType vartype = compileExpression(theAst->nodes[1], chunk);
+	//chunk.env[varId].type = vartype;
 }
 
 void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -409,6 +600,22 @@ void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChu
 		else if (stmt->nodes[0]->iName == grammarElement::IncrementStmt)
 		{
 			compilePostIncrementStatement(stmt->nodes[0], chunk);
+		}
+		else if (stmt->nodes[0]->iName == grammarElement::DecrementStmt)
+		{
+			compilePostDecrementStatement(stmt->nodes[0], chunk);
+		}
+		else if (stmt->nodes[0]->iName == grammarElement::ArrayAssignmentStmt)
+		{
+			compileArrayAssignmentStatement(stmt->nodes[0], chunk);
+		}
+		else if ((stmt->nodes[0]->iName == grammarElement::SingleLineComment) || (stmt->nodes[0]->iName == grammarElement::MultiLineComment))
+		{
+			// ignore comments
+		}
+		else
+		{
+			fatalError("Unknown statement type " + stmt->nodes[0]->name);
 		}
 	}
 }

@@ -225,6 +225,9 @@ void liaParser::postProcessAst(std::shared_ptr<peg::Ast>& ast)
 	grammarMap["VariableWithFunction"] = grammarElement::VariableWithFunction;
 	grammarMap["VariableWithProperty"] = grammarElement::VariableWithProperty;
 
+	grammarMap["SingleLineCommentStmt"] = grammarElement::SingleLineComment;
+	grammarMap["MultiLineCommentStmt"] = grammarElement::MultiLineComment;
+
 	std::map<std::string, relopId> relopMap;
 	relopMap["=="] = relopId::RelopEqual;
 	relopMap["<"] = relopId::RelopLess;
