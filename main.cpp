@@ -95,8 +95,17 @@ int main(int argc,char** argv)
 		//theCompiler.exeCute();
 
 		liaVM theVM;
-		theVM.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
-		theVM.exeCuteProgram();
+		try
+		{
+			theVM.compile(theLiaParser.theAst, params, theLiaInterpreter.getLiaFunctions());
+			theVM.exeCuteProgram();
+		}
+		catch (vmException& ex)
+		{
+			ex = ex;
+			return 1;
+		}
+
 #else
 		try
 		{
