@@ -90,9 +90,88 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			retvar.value = now;
 			bytesRead = 2;
 		}
+		else if (funId == StdFunctionId::FunctionToInteger)
+		{
+			unsigned int br = 0;
+			liaVariable element;
+			getExpressionFromCode(chunk, pos + 2, br, element);
+			retvar.type = liaVariableType::integer;
+			retvar.value = element.value;
+			bytesRead = br+2;
+		}
+		else if (funId == StdFunctionId::FunctionReadTextFileLineByLine)
+		{
+			unsigned int br = 0;
+			liaVariable fname;
+			getExpressionFromCode(chunk, pos + 2, br, fname);
+			retvar.type = liaVariableType::array;
+
+			std::string line;
+			std::ifstream file(std::get<std::string>(fname.value));
+			if (file.is_open())
+			{
+				while (std::getline(file, line))
+				{
+					liaVariable l;
+					l.type = liaVariableType::string;
+					l.value = line;
+					retvar.vlist.push_back(l);
+				}
+				file.close();
+			}
+			else
+			{
+				std::string err;
+				err += "Could not open file [" + std::get<std::string>(fname.value) + ".Terminating.";
+				fatalError(err);
+			}
+
+			bytesRead= br + 2;
+		}
 		else
 		{
 			fatalError("Unknown lib function called");
+		}
+	}
+	else if (chunk.code[pos] == liaOpcode::opVarFunctionCall)
+	{
+		unsigned short int varId = chunk.code[pos + 1];
+		unsigned short int funId = chunk.code[pos + 2];
+
+		if (funId == libMethodId::MethodSplit)
+		{
+			retvar.type = liaVariableType::array;
+
+			unsigned int br = 0;
+			liaVariable deLim;
+			getExpressionFromCode(chunk, pos + 3, br, deLim);
+
+			std::string string2split = std::get<std::string>(chunk.env[varId].value);
+			std::string delimiter = std::get<std::string>(deLim.value);
+
+			size_t pos = 0;
+			std::string token;
+			while ((pos = string2split.find(delimiter)) != std::string::npos)
+			{
+				token = string2split.substr(0, pos);
+				liaVariable varEl;
+				varEl.type = liaVariableType::string;
+				varEl.value = token;
+				retvar.vlist.push_back(varEl);
+				string2split.erase(0, pos + delimiter.length());
+			}
+
+			token = string2split.substr(0, pos);
+			liaVariable varEl;
+			varEl.type = liaVariableType::string;
+			varEl.value = token;
+			retvar.vlist.push_back(varEl);
+
+			bytesRead = 3 + br;
+		}
+		else
+		{
+			fatalError("Unknown lib method called");
 		}
 	}
 	else if (chunk.code[pos] == liaOpcode::opGetObjectLength)
@@ -110,14 +189,14 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else
 		{
-			fatalError("Asking length of object with wrong type.");
+			fatalError("Asking length of object with unsupported type.");
 		}
 
 		bytesRead = 2;
 	}
 	else
 	{
-		fatalError("Unknown getExpressionFromCode");
+		fatalError("Unknown getExpressionFromCode:"+std::to_string(chunk.code[pos]));
 	}
 }
 
@@ -199,6 +278,28 @@ void liaVM::exeCuteProgram()
 						innerPrint(v);
 						pos += br;
 						bytesRead += br;
+					}
+					else if (chunk.code[pos] == liaOpcode::opGetObjectLength)
+					{
+						unsigned int br = 0;
+						liaVariable v;
+						getExpressionFromCode(chunk, pos, br, v);
+						innerPrint(v);
+						pos += br;
+						bytesRead += br;
+					}
+					else if (chunk.code[pos] == liaOpcode::opLibFunctionCall)
+					{
+						unsigned int br = 0;
+						liaVariable v;
+						getExpressionFromCode(chunk, pos, br, v);
+						innerPrint(v);
+						pos += br;
+						bytesRead += br;
+					}
+					else
+					{
+						fatalError("Unhandled parameter passed to print ["+std::to_string(chunk.code[pos])+"]");
 					}
 				}
 				std::cout << std::endl;
@@ -320,6 +421,28 @@ void liaVM::exeCuteProgram()
 			}
 
 			ip += 2+numVars;
+		}
+		else if (opcode == liaOpcode::opVarFunctionCall)
+		{
+			unsigned short int varId = chunk.code[ip + 1];
+			unsigned short int funId = chunk.code[ip + 2];
+
+			unsigned int bytesRead = 0;
+			if (funId == libMethodId::MethodAdd)
+			{
+				liaVariable* pVar = &chunk.env[varId];
+				unsigned int br = 0;
+				liaVariable itemToAdd;
+				getExpressionFromCode(chunk, ip + 3, br, itemToAdd);
+				pVar->vlist.push_back(itemToAdd);
+				bytesRead += br;
+			}
+			else
+			{
+				fatalError("Unknown method called");
+			}
+
+			ip += 3 + bytesRead;
 		}
 		else
 		{
@@ -450,6 +573,55 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 		return chunk.env[varId].type;
 	}
+	else if (theAst->iName == grammarElement::VariableWithProperty)
+	{
+		//std::cout << peg::ast_to_s(theAst);
+
+		std::string varName = theAst->nodes[0]->token_to_string();
+		unsigned short int varId;
+		chunk.findVar(varName, varId);
+
+		std::string prop = theAst->nodes[1]->token_to_string();
+
+		if (prop == "length")
+		{
+			chunk.code.push_back(liaOpcode::opGetObjectLength);
+			chunk.code.push_back(varId);
+		}
+		else
+		{
+			fatalError("Unhandled variable property "+prop);
+		}
+
+		return liaVariableType::integer;
+	}
+	else if (theAst->iName == grammarElement::VariableWithFunction)
+	{
+		//std::cout << peg::ast_to_s(theAst);
+
+		std::string varName = theAst->nodes[0]->token_to_string();
+		unsigned short int varId;
+
+		if (!chunk.findVar(varName, varId))
+		{
+			// TODO: non-existant var function call
+			fatalError("Variable named " + varName + " not declared at line " + std::to_string(theAst->line));
+		}
+
+		unsigned short int funId = theAst->nodes[1]->tokenId;
+		if (funId == libMethodId::MethodSplit)
+		{
+			chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			chunk.code.push_back(varId);
+			chunk.code.push_back(funId);
+			compileExpression(theAst->nodes[2]->nodes[0], chunk);
+			return liaVariableType::array;
+		}
+		else
+		{
+			fatalError("Unknown lib method");
+		}
+	}
 	else if (theAst->iName == grammarElement::RFuncCall)
 	{
 		//std::cout << peg::ast_to_s(theAst);
@@ -459,6 +631,20 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 			chunk.code.push_back(liaOpcode::opLibFunctionCall);
 			chunk.code.push_back(StdFunctionId::FunctionGetMillisecondsSinceEpoch);
 			return liaVariableType::longint;
+		}
+		else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionToInteger)
+		{
+			chunk.code.push_back(liaOpcode::opLibFunctionCall);
+			chunk.code.push_back(StdFunctionId::FunctionToInteger);
+			compileExpression(theAst->nodes[1]->nodes[0], chunk);
+			return liaVariableType::integer;
+		}
+		else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionReadTextFileLineByLine)
+		{
+			chunk.code.push_back(liaOpcode::opLibFunctionCall);
+			chunk.code.push_back(StdFunctionId::FunctionReadTextFileLineByLine);
+			compileExpression(theAst->nodes[1]->nodes[0], chunk);
+			return liaVariableType::array;
 		}
 		else
 		{
@@ -471,7 +657,7 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	}
 	else
 	{
-		std::cout << "Error: unknown expression type:" << theAst->name << std::endl;
+		fatalError("Error: unknown expression type:"+theAst->name);
 	}
 
 	// "unreachable"
@@ -728,6 +914,27 @@ void liaVM::compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, lia
 	chunk.code[exitLoopPtr] = (unsigned short int)chunk.code.size();
 }
 
+void liaVM::compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+{
+	//std::cout << peg::ast_to_s(theAst);
+
+	std::string varName = theAst->nodes[0]->token_to_string();
+	unsigned short int varId;
+
+	if (!chunk.findVar(varName, varId))
+	{
+		// TODO: non-existant var function call
+		fatalError("Variable named " + varName + " not declared at line " + std::to_string(theAst->line));
+	}
+
+	unsigned short int funId = theAst->nodes[1]->tokenId;
+
+	chunk.code.push_back(liaOpcode::opVarFunctionCall);
+	chunk.code.push_back(varId);
+	chunk.code.push_back(funId);
+	compileExpression(theAst->nodes[2]->nodes[0], chunk);
+}
+
 void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
 	for (auto& stmt : theAst->nodes)
@@ -761,6 +968,10 @@ void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChu
 		else if (stmt->nodes[0]->iName == grammarElement::ForeachStmt)
 		{
 			compileForeachStatement(stmt->nodes[0], chunk);
+		}
+		else if (stmt->nodes[0]->iName == grammarElement::VarFuncCallStmt)
+		{
+			compileVarFunctionCallStatement(stmt->nodes[0], chunk);
 		}
 		else if ((stmt->nodes[0]->iName == grammarElement::SingleLineComment) || (stmt->nodes[0]->iName == grammarElement::MultiLineComment))
 		{

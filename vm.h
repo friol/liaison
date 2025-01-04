@@ -32,6 +32,7 @@ enum liaOpcode
 	opLibFunctionCall=0x10,
 	opGetObjectLength=0x11,
 	opRemoveLocalVariables=0x12,
+	opVarFunctionCall=0x13,
 };
 
 class vmException : public std::exception
@@ -95,6 +96,7 @@ private:
 	void compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 
