@@ -47,7 +47,7 @@ public:
 
 struct liaCodeChunk
 {
-	std::vector<unsigned short int> code;
+	std::vector<unsigned int> code;
 	std::vector<liaVariable> env;
 	unsigned int seq = 0;
 
@@ -57,7 +57,7 @@ struct liaCodeChunk
 		return seq;
 	}
 
-	bool findVar(std::string varName, unsigned short int& varId)
+	bool findVar(std::string varName, unsigned int& varId)
 	{
 		for (unsigned int pos = 0;pos < env.size();pos++)
 		{
@@ -82,12 +82,12 @@ private:
 
 	void fatalError(std::string err);
 
-	unsigned short int findOrAddConstantToConstantPool(liaVariable& constz);
+	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
 
 	void innerPrint(liaVariable& var);
 	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable& retvar);
 
-	unsigned short int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	unsigned int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	liaVariableType compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
@@ -97,6 +97,7 @@ private:
 	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 
