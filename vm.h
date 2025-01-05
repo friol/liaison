@@ -34,6 +34,10 @@ enum liaOpcode
 	opRemoveLocalVariables=0x12,
 	opVarFunctionCall=0x13,
 	opJumpIfNotEqual = 0x14,
+	opJumpIfEqual = 0x15,
+	opJumpIfLessEqual = 0x16,
+	opNot=0x17,
+	opPostMultiply=0x18,
 };
 
 class vmException : public std::exception
@@ -76,6 +80,8 @@ class liaVM
 {
 private:
 
+	liaVariable internalSub;
+
 	std::vector<liaVariable> constantPool;
 	std::vector<liaCodeChunk> chunks;
 	std::vector<liaFunction> funList;
@@ -85,7 +91,7 @@ private:
 	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
 
 	void innerPrint(liaVariable& var);
-	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable& retvar, std::vector<liaVariable>& env);
+	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable* retvar, std::vector<liaVariable>* env);
 
 	unsigned int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	liaVariableType compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
@@ -95,13 +101,14 @@ private:
 	void compileWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileReturnStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 
-	void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>& params);
+	void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>* params);
 
 	void printCompilationStats();
 
