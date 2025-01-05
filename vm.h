@@ -33,6 +33,7 @@ enum liaOpcode
 	opGetObjectLength=0x11,
 	opRemoveLocalVariables=0x12,
 	opVarFunctionCall=0x13,
+	opJumpIfNotEqual = 0x14,
 };
 
 class vmException : public std::exception
@@ -44,11 +45,10 @@ public:
 	}
 };
 
-
 struct liaCodeChunk
 {
 	std::vector<unsigned int> code;
-	std::vector<liaVariable> env;
+	std::vector<liaVariable> basicEnv;
 	unsigned int seq = 0;
 
 	unsigned int getNextSeq()
@@ -59,9 +59,9 @@ struct liaCodeChunk
 
 	bool findVar(std::string varName, unsigned int& varId)
 	{
-		for (unsigned int pos = 0;pos < env.size();pos++)
+		for (unsigned int pos = 0;pos < basicEnv.size();pos++)
 		{
-			if (env[pos].name == varName)
+			if (basicEnv[pos].name == varName)
 			{
 				varId = pos;
 				return true;
@@ -77,15 +77,15 @@ class liaVM
 private:
 
 	std::vector<liaVariable> constantPool;
-	std::stack<liaVariable> vmstack;
 	std::vector<liaCodeChunk> chunks;
+	std::vector<liaFunction> funList;
 
 	void fatalError(std::string err);
 
 	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
 
 	void innerPrint(liaVariable& var);
-	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable& retvar);
+	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable& retvar, std::vector<liaVariable>& env);
 
 	unsigned int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	liaVariableType compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
@@ -98,8 +98,12 @@ private:
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
-
+	void compileReturnStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
+
+	void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>& params);
+
+	void printCompilationStats();
 
 public:
 
