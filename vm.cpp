@@ -188,9 +188,38 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 			bytesRead = 3 + br;
 		}
+		else if (funId == libMethodId::MethodFind)
+		{
+			retvar->type = liaVariableType::integer;
+
+			unsigned int br = 0;
+			liaVariable val2find;
+			getExpressionFromCode(chunk, pos + 3, br, &val2find, env);
+
+			if ((*env)[varId].type == liaVariableType::array)
+			{
+				liaVariable l2f;
+				l2f.value = val2find.value;
+				ptrdiff_t pos = std::distance((*env)[varId].vlist.begin(), std::find((*env)[varId].vlist.begin(), (*env)[varId].vlist.end(), l2f));
+				if (pos < (signed int)(*env)[varId].vlist.size())
+				{
+					retvar->value = (int)pos;
+				}
+				else
+				{
+					retvar->value = -1;
+				}
+			}
+			else
+			{
+				fatalError("Unsupported find type.");
+			}
+
+			bytesRead = 3 + br;
+		}
 		else
 		{
-			fatalError("Unknown lib method called");
+			fatalError("Unknown lib method called "+std::to_string(funId));
 		}
 	}
 	else if (chunk.code[pos] == liaOpcode::opGetObjectLength)
@@ -218,36 +247,9 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 	else if (chunk.code[pos] == liaOpcode::opFunctionCall)
 	{
 		unsigned int funId = chunk.code[pos + 1];
-		unsigned int br = 0;
-		unsigned int totBr = 0;
-		std::vector<liaVariable> parmz;
-		for (auto& parm : funList[funId].parameters)
-		{
-			liaVariable theParm;
-			getExpressionFromCode(chunk, pos + 2 + totBr, br, &theParm, env);
-			theParm.name = parm.name;
-			parmz.push_back(theParm);
-			totBr += br;
-		}
-
-		//std::vector<liaVariable> savedEnv;
-		//for (auto& v : chunks[funId].basicEnv)
-		//{
-		//	savedEnv.push_back(v);
-		//}
-
-		executeChunk(chunks[funId], *retvar,&parmz);
-
-		//retvar.type = returnValue.type;
-		//retvar.value = returnValue.value;
-
-		//chunks[funId].basicEnv.clear();
-		//for (auto& v : savedEnv)
-		//{
-		//	chunks[funId].basicEnv.push_back(v);
-		//}
-
-		bytesRead = 2 + totBr;
+		unsigned int pbr = 0;
+		executeChunk(chunks[funId], *retvar,funId,pbr,chunk,pos,env);
+		bytesRead = 2 + pbr;
 	}
 	else if (chunk.code[pos] == liaOpcode::opNot)
 	{
@@ -299,19 +301,27 @@ void liaVM::innerPrint(liaVariable& var)
 	}
 }
 
-void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval, std::vector<liaVariable>* params)
+void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval, 
+	unsigned int funId, unsigned int& parmBytesRead,
+	liaCodeChunk& callerChunk,unsigned int callerpos, std::vector<liaVariable>* callerEnv)
 {
 	unsigned int ip = 0;
 	std::vector<liaVariable> runtimeEnv;
 
 	// init runtime env
 	unsigned int idx = 0;
+	unsigned int bbr = 0;
 	for (liaVariable& v : chunk.basicEnv)
 	{
 		runtimeEnv.push_back(v);
-		if (idx < params->size())
+		if (funId!=mainFunId)
 		{
-			runtimeEnv[idx] = (*params)[idx];
+			if (idx < funList[funId].parameters.size())
+			{
+				getExpressionFromCode(callerChunk, callerpos + 2 + parmBytesRead, bbr, &runtimeEnv[idx], callerEnv);
+				//theParm.name = parm.name;
+				parmBytesRead += bbr;
+			}
 		}
 		idx += 1;
 	}
@@ -340,9 +350,9 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval, std::vector<l
 			{
 				// TODO: check bounds
 				unsigned int br = 0;
-				liaVariable asub;
-				getExpressionFromCode(chunk, ip + 3 + bytesRead, br, &asub, &runtimeEnv);
-				pVar = &pVar->vlist[std::get<int>(asub.value)];
+				//liaVariable asub;
+				getExpressionFromCode(chunk, ip + 3 + bytesRead, br, &internalSub, &runtimeEnv);
+				pVar = &pVar->vlist[std::get<int>(internalSub.value)];
 				bytesRead += br;
 			}
 
@@ -439,6 +449,34 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval, std::vector<l
 			else
 			{
 				fatalError("Unhandled post-multiply type");
+			}
+
+			ip += 2 + bytesRead;
+		}
+		else if (opcode == liaOpcode::opPostDivide)
+		{
+			const unsigned int varId = chunk.code[ip + 1];
+
+			unsigned int bytesRead;
+			liaVariable mulAmount;
+			getExpressionFromCode(chunk, ip + 2, bytesRead, &mulAmount, &runtimeEnv);
+			liaVariableType incType = mulAmount.type;
+
+			if (incType == liaVariableType::integer)
+			{
+				int val = std::get<int>(runtimeEnv[varId].value);
+				int inc = std::get<int>(mulAmount.value);
+				runtimeEnv[varId].value = val/inc;
+			}
+			else if (incType == liaVariableType::longint)
+			{
+				long long val = std::get<long long>(runtimeEnv[varId].value);
+				long long inc = std::get<long long>(mulAmount.value);
+				runtimeEnv[varId].value = val/inc;
+			}
+			else
+			{
+				fatalError("Unhandled post-divide type");
 			}
 
 			ip += 2 + bytesRead;
@@ -580,34 +618,12 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval, std::vector<l
 		else if (opcode == liaOpcode::opFunctionCall)
 		{
 			unsigned int funId = chunk.code[ip + 1];
-			unsigned int bytesRead = 0;
-			unsigned int br = 0;
-			std::vector<liaVariable> parmz;
-			for (auto& parm : funList[funId].parameters)
-			{
-				liaVariable theParm;
-				getExpressionFromCode(chunk, ip + 2+ bytesRead,br, &theParm, &runtimeEnv);
-				theParm.name = parm.name;
-				parmz.push_back(theParm);
-				bytesRead += br;
-			}
-
-			//std::vector<liaVariable> savedEnv;
-			//for (auto& v : chunks[funId].basicEnv)
-			//{
-			//	savedEnv.push_back(v);
-			//}
 
 			liaVariable retVal;
-			executeChunk(chunks[funId], retVal,&parmz);
+			unsigned int pbr = 0;
+			executeChunk(chunks[funId], retVal, funId, pbr, chunk, ip, &runtimeEnv);
 
-			//chunks[funId].basicEnv.clear();
-			//for (auto& v : savedEnv)
-			//{
-			//	chunks[funId].basicEnv.push_back(v);
-			//}
-
-			ip += 2 + bytesRead;
+			ip += 2 + pbr;
 		}
 		else if (opcode == liaOpcode::opReturn)
 		{
@@ -700,9 +716,11 @@ void liaVM::exeCuteProgram()
 	{
 		if (fun.name == "main")
 		{
-			std::vector<liaVariable> dummyParms; // TODO: pass params to main
+			mainFunId = funId;
+			//std::vector<liaVariable> dummyParms; // TODO: pass params to main
 			liaVariable dummyVal;
-			executeChunk(chunks[funId],dummyVal,&dummyParms);
+			unsigned int dummyBytesRead=0;
+			executeChunk(chunks[funId], dummyVal, funId, dummyBytesRead, chunks[funId], 0, nullptr);
 		}
 
 		funId += 1;
@@ -970,7 +988,7 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	}
 	else
 	{
-		fatalError("Error: unknown expression type:"+theAst->name);
+		fatalError("Error: unknown expression type:"+theAst->name+" at line "+std::to_string(theAst->line));
 	}
 
 	// "unreachable"
@@ -1405,6 +1423,24 @@ void liaVM::compileMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, li
 
 }
 
+void liaVM::compileDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+{
+	std::string varName = theAst->nodes[0]->token_to_string();
+	unsigned int varId;
+
+	if (!chunk.findVar(varName, varId))
+	{
+		// var not declared before
+		fatalError("Trying to post-divide undeclared variable " + varName);
+	}
+
+	chunk.code.push_back(liaOpcode::opPostDivide);
+	chunk.code.push_back(varId);
+
+	compileExpression(theAst->nodes[1], chunk);
+
+}
+
 void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
 	for (auto& stmt : theAst->nodes)
@@ -1434,6 +1470,10 @@ void liaVM::compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst, liaCodeChu
 		else if (stmt->nodes[0]->iName == grammarElement::MultiplyStmt)
 		{
 			compileMultiplyStatement(stmt->nodes[0], chunk);
+		}
+		else if (stmt->nodes[0]->iName == grammarElement::DivideStmt)
+		{
+			compileDivideStatement(stmt->nodes[0], chunk);
 		}
 		else if (stmt->nodes[0]->iName == grammarElement::ArrayAssignmentStmt)
 		{

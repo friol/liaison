@@ -38,6 +38,7 @@ enum liaOpcode
 	opJumpIfLessEqual = 0x16,
 	opNot=0x17,
 	opPostMultiply=0x18,
+	opPostDivide=0x19,
 };
 
 class vmException : public std::exception
@@ -81,6 +82,7 @@ class liaVM
 private:
 
 	liaVariable internalSub;
+	unsigned int mainFunId = -1;
 
 	std::vector<liaVariable> constantPool;
 	std::vector<liaCodeChunk> chunks;
@@ -102,13 +104,17 @@ private:
 	void compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileReturnStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 
-	void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>* params);
+	//void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>* params);
+	void executeChunk(liaCodeChunk& chunk, liaVariable& retval,
+		unsigned int funId, unsigned int& parmBytesRead,
+		liaCodeChunk& callerChunk, unsigned int callerpos, std::vector<liaVariable>* callerEnv);
 
 	void printCompilationStats();
 
