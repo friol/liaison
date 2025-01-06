@@ -116,6 +116,25 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			retvar->value = std::stoi(std::get<std::string>(element.value));
 			bytesRead = br+2;
 		}
+		else if (funId == StdFunctionId::FunctionToLong)
+		{
+			unsigned int br = 0;
+			liaVariable element;
+			getExpressionFromCode(chunk, pos + 2, br, &element, env);
+			retvar->type = liaVariableType::longint;
+			retvar->value = std::stoll(std::get<std::string>(element.value));
+			bytesRead = br + 2;
+		}
+		else if (funId == StdFunctionId::FunctionToString)
+		{
+			unsigned int br = 0;
+			liaVariable element;
+			getExpressionFromCode(chunk, pos + 2, br, &element, env);
+			retvar->type = liaVariableType::string;
+			// TODO handle also longs
+			retvar->value = std::to_string(std::get<int>(element.value));
+			bytesRead = br + 2;
+		}
 		else if (funId == StdFunctionId::FunctionReadTextFileLineByLine)
 		{
 			unsigned int br = 0;
@@ -210,6 +229,20 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 					retvar->value = -1;
 				}
 			}
+			else if ((*env)[varId].type == liaVariableType::string)
+			{
+				std::string s = std::get<std::string>((*env)[varId].value);
+				const char* ptr = strstr(s.c_str(), std::get<std::string>(val2find.value).c_str());
+				if (ptr == NULL)
+				{
+					retvar->value = -1;
+				}
+				else
+				{
+					const char* ptrbeg = s.c_str();
+					retvar->value = (int)(ptr - ptrbeg);
+				}
+			}
 			else
 			{
 				fatalError("Unsupported find type.");
@@ -264,7 +297,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else
 		{
-			fatalError("Unhandled not type");
+			fatalError("Unhandled not type for opNot");
 		}
 
 		bytesRead = br + 1;
@@ -289,7 +322,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else
 		{
-			fatalError("Unsupported type in math op");
+			fatalError("Unsupported type in math op +");
 		}
 
 		bytesRead = bytesTot + 1;
@@ -314,7 +347,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else
 		{
-			fatalError("Unsupported type in math op");
+			fatalError("Unsupported type in math op -");
 		}
 
 		bytesRead = bytesTot + 1;
@@ -337,9 +370,14 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			retvar->type = liaVariableType::integer;
 			retvar->value = std::get<int>(lexpr.value) * std::get<int>(rexpr.value);
 		}
+		else if (lexpr.type == liaVariableType::longint)
+		{
+			retvar->type = liaVariableType::integer;
+			retvar->value = std::get<long long>(lexpr.value) * std::get<long long>(rexpr.value);
+		}
 		else
 		{
-			fatalError("Unsupported type in math op");
+			fatalError("Unsupported type in math op *");
 		}
 
 		bytesRead = bytesTot + 1;
@@ -364,8 +402,213 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else
 		{
-			fatalError("Unsupported type in math op");
+			fatalError("Unsupported type in math op /");
 		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareGreaterEqual)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) >= std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type for >=");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareGreater)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) > std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type for >");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareLess)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) < std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type for <");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareEqual)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) == std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else if (lexpr.type == liaVariableType::boolean)
+		{
+			bool cond = std::get<bool>(lexpr.value) == std::get<bool>(rexpr.value);
+			retvar->value = cond;
+		}
+		else if (lexpr.type == liaVariableType::longint)
+		{
+			bool cond = std::get<long long>(lexpr.value) == std::get<long long>(rexpr.value);
+			retvar->value = cond;
+		}
+		else if (lexpr.type == liaVariableType::string)
+		{
+			bool cond = std::get<std::string>(lexpr.value) == std::get<std::string>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type ["+std::to_string(lexpr.type)+"] for ==");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareLessEqual)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		if (lexpr.type != rexpr.type)
+		{
+			fatalError("Comparing with <= variables of different type");
+		}
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) <= std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else if (lexpr.type == liaVariableType::longint)
+		{
+			bool cond = std::get<long long>(lexpr.value) <= std::get<long long>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type [" + std::to_string(lexpr.type) + "] for <=");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opCompareNotEqual)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		retvar->type = liaVariableType::boolean;
+		if (lexpr.type == liaVariableType::integer)
+		{
+			bool cond = std::get<int>(lexpr.value) != std::get<int>(rexpr.value);
+			retvar->value = cond;
+		}
+		else if (lexpr.type == liaVariableType::boolean)
+		{
+			bool cond = std::get<bool>(lexpr.value) != std::get<bool>(rexpr.value);
+			retvar->value = cond;
+		}
+		else
+		{
+			fatalError("Unsupported comparison type for !=");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opLogicalAnd)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		// TODO: short circuit here
+		retvar->type = liaVariableType::boolean;
+		retvar->value = std::get<bool>(lexpr.value) && std::get<bool>(rexpr.value);
 
 		bytesRead = bytesTot + 1;
 	}
@@ -581,91 +824,6 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			ip += 2 + bytesRead;
 		}
-		else if (opcode == liaOpcode::opJumpIfGreaterEqual)
-		{
-			unsigned int br, br2;
-			liaVariable lexpr;
-			getExpressionFromCode(chunk, ip + 2, br, &lexpr, &runtimeEnv);
-			liaVariable rexpr;
-			getExpressionFromCode(chunk, ip + 2 + br, br2, &rexpr, &runtimeEnv);
-
-			if (lexpr.value >= rexpr.value)
-			{
-				ip = chunk.code[ip + 1];
-			}
-			else
-			{
-				ip += 2 + br + br2;
-			}
-		}
-		else if (opcode == liaOpcode::opJumpIfLessEqual)
-		{
-			unsigned int br, br2;
-			liaVariable lexpr;
-			getExpressionFromCode(chunk, ip + 2, br, &lexpr, &runtimeEnv);
-			liaVariable rexpr;
-			getExpressionFromCode(chunk, ip + 2 + br, br2, &rexpr, &runtimeEnv);
-
-			if (lexpr.value <= rexpr.value)
-			{
-				ip = chunk.code[ip + 1];
-			}
-			else
-			{
-				ip += 2 + br + br2;
-			}
-		}
-		else if (opcode == liaOpcode::opJumpIfNotEqual)
-		{
-			unsigned int br, br2;
-			liaVariable lexpr;
-			getExpressionFromCode(chunk, ip + 2, br, &lexpr, &runtimeEnv);
-			liaVariable rexpr;
-			getExpressionFromCode(chunk, ip + 2 + br, br2, &rexpr, &runtimeEnv);
-
-			if (lexpr.value != rexpr.value)
-			{
-				ip = chunk.code[ip + 1];
-			}
-			else
-			{
-				ip += 2 + br + br2;
-			}
-		}
-		else if (opcode == liaOpcode::opJumpIfEqual)
-		{
-			unsigned int br, br2;
-			liaVariable lexpr;
-			getExpressionFromCode(chunk, ip + 2, br, &lexpr, &runtimeEnv);
-			liaVariable rexpr;
-			getExpressionFromCode(chunk, ip + 2 + br, br2, &rexpr, &runtimeEnv);
-
-			if (lexpr.value == rexpr.value)
-			{
-				ip = chunk.code[ip + 1];
-			}
-			else
-			{
-				ip += 2 + br + br2;
-			}
-			}
-		else if (opcode == liaOpcode::opJumpIfLess)
-		{
-			unsigned int br, br2;
-			liaVariable lexpr;
-			getExpressionFromCode(chunk, ip + 2, br, &lexpr, &runtimeEnv);
-			liaVariable rexpr;
-			getExpressionFromCode(chunk, ip + 2 + br, br2, &rexpr, &runtimeEnv);
-
-			if (lexpr.value < rexpr.value)
-			{
-				ip = chunk.code[ip + 1];
-			}
-			else
-			{
-				ip += 2 + br + br2;
-			}
-		}
 		else if (opcode == liaOpcode::opJump)
 		{
 			ip = chunk.code[ip + 1];
@@ -802,6 +960,21 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 				ip += 3 + bytesRead;
 			}
 		}
+		else if (opcode == liaOpcode::opLogicalCondition)
+		{
+			unsigned int br;
+			liaVariable condition;
+			getExpressionFromCode(chunk, ip + 2, br, &condition, &runtimeEnv);
+
+			if (std::get<bool>(condition.value)==true)
+			{
+				ip += 2 + br;
+			}
+			else
+			{
+				ip = chunk.code[ip + 1];
+			}
+		}
 		else
 		{
 			fatalError("Runtime error: Unknown opcode [" + std::to_string(opcode) + "]");
@@ -861,6 +1034,21 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 		chunk.code.push_back(constantId);
 		
 		return liaVariableType::integer;
+	}
+	else if (theAst->iName == grammarElement::LongNumber)
+	{
+		// numeric constant - add it to or find it in the constant pool
+		long long constVal = std::stoll(theAst->token_to_string());
+
+		liaVariable theConst;
+		theConst.type = liaVariableType::longint;
+		theConst.value = constVal;
+		unsigned int constantId = findOrAddConstantToConstantPool(theConst);
+
+		chunk.code.push_back(liaOpcode::opConstant);
+		chunk.code.push_back(constantId);
+
+		return liaVariableType::longint;
 	}
 	else if (theAst->iName == grammarElement::StringLiteral)
 	{
@@ -1025,6 +1213,20 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 			compileExpression(theAst->nodes[1]->nodes[0], chunk);
 			return liaVariableType::integer;
 		}
+		else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionToLong)
+		{
+			chunk.code.push_back(liaOpcode::opLibFunctionCall);
+			chunk.code.push_back(StdFunctionId::FunctionToLong);
+			compileExpression(theAst->nodes[1]->nodes[0], chunk);
+			return liaVariableType::longint;
+		}
+		else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionToString)
+		{
+			chunk.code.push_back(liaOpcode::opLibFunctionCall);
+			chunk.code.push_back(StdFunctionId::FunctionToString);
+			compileExpression(theAst->nodes[1]->nodes[0], chunk);
+			return liaVariableType::string;
+		}
 		else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionReadTextFileLineByLine)
 		{
 			chunk.code.push_back(liaOpcode::opLibFunctionCall);
@@ -1120,9 +1322,13 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	{
 		return compileExpression(theAst->nodes[0], chunk);
 	}
+	/*else if ((theAst->iName == grammarElement::InnerCondition) || (theAst->iName == grammarElement::Condition))
+	{
+		return compileExpression(theAst->nodes[0], chunk);
+	}*/
 	else
 	{
-		fatalError("Error: unknown expression type:"+theAst->name+" at line "+std::to_string(theAst->line));
+		fatalError("Unknown expression type:"+theAst->name+" at line "+std::to_string(theAst->line));
 	}
 
 	// "unreachable"
@@ -1212,80 +1418,131 @@ void liaVM::compileFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, li
 	}
 }
 
-unsigned int liaVM::compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+void liaVM::compileInnerCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
-	std::cout << peg::ast_to_s(theAst);
+	//std::cout << peg::ast_to_s(theAst);
+	//std::cout << std::endl;
 
-	//if (theAst->nodes.size() == 3)
-	//{
-
-	//}
-
-	if (theAst->nodes[0]->nodes.size() == 3)
+	if ((theAst->iName == grammarElement::Condition) || (theAst->iName == grammarElement::InnerCondition))
 	{
-		std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0]->nodes[0];
-		int relopid = theAst->nodes[0]->nodes[1]->tokenId;
-		std::shared_ptr<peg::Ast> rExpr = theAst->nodes[0]->nodes[2];
+		if (theAst->nodes.size() == 1)
+		{
+			return compileInnerCondition(theAst->nodes[0], chunk);
+		}
+		else if (theAst->nodes.size() == 3)
+		{
+			// [InnerCondition CondOperator Condition] or [Expression Relop Expression]
+			//std::cout << "Size 3 " << theAst->name << " ns: " << theAst->nodes.size() << std::endl;
+			if ((theAst->nodes[0]->iName == grammarElement::InnerCondition) || (theAst->nodes[0]->iName == grammarElement::Condition))
+			{
+				// condition &&/|| condition
 
-		if (relopid == relopId::RelopLess)
-		{
-			chunk.code.push_back(liaOpcode::opJumpIfGreaterEqual);
-		}
-		else if (relopid == relopId::RelopGreater)
-		{
-			chunk.code.push_back(liaOpcode::opJumpIfLessEqual);
-		}
-		else if (relopid == relopId::RelopEqual)
-		{
-			chunk.code.push_back(liaOpcode::opJumpIfNotEqual);
-		}
-		else if (relopid == relopId::RelopNotEqual)
-		{
-			chunk.code.push_back(liaOpcode::opJumpIfEqual);
-		}
-		else if (relopid == relopId::RelopGreaterEqual)
-		{
-			chunk.code.push_back(liaOpcode::opJumpIfLess);
+				std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0];
+				std::string condOperator = theAst->nodes[1]->token_to_string();
+				std::shared_ptr<peg::Ast> rExpr = theAst->nodes[2];
+
+				if (condOperator == "&&")
+				{
+					chunk.code.push_back(liaOpcode::opLogicalAnd);
+				}
+				else if (condOperator == "||")
+				{
+					chunk.code.push_back(liaOpcode::opLogicalOr);
+				}
+				else
+				{
+					fatalError("Unimplemented logical condition " + condOperator);
+				}
+
+				compileInnerCondition(lExpr, chunk);
+				compileInnerCondition(rExpr, chunk);
+			}
+			else if (theAst->nodes[0]->iName == grammarElement::Expression)
+			{
+				std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0];
+				int relopid = theAst->nodes[1]->tokenId;
+				std::shared_ptr<peg::Ast> rExpr = theAst->nodes[2];
+
+				if (relopid == relopId::RelopLess)
+				{
+					chunk.code.push_back(liaOpcode::opCompareLess);
+				}
+				else if (relopid == relopId::RelopGreater)
+				{
+					chunk.code.push_back(liaOpcode::opCompareGreater);
+				}
+				else if (relopid == relopId::RelopEqual)
+				{
+					chunk.code.push_back(liaOpcode::opCompareEqual);
+				}
+				else if (relopid == relopId::RelopNotEqual)
+				{
+					chunk.code.push_back(liaOpcode::opCompareNotEqual);
+				}
+				else if (relopid == relopId::RelopGreaterEqual)
+				{
+					chunk.code.push_back(liaOpcode::opCompareGreaterEqual);
+				}
+				else if (relopid == relopId::RelopLessEqual)
+				{
+					chunk.code.push_back(liaOpcode::opCompareLessEqual);
+				}
+				else
+				{
+					fatalError("Unhandled relop [" + std::to_string(relopid) + "] at line " + std::to_string(theAst->line));
+				}
+
+				compileExpression(lExpr, chunk);
+				compileExpression(rExpr, chunk);
+				/*else if (theAst->nodes[0]->nodes.size() == 1)
+				{
+					std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0]->nodes[0];
+
+					chunk.code.push_back(liaOpcode::opCompareEqual);
+
+					compileExpression(lExpr, chunk);
+
+					liaVariable falseConst;
+					falseConst.type = liaVariableType::boolean;
+					falseConst.value = false;
+					unsigned int constantId = findOrAddConstantToConstantPool(falseConst);
+
+					chunk.code.push_back(liaOpcode::opConstant);
+					chunk.code.push_back(constantId);
+				}
+				else
+				{
+					fatalError("Unknown condition AST structure");
+				}*/
+			}
 		}
 		else
 		{
-			fatalError("Unhandled relop [" + std::to_string(relopid) + "] at line " + std::to_string(theAst->line));
+			std::string err;
+			err += "Unhandled expression node scenario. ";
+			err += "Terminating.";
+			fatalError(err);
 		}
-
-		unsigned int jumpPtr = (unsigned int)chunk.code.size();
-		chunk.code.push_back(0); // space for jump address
-
-		compileExpression(lExpr, chunk);
-		compileExpression(rExpr, chunk);
-
-		return jumpPtr;
-	}
-	else if (theAst->nodes[0]->nodes.size() == 1)
-	{
-		std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0]->nodes[0];
-
-		chunk.code.push_back(liaOpcode::opJumpIfEqual);
-
-		unsigned int jumpPtr = (unsigned int)chunk.code.size();
-		chunk.code.push_back(0); // space for jump address
-
-		compileExpression(lExpr, chunk);
-		
-		liaVariable falseConst;
-		falseConst.type = liaVariableType::boolean;
-		falseConst.value = false;
-		unsigned int constantId = findOrAddConstantToConstantPool(falseConst);
-
-		chunk.code.push_back(liaOpcode::opConstant);
-		chunk.code.push_back(constantId);
-
-		return jumpPtr;
 	}
 	else
 	{
-		fatalError("Unknown condition AST structure");
-		return 0;
+		if ((theAst->nodes.size() == 1) && (theAst->iName == grammarElement::Expression))
+		{
+			compileExpression(theAst->nodes[0], chunk);
+		}
 	}
+
+}
+
+unsigned int liaVM::compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
+{
+	chunk.code.push_back(liaOpcode::opLogicalCondition);
+	unsigned int jumpPtr = (unsigned int)chunk.code.size();
+	chunk.code.push_back(0); // space for jump address
+
+	compileInnerCondition(theAst, chunk);
+
+	return jumpPtr;
 }
 
 void liaVM::compileWhileStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1421,10 +1678,11 @@ void liaVM::compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, lia
 	std::shared_ptr<peg::Ast> pCodeBlock = theAst->nodes[2];
 	unsigned int loopAddress = (unsigned int)chunk.code.size();
 
-	chunk.code.push_back(liaOpcode::opJumpIfGreaterEqual);
+	chunk.code.push_back(liaOpcode::opLogicalCondition);
 	unsigned int exitLoopPtr = (unsigned int)chunk.code.size();
 	chunk.code.push_back(0); // space for jump address
 
+	chunk.code.push_back(liaOpcode::opCompareLess);
 	chunk.code.push_back(liaOpcode::opGetLocalVariable);
 	chunk.code.push_back(idxVarId);
 	chunk.code.push_back(liaOpcode::opGetObjectLength);

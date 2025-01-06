@@ -49,7 +49,7 @@ int main(int argc,char** argv)
 		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
 		//sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc01.2024.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\vmtest.lia";
+		sourceFileName = "d:\\prova\\liaPrograms\\aoc07.lia";
 	}
 
 	std::ifstream infile(sourceFileName);

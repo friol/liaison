@@ -23,9 +23,9 @@ enum liaOpcode
 	opStdFunctionCall=0x07,
 	opAdd=0x08,
 	opGetLocalVariable=0x09,
-	opJumpIfLess=0x0a,
+	opCompareLess=0x0a,
 	opJump=0x0b,
-	opJumpIfGreaterEqual=0x0c,
+	opCompareGreaterEqual=0x0c,
 	opArrayInitializer=0x0d,
 	opArraySubscript=0x0e,
 	opSetArrayElement=0x0f,
@@ -33,15 +33,19 @@ enum liaOpcode
 	opGetObjectLength=0x11,
 	opRemoveLocalVariables=0x12,
 	opVarFunctionCall=0x13,
-	opJumpIfNotEqual = 0x14,
-	opJumpIfEqual = 0x15,
-	opJumpIfLessEqual = 0x16,
+	opCompareNotEqual = 0x14,
+	opCompareEqual = 0x15,
+	opCompareLessEqual = 0x16,
 	opNot=0x17,
 	opPostMultiply=0x18,
 	opPostDivide=0x19,
 	opSubtract=0x1a,
 	opMultiply=0x1b,
 	opDivide=0x1c,
+	opLogicalCondition=0x1d,
+	opLogicalAnd=0x1e,
+	opLogicalOr=0x1f,
+	opCompareGreater = 0x20,
 };
 
 class vmException : public std::exception
@@ -99,6 +103,8 @@ private:
 	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable* retvar, std::vector<liaVariable>* env);
 
 	unsigned int compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileInnerCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+
 	liaVariableType compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
@@ -114,7 +120,6 @@ private:
 	void compileReturnStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileCodeBlock(const std::shared_ptr<peg::Ast>& theAst,liaCodeChunk& chunk);
 
-	//void executeChunk(liaCodeChunk& chunk,liaVariable& retval,std::vector<liaVariable>* params);
 	void executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 		unsigned int funId, unsigned int& parmBytesRead,
 		liaCodeChunk& callerChunk, unsigned int callerpos, std::vector<liaVariable>* callerEnv);
