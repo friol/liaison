@@ -269,6 +269,106 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 		bytesRead = br + 1;
 	}
+	else if (chunk.code[pos] == liaOpcode::opAdd)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1+ bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		if (lexpr.type == liaVariableType::integer)
+		{
+			retvar->type = liaVariableType::integer;
+			retvar->value = std::get<int>(lexpr.value) + std::get<int>(rexpr.value);
+		}
+		else
+		{
+			fatalError("Unsupported type in math op");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opSubtract)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		if (lexpr.type == liaVariableType::integer)
+		{
+			retvar->type = liaVariableType::integer;
+			retvar->value = std::get<int>(lexpr.value) - std::get<int>(rexpr.value);
+		}
+		else
+		{
+			fatalError("Unsupported type in math op");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opMultiply)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		if (lexpr.type == liaVariableType::integer)
+		{
+			retvar->type = liaVariableType::integer;
+			retvar->value = std::get<int>(lexpr.value) * std::get<int>(rexpr.value);
+		}
+		else
+		{
+			fatalError("Unsupported type in math op");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
+	else if (chunk.code[pos] == liaOpcode::opDivide)
+	{
+		unsigned int bytesTot = 0;
+		unsigned int br = 0;
+		liaVariable lexpr;
+		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		bytesTot += br;
+
+		br = 0;
+		liaVariable rexpr;
+		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
+		bytesTot += br;
+
+		if (lexpr.type == liaVariableType::integer)
+		{
+			retvar->type = liaVariableType::integer;
+			retvar->value = std::get<int>(lexpr.value) / std::get<int>(rexpr.value);
+		}
+		else
+		{
+			fatalError("Unsupported type in math op");
+		}
+
+		bytesRead = bytesTot + 1;
+	}
 	else
 	{
 		fatalError("Unknown getExpressionFromCode:"+std::to_string(chunk.code[pos]));
@@ -747,8 +847,6 @@ unsigned int liaVM::findOrAddConstantToConstantPool(liaVariable& constz)
 
 liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
-	//std::cout << peg::ast_to_s(theAst);
-
 	if (theAst->iName == grammarElement::IntegerNumber)
 	{
 		// numeric constant - add it to or find it in the constant pool
@@ -982,6 +1080,42 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 		return liaVariableType::boolean;
 	}
+	else if ((theAst->iName == grammarElement::Expression) && ((theAst->nodes.size() % 2) == 1) && (theAst->nodes.size() > 2))
+	{
+		//std::cout << peg::ast_to_s(theAst);
+
+		int nodepos = 1;
+		while (nodepos < theAst->nodes.size())
+		{
+			std::string mathOperator = theAst->nodes[nodepos]->token_to_string();
+
+			if (mathOperator == "+")
+			{
+				chunk.code.push_back(liaOpcode::opAdd);
+			}
+			else if (mathOperator == "-")
+			{
+				chunk.code.push_back(liaOpcode::opSubtract);
+			}
+			else if (mathOperator == "*")
+			{
+				chunk.code.push_back(liaOpcode::opMultiply);
+			}
+			else if (mathOperator == "/")
+			{
+				chunk.code.push_back(liaOpcode::opDivide);
+			}
+			else
+			{
+				fatalError("Unsupported math operator " + mathOperator);
+			}
+
+			compileExpression(theAst->nodes[nodepos - 1], chunk);
+
+			nodepos += 2;
+		}
+		compileExpression(theAst->nodes[nodepos - 1], chunk);
+	}
 	else if ((theAst->iName == grammarElement::InnerExpression) || (theAst->iName == grammarElement::Expression))
 	{
 		return compileExpression(theAst->nodes[0], chunk);
@@ -1080,7 +1214,12 @@ void liaVM::compileFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, li
 
 unsigned int liaVM::compileCondition(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
-	//std::cout << peg::ast_to_s(theAst);
+	std::cout << peg::ast_to_s(theAst);
+
+	//if (theAst->nodes.size() == 3)
+	//{
+
+	//}
 
 	if (theAst->nodes[0]->nodes.size() == 3)
 	{

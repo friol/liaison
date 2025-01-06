@@ -39,6 +39,9 @@ enum liaOpcode
 	opNot=0x17,
 	opPostMultiply=0x18,
 	opPostDivide=0x19,
+	opSubtract=0x1a,
+	opMultiply=0x1b,
+	opDivide=0x1c,
 };
 
 class vmException : public std::exception
