@@ -131,8 +131,19 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			liaVariable element;
 			getExpressionFromCode(chunk, pos + 2, br, &element, env);
 			retvar->type = liaVariableType::string;
-			// TODO handle also longs
-			retvar->value = std::to_string(std::get<int>(element.value));
+			
+			if (element.type == liaVariableType::integer)
+			{
+				retvar->value = std::to_string(std::get<int>(element.value));
+			}
+			else if (element.type == liaVariableType::longint)
+			{
+				retvar->value = std::to_string(std::get<long long>(element.value));
+			}
+			else
+			{
+				fatalError("Unhandled toString type");
+			}
 			bytesRead = br + 2;
 		}
 		else if (funId == StdFunctionId::FunctionReadTextFileLineByLine)
@@ -277,6 +288,34 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 		bytesRead = 2;
 	}
+	else if (chunk.code[pos] == liaOpcode::opGetObjectType)
+	{
+		retvar->type = liaVariableType::string;
+		liaVariable* obj = &(*env)[chunk.code[pos + 1]];
+
+		if (obj->type == liaVariableType::array)
+		{
+			retvar->value = "array";
+		}
+		else if (obj->type == liaVariableType::integer)
+		{
+			retvar->value = "integer";
+		}
+		else if (obj->type == liaVariableType::longint)
+		{
+			retvar->value = "long";
+		}
+		else if (obj->type == liaVariableType::string)
+		{
+			retvar->value = "string";
+		}
+		else
+		{
+			fatalError("Asking type of object with unsupported type.");
+		}
+
+		bytesRead = 2;
+	}
 	else if (chunk.code[pos] == liaOpcode::opFunctionCall)
 	{
 		unsigned int funId = chunk.code[pos + 1];
@@ -319,6 +358,11 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		{
 			retvar->type = liaVariableType::integer;
 			retvar->value = std::get<int>(lexpr.value) + std::get<int>(rexpr.value);
+		}
+		else if (lexpr.type == liaVariableType::string)
+		{
+			retvar->type = liaVariableType::string;
+			retvar->value = std::get<std::string>(lexpr.value) + std::get<std::string>(rexpr.value);
 		}
 		else
 		{
@@ -372,7 +416,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		}
 		else if (lexpr.type == liaVariableType::longint)
 		{
-			retvar->type = liaVariableType::integer;
+			retvar->type = liaVariableType::longint;
 			retvar->value = std::get<long long>(lexpr.value) * std::get<long long>(rexpr.value);
 		}
 		else
@@ -941,6 +985,15 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 						pos += br;
 						bytesRead += br;
 					}
+					else if (chunk.code[pos] == liaOpcode::opGetObjectType)
+					{
+						unsigned int br = 0;
+						liaVariable v;
+						getExpressionFromCode(chunk, pos, br, &v, &runtimeEnv);
+						innerPrint(v);
+						pos += br;
+						bytesRead += br;
+					}
 					else if (chunk.code[pos] == liaOpcode::opLibFunctionCall)
 					{
 						unsigned int br = 0;
@@ -1152,6 +1205,11 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 		if (prop == "length")
 		{
 			chunk.code.push_back(liaOpcode::opGetObjectLength);
+			chunk.code.push_back(varId);
+		}
+		else if (prop == "typeof")
+		{
+			chunk.code.push_back(liaOpcode::opGetObjectType);
 			chunk.code.push_back(varId);
 		}
 		else

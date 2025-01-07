@@ -46,6 +46,7 @@ enum liaOpcode
 	opLogicalAnd=0x1e,
 	opLogicalOr=0x1f,
 	opCompareGreater = 0x20,
+	opGetObjectType=0x21,
 };
 
 class vmException : public std::exception

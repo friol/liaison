@@ -135,7 +135,7 @@ liaParser::liaParser()
 	ArraySubscript <- VariableName '[' Expression ']' ('[' Expression ']')*
 
 	VariableWithProperty <- VariableName '.' Property /  ArraySubscript '.' Property
-	Property <- 'length' / 'keys'
+	Property <- 'length' / 'keys' / 'typeof'
 	VariableWithFunction <- VariableName '.' MethodName '(' ( ArgList )* ')'
 
 	FuncCallStmt <- FuncName '(' ( ArgList )* ')' ';' 
