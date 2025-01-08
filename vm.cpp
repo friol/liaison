@@ -54,10 +54,69 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 		retvar->type = liaVariableType::array;
 	}
-	else if (chunk.code[pos] == liaOpcode::opArraySubscript)
+	else if ((chunk.code[pos] == liaOpcode::opGetObjectLengthOfSubscript)|| (chunk.code[pos] == liaOpcode::opGetObjectLengthOfSubscriptGlobal))
+	{
+		retvar->type = liaVariableType::integer;
+		bytesRead = 3;
+
+		liaVariable* pVar;
+		if (chunk.code[pos] == liaOpcode::opGetObjectLengthOfSubscript) pVar = &(*env)[chunk.code[pos + 1]];
+		else pVar = &globalEnv[chunk.code[pos + 1]];
+
+		for (unsigned int sub = 0;sub < chunk.code[pos + 2];sub++)
+		{
+			unsigned int br = 0;
+			getExpressionFromCode(chunk, pos + bytesRead, br, &internalSub, env);
+
+			int idx = std::get<int>(internalSub.value);
+			if (pVar->type == liaVariableType::array)
+			{
+				if (idx >= pVar->vlist.size())
+				{
+					fatalError("Out of bounds - requested index: " + std::to_string(idx) + " - array size: " + std::to_string(pVar->vlist.size()));
+				}
+				pVar = &pVar->vlist[idx];
+			}
+			else
+			{
+				fatalError("Unhandled getLengthOf var type");
+			}
+			/*else if (pVar->type == liaVariableType::string)
+			{
+				if (idx >= std::get<std::string>(pVar->value).size())
+				{
+					fatalError("Out of bounds - requested index: " + std::to_string(idx) + " - array size: " + std::to_string(pVar->vlist.size()));
+				}
+				retvar->type = liaVariableType::string;
+				char c = std::get<std::string>(pVar->value).at(idx);
+				std::string sc;
+				sc += c;
+				retvar->value = sc;
+			}*/
+			bytesRead += br;
+		}
+
+		if (pVar->type == liaVariableType::array)
+		{
+			retvar->value = (int)pVar->vlist.size();
+		}
+		else if (pVar->type == liaVariableType::string)
+		{
+			retvar->value = (int)std::get<std::string>(pVar->value).size();
+		}
+		else
+		{
+			fatalError("Asking length of object with unsupported type.");
+		}
+
+	}
+	else if ((chunk.code[pos] == liaOpcode::opArraySubscript)|| (chunk.code[pos] == liaOpcode::opArraySubscriptGlobal))
 	{
 		bytesRead = 3;
-		liaVariable* pVar = &(*env)[chunk.code[pos + 1]];
+		liaVariable* pVar;
+		if (chunk.code[pos]==liaOpcode::opArraySubscript) pVar= &(*env)[chunk.code[pos + 1]];
+		else pVar= &globalEnv[chunk.code[pos + 1]];
+
 		for (unsigned int sub = 0;sub < chunk.code[pos + 2];sub++)
 		{
 			unsigned int br = 0;
@@ -180,11 +239,15 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			fatalError("Unknown lib function called");
 		}
 	}
-	else if (chunk.code[pos] == liaOpcode::opVarFunctionCall)
+	else if ((chunk.code[pos] == liaOpcode::opVarFunctionCall)|| (chunk.code[pos] == liaOpcode::opVarFunctionCallGlobal))
 	{
 		//std::cout << "varfuncall" << std::endl;
 		unsigned int varId = chunk.code[pos + 1];
 		unsigned int funId = chunk.code[pos + 2];
+
+		liaVariable* pVariable;
+		if (chunk.code[pos] == liaOpcode::opVarFunctionCall) pVariable = &(*env)[varId];
+		else pVariable = &globalEnv[varId];
 
 		if (funId == libMethodId::MethodSplit)
 		{
@@ -195,7 +258,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			liaVariable deLim;
 			getExpressionFromCode(chunk, pos + 3, br, &deLim,env);
 
-			std::string string2split = std::get<std::string>((*env)[varId].value);
+			std::string string2split = std::get<std::string>(pVariable->value);
 			std::string delimiter = std::get<std::string>(deLim.value);
 
 			size_t pos = 0;
@@ -230,8 +293,8 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			{
 				liaVariable l2f;
 				l2f.value = val2find.value;
-				ptrdiff_t pos = std::distance((*env)[varId].vlist.begin(), std::find((*env)[varId].vlist.begin(), (*env)[varId].vlist.end(), l2f));
-				if (pos < (signed int)(*env)[varId].vlist.size())
+				ptrdiff_t pos = std::distance(pVariable->vlist.begin(), std::find(pVariable->vlist.begin(), pVariable->vlist.end(), l2f));
+				if (pos < (signed int)pVariable->vlist.size())
 				{
 					retvar->value = (int)pos;
 				}
@@ -240,9 +303,9 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 					retvar->value = -1;
 				}
 			}
-			else if ((*env)[varId].type == liaVariableType::string)
+			else if (pVariable->type == liaVariableType::string)
 			{
-				std::string s = std::get<std::string>((*env)[varId].value);
+				std::string s = std::get<std::string>(pVariable->value);
 				const char* ptr = strstr(s.c_str(), std::get<std::string>(val2find.value).c_str());
 				if (ptr == NULL)
 				{
@@ -272,6 +335,28 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 		retvar->type = liaVariableType::integer;
 		liaVariable* obj = &(*env)[chunk.code[pos + 1]];
+
+		if (obj->type == liaVariableType::array)
+		{
+			retvar->value = (int)obj->vlist.size();
+		}
+		else if (obj->type == liaVariableType::string)
+		{
+			retvar->value = (int)std::get<std::string>(obj->value).size();
+		}
+		else
+		{
+			fatalError("Asking length of object with unsupported type.");
+		}
+
+		bytesRead = 2;
+	}
+	else if (chunk.code[pos] == liaOpcode::opGetObjectLengthGlobal)
+	{
+		//std::cout << "objlen" << std::endl;
+
+		retvar->type = liaVariableType::integer;
+		liaVariable* obj = &globalEnv[chunk.code[pos + 1]];
 
 		if (obj->type == liaVariableType::array)
 		{
@@ -341,115 +426,109 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 
 		bytesRead = br + 1;
 	}
-	else if (chunk.code[pos] == liaOpcode::opAdd)
+	else if (chunk.code[pos] == liaOpcode::opMathExpression)
 	{
+		liaVariable partialVal;
+
+		unsigned int numExpressions = chunk.code[pos + 1];
+
 		unsigned int bytesTot = 0;
 		unsigned int br = 0;
+
 		liaVariable lexpr;
-		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
+		getExpressionFromCode(chunk, pos + 2, br, &lexpr, env);
 		bytesTot += br;
 
-		br = 0;
-		liaVariable rexpr;
-		getExpressionFromCode(chunk, pos + 1+ bytesTot, br, &rexpr, env);
-		bytesTot += br;
+		partialVal.value = lexpr.value;
+		partialVal.type = lexpr.type;
 
-		if (lexpr.type == liaVariableType::integer)
+		for (unsigned int me = 0;me < numExpressions;me++)
 		{
-			retvar->type = liaVariableType::integer;
-			retvar->value = std::get<int>(lexpr.value) + std::get<int>(rexpr.value);
-		}
-		else if (lexpr.type == liaVariableType::string)
-		{
-			retvar->type = liaVariableType::string;
-			retvar->value = std::get<std::string>(lexpr.value) + std::get<std::string>(rexpr.value);
-		}
-		else
-		{
-			fatalError("Unsupported type in math op +");
-		}
+			unsigned int mathOpz = chunk.code[pos + 2 + me + bytesTot];
 
-		bytesRead = bytesTot + 1;
-	}
-	else if (chunk.code[pos] == liaOpcode::opSubtract)
-	{
-		unsigned int bytesTot = 0;
-		unsigned int br = 0;
-		liaVariable lexpr;
-		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
-		bytesTot += br;
+			br = 0;
+			liaVariable rexpr;
+			getExpressionFromCode(chunk, pos + 2 + (me+1) + bytesTot, br, &rexpr, env);
+			bytesTot += br;
 
-		br = 0;
-		liaVariable rexpr;
-		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
-		bytesTot += br;
+			if (mathOpz == liaOpcode::opAdd)
+			{
+				if (lexpr.type == liaVariableType::integer)
+				{
+					retvar->type = liaVariableType::integer;
+					int rv = std::get<int>(rexpr.value);
+					partialVal.value = std::get<int>(partialVal.value) + rv;
+				}
+				else if (lexpr.type == liaVariableType::string)
+				{
+					retvar->type = liaVariableType::string;
+					std::string rv = std::get<std::string>(rexpr.value);
+					partialVal.value = std::get<std::string>(partialVal.value) + rv;
+				}
+				else
+				{
+					fatalError("Unsupported type in math op +");
+				}
+			}
+			else if (mathOpz == liaOpcode::opSubtract)
+			{
+				if (lexpr.type == liaVariableType::integer)
+				{
+					partialVal.type = liaVariableType::integer;
+					retvar->type = liaVariableType::integer;
 
-		if (lexpr.type == liaVariableType::integer)
-		{
-			retvar->type = liaVariableType::integer;
-			retvar->value = std::get<int>(lexpr.value) - std::get<int>(rexpr.value);
-		}
-		else
-		{
-			fatalError("Unsupported type in math op -");
-		}
+					int rv = std::get<int>(rexpr.value);
+					partialVal.value = std::get<int>(partialVal.value) - rv;
+				}
+				else
+				{
+					fatalError("Unsupported type in math op -");
+				}
+			}
+			else if (mathOpz == liaOpcode::opMultiply)
+			{
+				if (lexpr.type == liaVariableType::integer)
+				{
+					partialVal.type = liaVariableType::integer;
+					retvar->type = liaVariableType::integer;
 
-		bytesRead = bytesTot + 1;
-	}
-	else if (chunk.code[pos] == liaOpcode::opMultiply)
-	{
-		unsigned int bytesTot = 0;
-		unsigned int br = 0;
-		liaVariable lexpr;
-		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
-		bytesTot += br;
+					int rv = std::get<int>(rexpr.value);
+					partialVal.value = std::get<int>(partialVal.value) * rv;
+				}
+				else if (lexpr.type == liaVariableType::longint)
+				{
+					partialVal.type = liaVariableType::longint;
+					retvar->type = liaVariableType::longint;
 
-		br = 0;
-		liaVariable rexpr;
-		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
-		bytesTot += br;
+					long long rv = std::get<long long>(rexpr.value);
+					partialVal.value = std::get<long long>(partialVal.value) * rv;
+				}
+				else
+				{
+					fatalError("Unsupported type in math op *");
+				}
+			}
+			else if (mathOpz == liaOpcode::opDivide)
+			{
+				if (lexpr.type == liaVariableType::integer)
+				{
+					partialVal.type = liaVariableType::integer;
+					retvar->type = liaVariableType::integer;
 
-		if (lexpr.type == liaVariableType::integer)
-		{
-			retvar->type = liaVariableType::integer;
-			retvar->value = std::get<int>(lexpr.value) * std::get<int>(rexpr.value);
-		}
-		else if (lexpr.type == liaVariableType::longint)
-		{
-			retvar->type = liaVariableType::longint;
-			retvar->value = std::get<long long>(lexpr.value) * std::get<long long>(rexpr.value);
-		}
-		else
-		{
-			fatalError("Unsupported type in math op *");
-		}
+					int rv = std::get<int>(rexpr.value);
+					partialVal.value = std::get<int>(partialVal.value) / rv;
+				}
+				else
+				{
+					fatalError("Unsupported type in math op /");
+				}
 
-		bytesRead = bytesTot + 1;
-	}
-	else if (chunk.code[pos] == liaOpcode::opDivide)
-	{
-		unsigned int bytesTot = 0;
-		unsigned int br = 0;
-		liaVariable lexpr;
-		getExpressionFromCode(chunk, pos + 1, br, &lexpr, env);
-		bytesTot += br;
-
-		br = 0;
-		liaVariable rexpr;
-		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
-		bytesTot += br;
-
-		if (lexpr.type == liaVariableType::integer)
-		{
-			retvar->type = liaVariableType::integer;
-			retvar->value = std::get<int>(lexpr.value) / std::get<int>(rexpr.value);
-		}
-		else
-		{
-			fatalError("Unsupported type in math op /");
+			}
 		}
 
-		bytesRead = bytesTot + 1;
+		retvar->value = partialVal.value;
+
+		bytesRead = bytesTot + 2 + numExpressions;
 	}
 	else if (chunk.code[pos] == liaOpcode::opCompareGreaterEqual)
 	{
@@ -630,6 +709,11 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			bool cond = std::get<bool>(lexpr.value) != std::get<bool>(rexpr.value);
 			retvar->value = cond;
 		}
+		else if (lexpr.type == liaVariableType::string)
+		{
+			bool cond = std::get<std::string>(lexpr.value) != std::get<std::string>(rexpr.value);
+			retvar->value = cond;
+		}
 		else
 		{
 			fatalError("Unsupported comparison type for !=");
@@ -658,7 +742,9 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 	}
 	else
 	{
-		fatalError("Unknown getExpressionFromCode:"+std::to_string(chunk.code[pos]));
+		std::stringstream stream;
+		stream << std::hex << chunk.code[pos];
+		fatalError("Unknown getExpressionFromCode:" + stream.str());
 	}
 }
 
@@ -726,12 +812,30 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			ip += 2 + br;
 		}
-		else if (opcode == liaOpcode::opSetArrayElement)
+		else if (opcode == liaOpcode::opSetGlobalVariable)
+		{
+			const unsigned int varId = chunk.code[ip + 1];
+			unsigned int br;
+			getExpressionFromCode(chunk, ip + 2, br, &globalEnv[varId], &runtimeEnv);
+
+			ip += 2 + br;
+		}
+		else if ((opcode == liaOpcode::opSetArrayElement)|| (opcode == liaOpcode::opSetArrayElementGlobal))
 		{
 			const unsigned int arrId = chunk.code[ip + 1];
 			const unsigned int numSubscripts = chunk.code[ip + 2];
 
-			liaVariable* pVar = &runtimeEnv[arrId];
+			liaVariable* pVar;
+			
+			if (opcode == liaOpcode::opSetArrayElement)
+			{
+				pVar = &runtimeEnv[arrId];
+			}
+			else
+			{
+				pVar = &globalEnv[arrId];
+			}
+
 			unsigned int bytesRead = 0;
 			for (unsigned int sub = 0;sub < numSubscripts;sub++)
 			{
@@ -748,11 +852,10 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			ip += 3 + bytesRead + br2;
 		}
-		else if (opcode == liaOpcode::opPostIncrement)
+		else if ((opcode == liaOpcode::opPostIncrement)|| (opcode == liaOpcode::opPostIncrementGlobal))
 		{
 			const unsigned int varId = chunk.code[ip + 1];
 
-			//liaVariableType incType = runtimeEnv[varId].type;
 			unsigned int bytesRead;
 			liaVariable incAmount;
 			getExpressionFromCode(chunk, ip + 2, bytesRead, &incAmount, &runtimeEnv);
@@ -760,34 +863,60 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			if (incType == liaVariableType::integer)
 			{
-				int val = std::get<int>(runtimeEnv[varId].value);
-				int inc = std::get<int>(incAmount.value);
-				runtimeEnv[varId].value = val + inc;
+				if (opcode == liaOpcode::opPostIncrement)
+				{
+					int val = std::get<int>(runtimeEnv[varId].value);
+					int inc = std::get<int>(incAmount.value);
+					runtimeEnv[varId].value = val + inc;
+				}
+				else
+				{
+					int val = std::get<int>(globalEnv[varId].value);
+					int inc = std::get<int>(incAmount.value);
+					globalEnv[varId].value = val + inc;
+				}
 			}
 			else if (incType == liaVariableType::longint)
 			{
-				long long val = std::get<long long>(runtimeEnv[varId].value);
-				long long inc = std::get<long long>(incAmount.value);
-				runtimeEnv[varId].value = val + inc;
+				if (opcode == liaOpcode::opPostIncrement)
+				{
+					long long val = std::get<long long>(runtimeEnv[varId].value);
+					long long inc = std::get<long long>(incAmount.value);
+					runtimeEnv[varId].value = val + inc;
+				}
+				else
+				{
+					long long val = std::get<long long>(globalEnv[varId].value);
+					long long inc = std::get<long long>(incAmount.value);
+					globalEnv[varId].value = val + inc;
+				}
 			}
 			else if (incType == liaVariableType::string)
 			{
-				std::string val = std::get<std::string>(runtimeEnv[varId].value);
-				std::string inc = std::get<std::string>(incAmount.value);
-				runtimeEnv[varId].value = val + inc;
+				if (opcode == liaOpcode::opPostIncrement)
+				{
+					std::string val = std::get<std::string>(runtimeEnv[varId].value);
+					std::string inc = std::get<std::string>(incAmount.value);
+					runtimeEnv[varId].value = val + inc;
+				}
+				else
+				{
+					std::string val = std::get<std::string>(globalEnv[varId].value);
+					std::string inc = std::get<std::string>(incAmount.value);
+					globalEnv[varId].value = val + inc;
+				}
 			}
 			else
 			{
-				fatalError("Unhandled postdecrement type");
+				fatalError("Unhandled postincrement type");
 			}
 
 			ip += 2 + bytesRead;
 		}
-		else if (opcode == liaOpcode::opPostDecrement)
+		else if ((opcode == liaOpcode::opPostDecrement)|| (opcode == liaOpcode::opPostDecrementGlobal))
 		{
 			const unsigned int varId = chunk.code[ip + 1];
 
-			//liaVariableType incType = runtimeEnv[varId].type;
 			unsigned int bytesRead;
 			liaVariable incAmount;
 			getExpressionFromCode(chunk, ip + 2, bytesRead, &incAmount, &runtimeEnv);
@@ -795,15 +924,33 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			if (incType == liaVariableType::integer)
 			{
-				int val = std::get<int>(runtimeEnv[varId].value);
-				int inc = std::get<int>(incAmount.value);
-				runtimeEnv[varId].value = val - inc;
+				if (opcode == liaOpcode::opPostDecrement)
+				{
+					int val = std::get<int>(runtimeEnv[varId].value);
+					int inc = std::get<int>(incAmount.value);
+					runtimeEnv[varId].value = val - inc;
+				}
+				else
+				{
+					int val = std::get<int>(globalEnv[varId].value);
+					int inc = std::get<int>(incAmount.value);
+					globalEnv[varId].value = val - inc;
+				}
 			}
 			else if (incType == liaVariableType::longint)
 			{
-				long long val = std::get<long long>(runtimeEnv[varId].value);
-				long long inc = std::get<long long>(incAmount.value);
-				runtimeEnv[varId].value = val - inc;
+				if (opcode == liaOpcode::opPostDecrement)
+				{
+					long long val = std::get<long long>(runtimeEnv[varId].value);
+					long long inc = std::get<long long>(incAmount.value);
+					runtimeEnv[varId].value = val - inc;
+				}
+				else
+				{
+					long long val = std::get<long long>(globalEnv[varId].value);
+					long long inc = std::get<long long>(incAmount.value);
+					globalEnv[varId].value = val - inc;
+				}
 			}
 			else
 			{
@@ -872,15 +1019,18 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 		{
 			ip = chunk.code[ip + 1];
 		}
-		else if (opcode == liaOpcode::opVarFunctionCall)
+		else if ((opcode == liaOpcode::opVarFunctionCall)|| (opcode == liaOpcode::opVarFunctionCallGlobal))
 		{
 			unsigned int varId = chunk.code[ip + 1];
 			unsigned int funId = chunk.code[ip + 2];
 
+			liaVariable* pVar;
+			if (opcode == liaOpcode::opVarFunctionCall) pVar = &runtimeEnv[varId];
+			else pVar = &globalEnv[varId];
+
 			unsigned int bytesRead = 0;
 			if (funId == libMethodId::MethodAdd)
 			{
-				liaVariable* pVar = &runtimeEnv[varId];
 				unsigned int br = 0;
 				liaVariable itemToAdd;
 				getExpressionFromCode(chunk, ip + 3, br, &itemToAdd, &runtimeEnv);
@@ -889,8 +1039,6 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			}
 			else if (funId == libMethodId::MethodSort)
 			{
-				liaVariable* pVar = &runtimeEnv[varId];
-
 				if (pVar->vlist.size() != 0)
 				{
 					if (pVar->vlist[0].type == liaVariableType::integer)
@@ -964,6 +1112,13 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 					{
 						unsigned int varId = chunk.code[pos + 1];
 						innerPrint(runtimeEnv[varId]);
+						pos += 2;
+						bytesRead += 2;
+					}
+					else if (chunk.code[pos] == liaOpcode::opGetGlobalVariable)
+					{
+						unsigned int varId = chunk.code[pos + 1];
+						innerPrint(globalEnv[varId]);
 						pos += 2;
 						bytesRead += 2;
 					}
@@ -1162,11 +1317,18 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	{
 		//std::cout << peg::ast_to_s(theAst);
 
-		chunk.code.push_back(liaOpcode::opArraySubscript);
-
 		std::string varName = theAst->nodes[0]->token_to_string();
 		unsigned int varId;
-		chunk.findVar(varName, varId);
+
+		if (!findGlobalVariable(varName, varId))
+		{
+			chunk.findVar(varName, varId);
+			chunk.code.push_back(liaOpcode::opArraySubscript);
+		}
+		else
+		{
+			chunk.code.push_back(liaOpcode::opArraySubscriptGlobal);
+		}
 
 		chunk.code.push_back(varId);
 
@@ -1185,36 +1347,94 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	{
 		std::string varName = theAst->token_to_string();
 		unsigned int varId;
-		chunk.findVar(varName, varId);
 
-		chunk.code.push_back(liaOpcode::opGetLocalVariable);
-		chunk.code.push_back(varId);
-
-		return chunk.basicEnv[varId].type;
+		if (findGlobalVariable(varName, varId))
+		{
+			chunk.code.push_back(liaOpcode::opGetGlobalVariable);
+			chunk.code.push_back(varId);
+			return globalEnv[varId].type;
+		}
+		else
+		{
+			chunk.findVar(varName, varId);
+			chunk.code.push_back(liaOpcode::opGetLocalVariable);
+			chunk.code.push_back(varId);
+			return chunk.basicEnv[varId].type;
+		}
 	}
 	else if (theAst->iName == grammarElement::VariableWithProperty)
 	{
 		//std::cout << peg::ast_to_s(theAst);
 
-		std::string varName = theAst->nodes[0]->token_to_string();
-		unsigned int varId;
-		chunk.findVar(varName, varId);
-
-		std::string prop = theAst->nodes[1]->token_to_string();
-
-		if (prop == "length")
+		if (theAst->nodes[0]->iName == grammarElement::ArraySubscript)
 		{
-			chunk.code.push_back(liaOpcode::opGetObjectLength);
-			chunk.code.push_back(varId);
-		}
-		else if (prop == "typeof")
-		{
-			chunk.code.push_back(liaOpcode::opGetObjectType);
-			chunk.code.push_back(varId);
+			std::string prop = theAst->nodes[1]->token_to_string();
+			if (prop == "length")
+			{
+				std::string varName = theAst->nodes[0]->nodes[0]->token_to_string();
+				unsigned int varId;
+				bool isGlobal = true;
+
+				if (!findGlobalVariable(varName, varId))
+				{
+					isGlobal = false;
+					chunk.findVar(varName, varId);
+				}
+
+				if (!isGlobal) chunk.code.push_back(liaOpcode::opGetObjectLengthOfSubscript);
+				else chunk.code.push_back(liaOpcode::opGetObjectLengthOfSubscriptGlobal);
+
+				chunk.code.push_back(varId);
+
+				unsigned int numSubscripts = (unsigned int)(theAst->nodes.size() - 1);
+				chunk.code.push_back(numSubscripts);
+
+				for (auto& sub : theAst->nodes[0]->nodes)
+				{
+					if (sub->iName == grammarElement::Expression)
+					{
+						compileExpression(sub, chunk);
+					}
+				}
+			}
+			else
+			{
+				fatalError("Unsupported array subscript property " + prop);
+			}
+
+
+			//fatalError("Property of array subscript is unsupported at line "+std::to_string(theAst->line));
 		}
 		else
 		{
-			fatalError("Unhandled variable property "+prop);
+			std::string varName = theAst->nodes[0]->token_to_string();
+			unsigned int varId;
+			bool isGlobal = true;
+
+			if (!findGlobalVariable(varName, varId))
+			{
+				isGlobal = false;
+				chunk.findVar(varName, varId);
+			}
+
+			std::string prop = theAst->nodes[1]->token_to_string();
+
+			if (prop == "length")
+			{
+				if (!isGlobal) chunk.code.push_back(liaOpcode::opGetObjectLength);
+				else chunk.code.push_back(liaOpcode::opGetObjectLengthGlobal);
+				chunk.code.push_back(varId);
+			}
+			else if (prop == "typeof")
+			{
+				if (!isGlobal) chunk.code.push_back(liaOpcode::opGetObjectType);
+				else chunk.code.push_back(liaOpcode::opGetObjectTypeGlobal);
+				chunk.code.push_back(varId);
+			}
+			else
+			{
+				fatalError("Unhandled variable property " + prop);
+			}
 		}
 
 		return liaVariableType::integer;
@@ -1225,17 +1445,23 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 		std::string varName = theAst->nodes[0]->token_to_string();
 		unsigned int varId;
+		bool varIsGlobal = true;
 
-		if (!chunk.findVar(varName, varId))
+		if (!findGlobalVariable(varName, varId))
 		{
-			// TODO: non-existant var function call
-			fatalError("Variable named " + varName + " not declared at line " + std::to_string(theAst->line));
+			varIsGlobal = false;
+			if (!chunk.findVar(varName, varId))
+			{
+				// TODO: non-existant var function call
+				fatalError("Variable Named " + varName + " not declared at line " + std::to_string(theAst->line));
+			}
 		}
 
 		unsigned int funId = theAst->nodes[1]->tokenId;
 		if (funId == libMethodId::MethodSplit)
 		{
-			chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			if (!varIsGlobal) chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			else chunk.code.push_back(liaOpcode::opVarFunctionCallGlobal);
 			chunk.code.push_back(varId);
 			chunk.code.push_back(funId);
 			compileExpression(theAst->nodes[2]->nodes[0], chunk);
@@ -1243,7 +1469,8 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 		}
 		else if (funId == libMethodId::MethodFind)
 		{
-			chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			if (!varIsGlobal) chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			else chunk.code.push_back(liaOpcode::opVarFunctionCallGlobal);
 			chunk.code.push_back(varId);
 			chunk.code.push_back(funId);
 			compileExpression(theAst->nodes[2]->nodes[0], chunk);
@@ -1344,7 +1571,11 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	{
 		//std::cout << peg::ast_to_s(theAst);
 
+		chunk.code.push_back(liaOpcode::opMathExpression);
+		chunk.code.push_back((unsigned int)((theAst->nodes.size()-1)/2));
+
 		int nodepos = 1;
+		compileExpression(theAst->nodes[0], chunk);
 		while (nodepos < theAst->nodes.size())
 		{
 			std::string mathOperator = theAst->nodes[nodepos]->token_to_string();
@@ -1370,20 +1601,15 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 				fatalError("Unsupported math operator " + mathOperator);
 			}
 
-			compileExpression(theAst->nodes[nodepos - 1], chunk);
-
+			compileExpression(theAst->nodes[nodepos + 1], chunk);
 			nodepos += 2;
 		}
-		compileExpression(theAst->nodes[nodepos - 1], chunk);
+		//compileExpression(theAst->nodes[nodepos - 1], chunk);
 	}
 	else if ((theAst->iName == grammarElement::InnerExpression) || (theAst->iName == grammarElement::Expression))
 	{
 		return compileExpression(theAst->nodes[0], chunk);
 	}
-	/*else if ((theAst->iName == grammarElement::InnerCondition) || (theAst->iName == grammarElement::Condition))
-	{
-		return compileExpression(theAst->nodes[0], chunk);
-	}*/
 	else
 	{
 		fatalError("Unknown expression type:"+theAst->name+" at line "+std::to_string(theAst->line));
@@ -1393,6 +1619,22 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 	return liaVariableType::integer;
 }
 
+bool liaVM::findGlobalVariable(std::string& vname, unsigned int& varId)
+{
+	unsigned int idx = 0;
+	while (idx < globalEnv.size())
+	{
+		if (globalEnv[idx].name == vname)
+		{
+			varId = idx;
+			return true;
+		}
+		idx += 1;
+	}
+
+	return false;
+}
+
 void liaVM::compileVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
 {
 	//std::cout << peg::ast_to_s(theAst);
@@ -1400,21 +1642,30 @@ void liaVM::compileVarDeclStatement(const std::shared_ptr<peg::Ast>& theAst, lia
 	std::string varName = theAst->nodes[0]->token_to_string();
 	unsigned int varId;
 
-	if (!chunk.findVar(varName,varId))
+	if (findGlobalVariable(varName, varId))
 	{
-		liaVariable newVar;
-		newVar.name = varName;
-		chunk.basicEnv.push_back(newVar);
-		varId = (unsigned int)(chunk.basicEnv.size() - 1);
+		chunk.code.push_back(liaOpcode::opSetGlobalVariable);
+		chunk.code.push_back(varId);
+		compileExpression(theAst->nodes[1], chunk);
 	}
+	else
+	{
+		if (!chunk.findVar(varName, varId))
+		{
+			liaVariable newVar;
+			newVar.name = varName;
+			chunk.basicEnv.push_back(newVar);
+			varId = (unsigned int)(chunk.basicEnv.size() - 1);
+		}
 
-	assert(theAst->nodes[1]->iName == grammarElement::Expression);
+		assert(theAst->nodes[1]->iName == grammarElement::Expression);
 
-	chunk.code.push_back(liaOpcode::opSetLocalVariable);
-	chunk.code.push_back(varId);
+		chunk.code.push_back(liaOpcode::opSetLocalVariable);
+		chunk.code.push_back(varId);
 
-	liaVariableType vartype=compileExpression(theAst->nodes[1], chunk);
-	chunk.basicEnv[varId].type = vartype;
+		liaVariableType vartype = compileExpression(theAst->nodes[1], chunk);
+		chunk.basicEnv[varId].type = vartype;
+	}
 }
 
 void liaVM::compileFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1552,26 +1803,6 @@ void liaVM::compileInnerCondition(const std::shared_ptr<peg::Ast>& theAst, liaCo
 
 				compileExpression(lExpr, chunk);
 				compileExpression(rExpr, chunk);
-				/*else if (theAst->nodes[0]->nodes.size() == 1)
-				{
-					std::shared_ptr<peg::Ast> lExpr = theAst->nodes[0]->nodes[0];
-
-					chunk.code.push_back(liaOpcode::opCompareEqual);
-
-					compileExpression(lExpr, chunk);
-
-					liaVariable falseConst;
-					falseConst.type = liaVariableType::boolean;
-					falseConst.value = false;
-					unsigned int constantId = findOrAddConstantToConstantPool(falseConst);
-
-					chunk.code.push_back(liaOpcode::opConstant);
-					chunk.code.push_back(constantId);
-				}
-				else
-				{
-					fatalError("Unknown condition AST structure");
-				}*/
 			}
 		}
 		else
@@ -1631,16 +1862,25 @@ void liaVM::compilePostIncrementStatement(const std::shared_ptr<peg::Ast>& theAs
 	std::string varName = theAst->nodes[0]->token_to_string();
 	unsigned int varId;
 
-	if (!chunk.findVar(varName, varId))
+	if (findGlobalVariable(varName, varId))
 	{
-		// var not declared before
-		fatalError("Trying to postincrement undeclared variable " + varName);
+		chunk.code.push_back(liaOpcode::opPostIncrementGlobal);
+		chunk.code.push_back(varId);
+		compileExpression(theAst->nodes[1], chunk);
 	}
+	else
+	{
+		if (!chunk.findVar(varName, varId))
+		{
+			// var not declared before
+			fatalError("Trying to postincrement undeclared variable " + varName);
+		}
 
-	chunk.code.push_back(liaOpcode::opPostIncrement);
-	chunk.code.push_back(varId);
+		chunk.code.push_back(liaOpcode::opPostIncrement);
+		chunk.code.push_back(varId);
 
-	compileExpression(theAst->nodes[1], chunk);
+		compileExpression(theAst->nodes[1], chunk);
+	}
 }
 
 void liaVM::compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1650,16 +1890,25 @@ void liaVM::compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAs
 	std::string varName = theAst->nodes[0]->token_to_string();
 	unsigned int varId;
 
-	if (!chunk.findVar(varName, varId))
+	if (findGlobalVariable(varName, varId))
 	{
-		// var not declared before
-		fatalError("Trying to postdecrement undeclared variable " + varName);
+		chunk.code.push_back(liaOpcode::opPostDecrementGlobal);
+		chunk.code.push_back(varId);
+		compileExpression(theAst->nodes[1], chunk);
 	}
+	else
+	{
+		if (!chunk.findVar(varName, varId))
+		{
+			// var not declared before
+			fatalError("Trying to postdecrement undeclared variable " + varName);
+		}
 
-	chunk.code.push_back(liaOpcode::opPostDecrement);
-	chunk.code.push_back(varId);
+		chunk.code.push_back(liaOpcode::opPostDecrement);
+		chunk.code.push_back(varId);
 
-	compileExpression(theAst->nodes[1], chunk);
+		compileExpression(theAst->nodes[1], chunk);
+	}
 }
 
 void liaVM::compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1669,27 +1918,44 @@ void liaVM::compileArrayAssignmentStatement(const std::shared_ptr<peg::Ast>& the
 	std::string varName = theAst->nodes[0]->nodes[0]->token_to_string();
 	unsigned int varId;
 
-	if (!chunk.findVar(varName, varId))
+	if (findGlobalVariable(varName, varId))
 	{
-		// TODO: non-existant array assignment
-		fatalError("Array named " + varName + " not declared at line " + std::to_string(theAst->line));
+		chunk.code.push_back(liaOpcode::opSetArrayElementGlobal);
+		chunk.code.push_back(varId);
+
+		unsigned int numSubscripts = (unsigned int)(theAst->nodes[0]->nodes.size() - 1);
+		chunk.code.push_back(numSubscripts);
+
+		for (unsigned int sub = 0;sub < numSubscripts;sub++)
+		{
+			compileExpression(theAst->nodes[0]->nodes[sub + 1], chunk);
+		}
+
+		liaVariableType vartype = compileExpression(theAst->nodes[1], chunk);
 	}
-
-	assert(theAst->nodes[1]->iName == grammarElement::Expression);
-
-	chunk.code.push_back(liaOpcode::opSetArrayElement);
-	chunk.code.push_back(varId);
-
-	unsigned int numSubscripts = (unsigned int)(theAst->nodes[0]->nodes.size() - 1);
-	chunk.code.push_back(numSubscripts);
-
-	for (unsigned int sub = 0;sub < numSubscripts;sub++)
+	else
 	{
-		compileExpression(theAst->nodes[0]->nodes[sub+1], chunk);
-	}
+		if (!chunk.findVar(varName, varId))
+		{
+			// TODO: non-existant array assignment
+			fatalError("Array named " + varName + " not declared at line " + std::to_string(theAst->line));
+		}
 
-	liaVariableType vartype = compileExpression(theAst->nodes[1], chunk);
-	//chunk.env[varId].type = vartype;
+		assert(theAst->nodes[1]->iName == grammarElement::Expression);
+
+		chunk.code.push_back(liaOpcode::opSetArrayElement);
+		chunk.code.push_back(varId);
+
+		unsigned int numSubscripts = (unsigned int)(theAst->nodes[0]->nodes.size() - 1);
+		chunk.code.push_back(numSubscripts);
+
+		for (unsigned int sub = 0;sub < numSubscripts;sub++)
+		{
+			compileExpression(theAst->nodes[0]->nodes[sub + 1], chunk);
+		}
+
+		liaVariableType vartype = compileExpression(theAst->nodes[1], chunk);
+	}
 }
 
 void liaVM::compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1788,21 +2054,37 @@ void liaVM::compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& the
 	std::string varName = theAst->nodes[0]->token_to_string();
 	unsigned int varId;
 
-	if (!chunk.findVar(varName, varId))
+	if (findGlobalVariable(varName, varId))
 	{
-		// TODO: non-existant var function call
-		fatalError("Variable named " + varName + " not declared at line " + std::to_string(theAst->line));
+		unsigned int funId = theAst->nodes[1]->tokenId;
+
+		chunk.code.push_back(liaOpcode::opVarFunctionCallGlobal);
+		chunk.code.push_back(varId);
+		chunk.code.push_back(funId);
+
+		if (theAst->nodes.size() > 2)
+		{
+			compileExpression(theAst->nodes[2]->nodes[0], chunk);
+		}
 	}
-
-	unsigned int funId = theAst->nodes[1]->tokenId;
-
-	chunk.code.push_back(liaOpcode::opVarFunctionCall);
-	chunk.code.push_back(varId);
-	chunk.code.push_back(funId);
-
-	if (theAst->nodes.size() > 2)
+	else
 	{
-		compileExpression(theAst->nodes[2]->nodes[0], chunk);
+		if (!chunk.findVar(varName, varId))
+		{
+			// TODO: non-existant var function call
+			fatalError("Variable named " + varName + " not declared at line " + std::to_string(theAst->line));
+		}
+
+		unsigned int funId = theAst->nodes[1]->tokenId;
+
+		chunk.code.push_back(liaOpcode::opVarFunctionCall);
+		chunk.code.push_back(varId);
+		chunk.code.push_back(funId);
+
+		if (theAst->nodes.size() > 2)
+		{
+			compileExpression(theAst->nodes[2]->nodes[0], chunk);
+		}
 	}
 }
 
@@ -1875,7 +2157,6 @@ void liaVM::compileMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, li
 	chunk.code.push_back(varId);
 
 	compileExpression(theAst->nodes[1], chunk);
-
 }
 
 void liaVM::compileDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk)
@@ -1974,6 +2255,16 @@ void liaVM::printCompilationStats()
 	std::cout << "]" << std::endl;
 }
 
+int liaVM::getGlobalVariables(liaEnvironment& gEnv)
+{
+	for (auto& v : gEnv.varMap)
+	{
+		globalEnv.push_back(v.second);
+	}
+
+	return 0;
+}
+
 int liaVM::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<std::string> params, std::unordered_map<std::string, liaFunction> functionList)
 {
 	for (auto& f : functionList)
@@ -1993,6 +2284,7 @@ int liaVM::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<std::str
 			chunk.basicEnv.push_back(p);
 		}
 
+		std::cout << "Compiling:" << f.second.name << std::endl;
 		compileCodeBlock(f.second.functionCodeBlockAst,chunk);
 		chunks.push_back(chunk);
 	}

@@ -141,6 +141,7 @@ public:
 
 	int storeGlobalVariables(std::shared_ptr<peg::Ast> theAst);
 	void getFunctions(std::shared_ptr<peg::Ast> theAst);
+	liaEnvironment& getGlobalScope() { return globalScope; }
 	std::unordered_map<std::string, liaFunction>& getLiaFunctions() { return functionMap; }
 	void dumpFunctions();
 	

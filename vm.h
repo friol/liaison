@@ -15,38 +15,59 @@
 enum liaOpcode
 {
 	opReturn=0x01,
+
 	opPostIncrement=0x02,
 	opPostDecrement=0x03,
+	opPostMultiply = 0x18,
+	opPostDivide = 0x19,
+
 	opConstant=0x04,
+	opGetLocalVariable = 0x09,
 	opSetLocalVariable=0x05,
 	opFunctionCall=0x06,
 	opStdFunctionCall=0x07,
+	opLibFunctionCall = 0x10,
+	opVarFunctionCall = 0x13,
+	opVarFunctionCallGlobal = 0x27,
+
 	opAdd=0x08,
-	opGetLocalVariable=0x09,
+	opSubtract = 0x1a,
+	opMultiply = 0x1b,
+	opDivide = 0x1c,
+	opMathExpression=0x2b,
+	opMathTrain=0x2c,
+
 	opCompareLess=0x0a,
+	opCompareLessEqual = 0x16,
+	opCompareGreater = 0x20,
+	opCompareGreaterEqual = 0x0c,
+	opCompareEqual = 0x15,
+	opCompareNotEqual = 0x14,
+
 	opJump=0x0b,
-	opCompareGreaterEqual=0x0c,
 	opArrayInitializer=0x0d,
 	opArraySubscript=0x0e,
+	opArraySubscriptGlobal=0x2a,
 	opSetArrayElement=0x0f,
-	opLibFunctionCall=0x10,
+	opSetArrayElementGlobal=0x26,
 	opGetObjectLength=0x11,
-	opRemoveLocalVariables=0x12,
-	opVarFunctionCall=0x13,
-	opCompareNotEqual = 0x14,
-	opCompareEqual = 0x15,
-	opCompareLessEqual = 0x16,
+	opGetObjectLengthGlobal=0x29,
+	opGetObjectLengthOfSubscript=0x2d,
+	opGetObjectLengthOfSubscriptGlobal=0x2e,
+	/*opRemoveLocalVariables = 0x12,*/
+
 	opNot=0x17,
-	opPostMultiply=0x18,
-	opPostDivide=0x19,
-	opSubtract=0x1a,
-	opMultiply=0x1b,
-	opDivide=0x1c,
 	opLogicalCondition=0x1d,
 	opLogicalAnd=0x1e,
 	opLogicalOr=0x1f,
-	opCompareGreater = 0x20,
+
 	opGetObjectType=0x21,
+	opGetObjectTypeGlobal=0x28,
+	opGetGlobalVariable=0x22,
+	opSetGlobalVariable=0x23,
+
+	opPostIncrementGlobal = 0x24,
+	opPostDecrementGlobal=0x25,
 };
 
 class vmException : public std::exception
@@ -96,9 +117,12 @@ private:
 	std::vector<liaCodeChunk> chunks;
 	std::vector<liaFunction> funList;
 
+	std::vector<liaVariable> globalEnv;
+
 	void fatalError(std::string err);
 
 	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
+	bool findGlobalVariable(std::string& vname, unsigned int& varId);
 
 	void innerPrint(liaVariable& var);
 	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable* retvar, std::vector<liaVariable>* env);
@@ -129,6 +153,7 @@ private:
 
 public:
 
+	int getGlobalVariables(liaEnvironment& gEnv);
 	int compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<std::string> params, std::unordered_map<std::string, liaFunction> functionList);
 	void exeCuteProgram();
 
