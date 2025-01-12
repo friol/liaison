@@ -192,7 +192,7 @@ fn part1(arr)
 
     //printGrid(listOfRobots,tilesx,tilesy);
 
-    print("Part 1:",countQuadrants(listOfRobots,tilesx,tilesy));
+    print("Part 1:",countQuadrants(listOfRobots,tilesx,tilesy)," (224357412)");
 }
 
 fn checkXmasTree(lr,maxConsecutivePoints)
@@ -245,7 +245,7 @@ fn part2(arr)
         listOfRobots=simulate(tilesx,tilesy,listOfRobots);
         if (checkXmasTree(listOfRobots,10))
         {
-            print("Part 2:",i+1);
+            print("Part 2:",i+1," (7083)");
             printGrid(listOfRobots,tilesx,tilesy);
             return;
         }

@@ -1,3 +1,4 @@
+
 #pragma once
 
 #ifndef INTERPRETER_H
@@ -39,6 +40,7 @@ struct liaVariable
 	{
 		if (n1.value == this->value)
 		{
+			// this is needed for array-in-array search
 			int idx = 0;
 			for (auto& el : this->vlist)
 			{

@@ -192,7 +192,7 @@ fn part2(arr)
         }
     }
 
-    print("Part 2:",numTokens);
+    print("Part 2:",numTokens," (108394825772874)");
 }
 
 fn part1(arr)
@@ -211,7 +211,7 @@ fn part1(arr)
         }
     }
 
-    print("Part 1:",numTokens);
+    print("Part 1:",numTokens," (28138)");
 }
 
 fn main(params)

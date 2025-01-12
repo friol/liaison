@@ -85,7 +85,7 @@ fn compact(s)
     return s;
 }
 
-fn calcChecksum(s,part)
+fn calcChecksum(s,part,myres)
 {
     pos=0;
     checkSum=0L;
@@ -104,14 +104,14 @@ fn calcChecksum(s,part)
         pos+=1;
     }
 
-    print(part,":",checkSum);
+    print(part,":",checkSum,myres);
 }
 
 fn part1(line)
 {
     repr=fsToExtendedRepr(line);
     compacted=compact(repr);
-    calcChecksum(compacted,"Part 1");
+    calcChecksum(compacted,"Part 1"," (6378826667552)");
 }
 
 fn findSpan(curFileId)
@@ -237,7 +237,7 @@ fn part2(line)
 {
     glbS=fsToExtendedRepr(line);
     compacted=compact2();
-    calcChecksum(compacted,"Part 2");
+    calcChecksum(compacted,"Part 2"," (6413328569890)");
 }
 
 fn main(params)

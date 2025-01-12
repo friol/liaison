@@ -212,6 +212,13 @@ bool compareIntVars(liaVariable i1, liaVariable i2)
 	return (iv1<iv2);
 }
 
+bool compareLongVars(liaVariable i1, liaVariable i2)
+{
+	long long iv1 = std::get<long long>(i1.value);
+	long long iv2 = std::get<long long>(i2.value);
+	return (iv1 < iv2);
+}
+
 bool compareStringVars(liaVariable i1, liaVariable i2)
 {
 	std::string iv1 = std::get<std::string>(i1.value);

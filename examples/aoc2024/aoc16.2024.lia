@@ -291,7 +291,7 @@ fn part1(arr)
     t1-=t0;
 
     //print("Execution time:",t1); // 33s on my input
-    print("Part 1:",glbMinCost);
+    print("Part 1:",glbMinCost," (135512)");
 }
 
 fn part2(arr)
@@ -307,7 +307,7 @@ fn part2(arr)
     t1-=t0;
 
     //print("Execution time:",t1);
-    print("Part 2:",glbSpots.length+1);
+    print("Part 2:",glbSpots.length+1," (541)");
 }
 
 fn main(params)

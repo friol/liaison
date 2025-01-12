@@ -114,12 +114,12 @@ fn findTrailheads(x,y,curHeight,path,part)
 
 fn part1and2(arr)
 {
-    foreach (row in arr)
+    foreach (rowz in arr)
     {
         mapRow=[];
-        foreach (c in row)
+        foreach (c0l in rowz)
         {
-            mapRow.add(toInteger(c));
+            mapRow.add(toInteger(c0l));
         }
         glbMap.add(mapRow);
     }
@@ -147,7 +147,8 @@ fn part1and2(arr)
             y+=1;
         }
 
-        print("Part ",p+1,":",sumOfScores);
+        realRez=[" (822)"," (1801)"];
+        print("Part ",p+1,":",sumOfScores,realRez[p]);
         p+=1;
     }
 }

@@ -252,7 +252,7 @@ fn part1(arr)
     //print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
     executeProgram();
 
-    print("Part 1:",glbOutBuf);
+    print("Part 1:",glbOutBuf," (7,4,2,5,1,4,6,0,4)");
     //print("A:",glbRegA," B:",glbRegB," C:",glbRegC," Program:",glbProgram);
 }
 
@@ -328,7 +328,7 @@ fn part2(arr)
             if (areEqual(glbOutBuf,glbProgram))
             {
                 //print("finished!");
-                print("Part 2:",g);
+                print("Part 2:",g," (164278764924605)");
                 return;
             }
 

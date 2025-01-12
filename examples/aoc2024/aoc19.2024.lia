@@ -136,7 +136,7 @@ fn part1(arr)
         }
     }
 
-    print("Part 1:",totCanBeMade);
+    print("Part 1:",totCanBeMade," (371)");
 }
 
 fn part2(arr)
@@ -167,7 +167,7 @@ fn part2(arr)
         }
     }
 
-    print("Part 2:",totKomb);
+    print("Part 2:",totKomb," (650354687260341)");
 }
 
 fn main(params)

@@ -20,6 +20,10 @@ enum liaOpcode
 	opPostDecrement=0x03,
 	opPostMultiply = 0x18,
 	opPostDivide = 0x19,
+	opPostModulo=0x2f,
+	opPostModuloGlobal=0x30,
+	opPostBitwiseOr = 0x36,
+	opPostRshift = 0x37,
 
 	opConstant=0x04,
 	opGetLocalVariable = 0x09,
@@ -34,8 +38,10 @@ enum liaOpcode
 	opSubtract = 0x1a,
 	opMultiply = 0x1b,
 	opDivide = 0x1c,
+	opModulo = 0x34,
+	opXor = 0x35,
 	opMathExpression=0x2b,
-	opMathTrain=0x2c,
+	opRemoveLocalVariables =0x2c,
 
 	opCompareLess=0x0a,
 	opCompareLessEqual = 0x16,
@@ -54,7 +60,9 @@ enum liaOpcode
 	opGetObjectLengthGlobal=0x29,
 	opGetObjectLengthOfSubscript=0x2d,
 	opGetObjectLengthOfSubscriptGlobal=0x2e,
-	/*opRemoveLocalVariables = 0x12,*/
+	opDictInitializer = 0x33,
+	opGetDictKeys=0x31,
+	opGetDictKeysGlobal=0x32,
 
 	opNot=0x17,
 	opLogicalCondition=0x1d,
@@ -122,7 +130,7 @@ private:
 	void fatalError(std::string err);
 
 	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
-	bool findGlobalVariable(std::string& vname, unsigned int& varId);
+	inline bool findGlobalVariable(std::string& vname, unsigned int& varId);
 
 	void innerPrint(liaVariable& var);
 	void getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos,unsigned int& bytesRead,liaVariable* retvar, std::vector<liaVariable>* env);
@@ -139,6 +147,9 @@ private:
 	void compilePostDecrementStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileMultiplyStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileDivideStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileModuloStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileBitwiseOrStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
+	void compileRshiftStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileVarFunctionCallStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
 	void compileIfStatement(const std::shared_ptr<peg::Ast>& theAst, liaCodeChunk& chunk);
@@ -147,7 +158,7 @@ private:
 
 	void executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 		unsigned int funId, unsigned int& parmBytesRead,
-		liaCodeChunk& callerChunk, unsigned int callerpos, std::vector<liaVariable>* callerEnv);
+		liaCodeChunk* callerChunk, unsigned int callerpos, std::vector<liaVariable>* callerEnv);
 
 	void printCompilationStats();
 

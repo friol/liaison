@@ -44,7 +44,7 @@ fn part1(input)
         bigSum+=ns;
     }
 
-    print("Part 1:",bigSum);
+    print("Part 1:",bigSum," (13764677935)");
 }
 
 fn createChangeSequence(s)
@@ -127,7 +127,7 @@ fn part2(input)
         numz+=1;
     }
 
-    print("Part 2:",maxBananas);
+    print("Part 2:",maxBananas," (1619)");
 }
 
 fn main(params)

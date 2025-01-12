@@ -134,7 +134,7 @@ fn evolveDict(dict)
     return resDict;
 }
 
-fn part1and2(arr,limit,part)
+fn part1and2(arr,limit,part,realres)
 {
     stoneList=arr.split(" ");
     longList=[];
@@ -166,7 +166,7 @@ fn part1and2(arr,limit,part)
 
         if (blinkNum==limit)
         {
-            print(part,total);
+            print(part,total,realres);
         }
     }
 
@@ -175,6 +175,6 @@ fn part1and2(arr,limit,part)
 fn main(params)
 {
     input=readInput();
-    part1and2(input[0],25,"Part 1:");
-    part1and2(input[0],75,"Part 2:");
+    part1and2(input[0],25,"Part 1:"," (213625)");
+    part1and2(input[0],75,"Part 2:"," (252442982856820)");
 }

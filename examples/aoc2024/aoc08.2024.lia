@@ -203,7 +203,7 @@ fn part1(arr)
     }
 
     //print(realAnList);
-    print("Part 1:",realAnList.length);
+    print("Part 1:",realAnList.length," (303)");
 }
 
 fn part2(arr)
@@ -253,7 +253,7 @@ fn part2(arr)
     }
 
     //print(realAnList);
-    print("Part 2:",realAnList.length);
+    print("Part 2:",realAnList.length," (1045)");
 }
 
 fn main(params)

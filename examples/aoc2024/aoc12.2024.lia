@@ -497,7 +497,7 @@ fn part1and2(arr)
         }
     }
 
-    print("Part 1:",total);
+    print("Part 1:",total," (1375476)");
 
     // 
 
@@ -523,7 +523,7 @@ fn part1and2(arr)
 
     }
 
-    print("Part 2:",total);
+    print("Part 2:",total," (821372)");
 }
 
 fn main(params)
