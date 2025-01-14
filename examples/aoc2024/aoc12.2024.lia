@@ -230,11 +230,11 @@ fn calcNumSpansHorz(arr,miny,maxy)
         }
 
         tmpArr=[];
-        foreach (el in arr)
+        foreach (elz in arr)
         {
-            if ((el[1]==y)&&(el[2]==1))
+            if ((elz[1]==y)&&(elz[2]==1))
             {
-                tmpArr.add(el[0]);
+                tmpArr.add(elz[0]);
             }
         }
         if (tmpArr.length>0)
@@ -275,11 +275,11 @@ fn calcNumSpansVert(arr,minx,maxx)
         }
 
         tmpArr=[];
-        foreach (el in arr)
+        foreach (elz in arr)
         {
-            if ((el[0]==x)&&(el[2]==1))
+            if ((elz[0]==x)&&(elz[2]==1))
             {
-                tmpArr.add(el[1]);
+                tmpArr.add(elz[1]);
             }
         }
         if (tmpArr.length>0)
@@ -481,14 +481,14 @@ fn part1and2(arr)
     idx=0;
     area=0;
     perm=0;
-    foreach (idx in idees)
+    foreach (idxs in idees)
     {
         //print("id:",idx);
 
-        area=calcArea(idx);
+        area=calcArea(idxs);
         if (area!=0)
         {
-            perm=calcPerimeter(idx);
+            perm=calcPerimeter(idxs);
             if (perm!=0)
             {
                 prod=area*perm;
@@ -499,20 +499,56 @@ fn part1and2(arr)
 
     print("Part 1:",total," (1375476)");
 
+    // part 2
+
+    glbMap=[];
+    glbFloodMap=[];
+
+    maxShapeId=-1;
+    foreach (rowzy in arr)
+    {
+        floodRow=[];
+        curRow=[];
+        foreach (c2 in rowzy)
+        {
+            curRow.add(c2);
+            floodRow.add(-1);
+        }
+        glbMap.add(curRow);
+        glbFloodMap.add(floodRow);
+    }
+
     // 
+
+    //print("Building flood map");
+    maxShapeId=buildFloodMap();
+
+    //print("Max shape id:",maxShapeId);
+
+    idees=[];
+    foreach (rowzx in glbFloodMap)
+    {
+        foreach (czz in rowzx)
+        {
+            if (idees.find(czz)==-1)
+            {
+                idees.add(czz);
+            }
+        }
+    }
 
     total=0;
     idx=0;
     area=0;
     perm=0;
-    foreach (idx in idees)
+    foreach (idxy in idees)
     {
-        //print("id:",idx);
+        //print("id:",idxy);
 
-        area=calcArea(idx);
+        area=calcArea(idxy);
         if (area!=0)
         {
-            perm=calcNumOfSides(idx);
+            perm=calcNumOfSides(idxy);
         }
 
         if ((area!=0)&&(perm!=0))

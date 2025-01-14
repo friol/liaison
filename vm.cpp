@@ -1153,6 +1153,7 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			// set variable value to stack pop
 			const unsigned int varId = chunk.code[ip + 1];
 			unsigned int br;
+
 			getExpressionFromCode(chunk, ip + 2, br, &runtimeEnv[varId], &runtimeEnv);
 
 			ip += 2 + br;
@@ -2698,6 +2699,13 @@ void liaVM::compileForeachStatement(const std::shared_ptr<peg::Ast>& theAst, lia
 
 	std::string tmpVarName = theAst->nodes[0]->token_to_string();
 	std::string iteratedName;
+
+	// tmpVarName already in env?
+	unsigned int dummyId;
+	if (chunk.findVar(tmpVarName, dummyId))
+	{
+		fatalError("You can't use the same variable name ("+tmpVarName+") for foreaches in the same chunk at line "+std::to_string(theAst->line));
+	}
 	
 	bool iteratedIsGlobal = false;
 	unsigned int iteratedId;

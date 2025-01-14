@@ -83,9 +83,9 @@ fn part1(input)
     foreach (comp in listOfUniqueComputers)
     {
         konnections=[];
-        foreach (complink in input)
+        foreach (complinkz in input)
         {
-            comps=complink.split("-");
+            comps=complinkz.split("-");
             if (comps[0]==comp)
             {
                 konnections.add(comps[1]);
@@ -212,9 +212,9 @@ fn part2(input)
     foreach (comp in glbListOfUniqueComputers)
     {
         konnections=[];
-        foreach (complink in input)
+        foreach (complinkz in input)
         {
-            comps=complink.split("-");
+            comps=complinkz.split("-");
             if (comps[0]==comp)
             {
                 konnections.add(comps[1]);

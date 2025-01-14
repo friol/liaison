@@ -417,7 +417,7 @@ fn part2(input)
     glbDirKeypad.add([-1,0,11]);
     glbDirKeypad.add([3,2,1]);
 
-    curCode=input[0];
+    //curCode=input[0];
     megaSum=0;
     foreach (curCode in input)
     {

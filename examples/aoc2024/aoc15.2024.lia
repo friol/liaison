@@ -53,9 +53,9 @@ fn parseTheInput(arr)
             }
             else
             {
-                foreach (c in row)
+                foreach (c2 in row)
                 {
-                    glbListOfMoves.add(c);
+                    glbListOfMoves.add(c2);
                 }
             }
         }
@@ -318,9 +318,9 @@ fn parseTheInputp2(arr)
             }
             else
             {
-                foreach (c in row)
+                foreach (c2 in row)
                 {
-                    glbListOfMoves.add(c);
+                    glbListOfMoves.add(c2);
                 }
             }
         }
@@ -510,11 +510,11 @@ fn rearrangeImpactedBoxes(curDir)
         while (y>0)
         {
             curRow=glbMap[y];
-            foreach (id in glbListOfImpactedBoxes)
+            foreach (id2 in glbListOfImpactedBoxes)
             {
-                if (curRow.find(id)!=-1)
+                if (curRow.find(id2)!=-1)
                 {
-                    finalList.add(id);
+                    finalList.add(id2);
                 }
             }
             y-=1;

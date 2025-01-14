@@ -151,11 +151,11 @@ fn part1and2(arr)
     idx=0;
     totSum=0L;
     possibleOps=["+","*","||"];
-    foreach (res in rezArr)
+    foreach (res2 in rezArr)
     {
-        if (canBeTrue(res,opsArr[idx],possibleOps))
+        if (canBeTrue(res2,opsArr[idx],possibleOps))
         {
-            totSum+=res;
+            totSum+=res2;
         }
 
         idx+=1;

@@ -337,29 +337,29 @@ fn findCompNotOr(gatesList,notXorred)
                     if (isResultOf("OR",gate[2],gatesList,wireName))
                     {
                         //print("checking AND for ",gate[2]);
-                        foreach (g2 in gatesList)
+                        foreach (gt2 in gatesList)
                         {
-                            if ((g2[0]=="OR")&&(g2[3]==gate[2]))
+                            if ((gt2[0]=="OR")&&(gt2[3]==gate[2]))
                             {
                                 //print("Components: ",g2[1]," ",g2[2]);
-                                foreach (g3 in gatesList)
+                                foreach (gt3 in gatesList)
                                 {
-                                    if ((g3[0]=="AND")&&(g3[3]==g2[1]))
+                                    if ((gt3[0]=="AND")&&(gt3[3]==g2[1]))
                                     {
-                                        k1=g3[1]; k2=g3[2];
+                                        k1=gt3[1]; k2=gt3[2];
                                         if ((k1[0]=="x")||(k2[0]=="x"))
                                         {
                                             andedG2=true;
-                                            //print(g3);
+                                            //print(gt3);
                                         }
                                     }
-                                    if ((g3[0]=="AND")&&(g3[3]==g2[2]))
+                                    if ((gt3[0]=="AND")&&(gt3[3]==g2[2]))
                                     {
-                                        k1=g3[1]; k2=g3[2];
+                                        k1=gt3[1]; k2=gt3[2];
                                         if ((k1[0]=="x")||(k2[0]=="x"))
                                         {
                                             andedG2=true;
-                                            //print(g3);
+                                            //print(gt3);
                                         }
                                     }
                                 }
@@ -367,7 +367,7 @@ fn findCompNotOr(gatesList,notXorred)
                                 if (!andedG2)
                                 {
                                     //print(g2," is strange");
-                                    res.add(g2[2]);
+                                    res.add(gt2[2]);
                                 }
 
                             }
@@ -510,11 +510,11 @@ fn findSwappee(nn,gatesList)
         }
     }
 
-    foreach (gate in gatesList)
+    foreach (gates in gatesList)
     {
-        if ((gate[0]=="XOR")&&((gate[1]==result)||(gate[2]==result)))
+        if ((gates[0]=="XOR")&&((gates[1]==result)||(gates[2]==result)))
         {
-            return gate[3];
+            return gates[3];
         }
     }
 }
@@ -565,13 +565,13 @@ fn part2(input)
     //
 
     initialWiresDict={};
-    foreach (row in input)
+    foreach (rowz in input)
     {
-        if (row.length!=0)
+        if (rowz.length!=0)
         {
-            if (row.find(":")!=-1)
+            if (rowz.find(":")!=-1)
             {
-                line=row.split(": ");
+                line=rowz.split(": ");
                 initialWiresDict[line[0]]=toInteger(line[1]);
             }
         }
@@ -581,9 +581,9 @@ fn part2(input)
 
     swap=[];
     idx=0;
-    foreach (w in notXorred)
+    foreach (ww in notXorred)
     {
-        swap.add(w);
+        swap.add(ww);
         swap.add(swappees[idx]);
         idx+=1;
     }
