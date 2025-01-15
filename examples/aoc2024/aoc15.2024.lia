@@ -263,7 +263,7 @@ fn part1(arr)
         //printMap(robotPos);
     }
 
-    print("Part 1:",calcSumOfGPS(robotPos));
+    print("Part 1:",calcSumOfGPS(robotPos)," (1406628)");
 }
 
 fn parseTheInputp2(arr)
@@ -656,7 +656,7 @@ fn part2(arr)
         //printNewMap();
     }
 
-    print("Part 2:",calcNewGPSTotal());
+    print("Part 2:",calcNewGPSTotal()," (1432781)");
 }
 
 fn main(params)

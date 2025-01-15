@@ -10,10 +10,10 @@
 // passing parameters to functions byref
 // regexs
 // if else if come on
-// v[x][y][...][z].length bugs
+// v[x][y][...][z].length bugs // should work in VM
+// circuit breaking if statements with && 
 // arr[x][...][z].function()
 // floats
-// circuit breaking if statements with && 
 // convert (almost) all the assertions to ifs
 
 // check why sub-indexing seems slow // DONE

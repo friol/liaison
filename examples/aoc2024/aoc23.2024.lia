@@ -57,7 +57,7 @@ fn findTripletsWithT(listOfUniqueComputers,listOfConnections)
         idxComp+=1;
     }
 
-    print("Part 1:",finalList.length);
+    print("Part 1:",finalList.length," (1054)");
 }
 
 fn part1(input)
@@ -260,7 +260,7 @@ fn part2(input)
         }        
     }
 
-    print("Part 2:",glbMaxClique);
+    print("Part 2:",glbMaxClique," (ch,cz,di,gb,ht,ku,lu,tw,vf,vt,wo,xz,zk)");
 }
 
 fn main(params)

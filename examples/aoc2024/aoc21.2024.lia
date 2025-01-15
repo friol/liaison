@@ -555,7 +555,8 @@ fn part1and2(input,part,numDkeypads)
         megaSum+=komplexity;
     }
 
-    print("Part ",part,":",megaSum);
+    resultz=[" (157892)"," (197015606336332)"];
+    print("Part ",part,":",megaSum,resultz[part-1]);
 }
 
 fn init()

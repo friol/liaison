@@ -119,7 +119,7 @@ fn part1(input)
         }
     }
 
-    print("Part 1:",bigRez);
+    print("Part 1:",bigRez," (49520947122770)");
 }
 
 fn getBinNumber(l,start,end)
@@ -603,7 +603,7 @@ fn part2(input)
         {
             //print("ok:",newSwap);
             newSwap.sort();
-            print("Part 2:",newSwap);
+            print("Part 2:",newSwap," (gjc,gvm,qjj,qsb,wmp,z17,z26,z39)");
             return;
         }
     }

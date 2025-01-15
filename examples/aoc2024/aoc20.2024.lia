@@ -385,7 +385,7 @@ fn part1(arr)
     sp=findShortestPath(start,end);
     //print(sp);
 
-    print("Part 1:",findCheatzzz(sp,100));    
+    print("Part 1:",findCheatzzz(sp,100)," (1346)");    
 }
 
 fn findCheatzzz2(sp,target)
@@ -456,7 +456,7 @@ fn part2(arr)
     sp=findShortestPath(start,end);
     //print(sp);
 
-    print("Part 2:",findCheatzzz2(sp,100));    
+    print("Part 2:",findCheatzzz2(sp,100)," (985482)");    
 }
 
 fn main(params)

@@ -4,7 +4,7 @@
 	lia VM - 2o25 
 	TODO's:
 	- maps // DONE
-	- solve two sequential foreaches 
+	- solve two sequential foreaches // errr... DONE
 
 */
 
@@ -1045,7 +1045,6 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 		getExpressionFromCode(chunk, pos + 1 + bytesTot, br, &rexpr, env);
 		bytesTot += br;
 
-		// TODO: short circuit here
 		retvar->type = liaVariableType::boolean;
 		retvar->value = std::get<bool>(lexpr.value) || std::get<bool>(rexpr.value);
 
@@ -1971,7 +1970,7 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 				chunk.code.push_back(varId);
 
-				unsigned int numSubscripts = (unsigned int)(theAst->nodes.size() - 1);
+				unsigned int numSubscripts = (unsigned int)(theAst->nodes[0]->nodes.size() - 1);
 				chunk.code.push_back(numSubscripts);
 
 				for (auto& sub : theAst->nodes[0]->nodes)
@@ -1986,8 +1985,6 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 			{
 				fatalError("Unsupported array subscript property " + prop);
 			}
-
-			//fatalError("Property of array subscript is unsupported at line "+std::to_string(theAst->line));
 		}
 		else
 		{
@@ -3179,12 +3176,12 @@ int liaVM::compile(const std::shared_ptr<peg::Ast>& theAst, std::vector<std::str
 			chunk.basicEnv.push_back(p);
 		}
 
-		std::cout << "Compiling:" << f.second.name << std::endl;
+		//std::cout << "Compiling:" << f.second.name << std::endl;
 		compileCodeBlock(f.second.functionCodeBlockAst,chunk);
 		chunks.push_back(chunk);
 	}
 
-	printCompilationStats();
+	//printCompilationStats();
 
 	return 0;
 }
