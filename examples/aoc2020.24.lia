@@ -1,0 +1,138 @@
+
+//
+// aoc lia
+//
+
+glbCurrentPos=[0,0];
+glbTileArray=[];
+
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc2020.24.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2020.24.part1.txt");
+    return sarr;
+}
+
+fn substr(s,n)
+{
+    news="";
+    idx=0;
+    while (idx<s.length)
+    {
+        if (idx>=n)
+        {
+            news+=s[idx];
+        }
+        idx+=1;
+    }
+    return news;
+}
+
+fn performMove(m)
+{
+    // print("doing ",m);
+
+    glbCurrentPos[0]+=m[0];
+    glbCurrentPos[1]+=m[1];
+
+    idx=0;
+    found=false;
+    while ((!found)&&(idx<glbTileArray.length))
+    {
+        if ( ((glbCurrentPos[0]==glbTileArray[idx][0])) && ((glbCurrentPos[1]==glbTileArray[idx][1])) )
+        {
+            found=true;
+        }
+        else
+        {
+            idx+=1;
+        }
+    }
+
+    if (!found)
+    {
+        glbTileArray.add([glbCurrentPos[0],glbCurrentPos[1],0]);
+    }
+}
+
+fn performMoves(s)
+{
+    possibleMoves=["e", "se", "sw", "w", "nw", "ne"];
+    adders=[[2,0],[1,-1],[-1,-1],[-2,0],[-1,1],[1,1]];
+    //adders=[[1,0],[1,1],[0,1],[-1,0],[0,-1],[1,-1]];
+    done=false;
+
+    while (!done)
+    {
+        if (s.length==0)
+        {
+            done=true;
+            psx=0;
+            foreach (el in glbTileArray)
+            {
+                if ((el[0]==glbCurrentPos[0])&&(el[1]==glbCurrentPos[1]))
+                {
+                    if (glbTileArray[psx][2]==0)
+                    {
+                        glbTileArray[psx][2]=1;
+                    }
+                    else
+                    {
+                        glbTileArray[psx][2]=0;
+                    }
+                }
+                psx+=1;
+            }
+        }
+        else
+        {
+            pruned=false;
+            moveIndex=0;
+            foreach (move in possibleMoves)
+            {
+                if (!pruned)
+                {
+                    if (s.find(move)==0)
+                    {
+                        //print("performing move "+move);
+                        performMove(adders[moveIndex]);
+                        s=substr(s,move.length);
+                        pruned=true;
+                    }
+                    moveIndex+=1;
+                }
+            }
+        }
+    }
+}
+
+fn countBlackTiles()
+{
+    cnt=0;
+    foreach (el in glbTileArray)
+    {
+        if (el[2]==1)
+        {
+            cnt+=1;
+        }
+    }
+
+    print(cnt," black tiles");
+}
+
+fn main(params)
+{
+    input=readInput();
+    foreach (s in input)
+    {
+        print("["+s+"]");
+        glbCurrentPos=[0,0];
+        performMoves(s);
+    }
+
+    //print(glbTileArray);
+
+    countBlackTiles();
+}

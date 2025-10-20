@@ -1,0 +1,143 @@
+//
+// aoc 2021 day 25
+//
+
+glbMap=[];
+glbMapDimx=0;
+glbMapDimy=0;
+
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2021.25.part1.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2021.25.part1.txt");
+    return sarr;
+}
+
+fn simulateOneStep()
+{
+    numMoved=0;
+    melons2move=[];
+
+    // move east facing melons
+
+    posy=0;
+    foreach (row in glbMap)
+    {
+        posx=0;
+        foreach (el in row)
+        {
+            if (el==">")
+            {
+                if (glbMap[posy][(posx+1)%glbMapDimx]==".")
+                {
+                    melons2move.add([posx,posy]);
+                    numMoved+=1;
+                }
+            }
+
+            posx+=1;
+        }
+        posy+=1;
+    }
+
+    foreach (melon in melons2move)
+    {
+        glbMap[melon[1]][melon[0]]=".";
+        glbMap[melon[1]][(melon[0]+1)%glbMapDimx]=">";
+    }
+
+    melons2move=[];
+
+    // move south facing
+
+    posy=0;
+    foreach (row in glbMap)
+    {
+        posx=0;
+        foreach (el in row)
+        {
+            if (el=="v")
+            {
+                if (glbMap[(posy+1)%glbMapDimy][posx]==".")
+                {
+                    melons2move.add([posx,posy]);
+                    numMoved+=1;
+                }
+            }
+
+            posx+=1;
+        }
+        posy+=1;
+    }
+
+    foreach (melon in melons2move)
+    {
+        glbMap[melon[1]][melon[0]]=".";
+        glbMap[(melon[1]+1)%glbMapDimy][melon[0]]="v";
+    }
+
+    if (numMoved>0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn printGrid()
+{
+    foreach (row in glbMap)
+    {
+        str="";
+        foreach (el in row)
+        {
+            str+=el;
+        }
+        print(str);
+    }
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    foreach (row in input)
+    {
+        newRow=[];
+        foreach (s in row)
+        {
+            newRow.add(s);
+        }
+        glbMap.add(newRow);
+    }
+
+    glbMapDimx=glbMap[0].length;
+    glbMapDimy=glbMap.length;
+
+    print(glbMapDimx," ",glbMapDimy);
+
+    //
+
+    numMoves=0;
+    exit=false;
+
+    while (!exit)
+    {
+        print("simulating the universe");
+        ret=simulateOneStep();
+        if (ret==false)
+        {
+            exit=true;
+        }
+        else
+        {
+            numMoves+=1;
+        }
+    }
+    
+    print(numMoves+1);
+    
+    //printGrid();
+}
