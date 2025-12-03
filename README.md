@@ -2,7 +2,7 @@
 
 ### 2024 Update!
 
-I managed to solve the entire AoC 2024 in Liaison. You can find all the solutions in the [examples/aoc2024](https://github.com/friol/liaison/tree/master/examples/aoc2024) folder.
+I managed to solve the entire  [AoC 2024](https://adventofcode.com/2024) in Liaison. You can find all the solutions in the [examples/aoc2024](https://github.com/friol/liaison/tree/master/examples/aoc2024) folder.
 <br/>
 
 ### Liaison
@@ -53,7 +53,7 @@ longNum=toLong(s); // converts a string to a long number
 s2=s1.slice(0,2); // s2 is a substring of s1 from char 0 to char 2 excluded (?)
 
 ```
-
+More examples to come.
 
 ### Compiling
 The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022.<br/>Just load the project and hit "compile solution".
