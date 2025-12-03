@@ -1,0 +1,173 @@
+//
+// aoc 2025 day 3
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.03.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.03.txt");
+    return sarr;
+}
+
+//
+//
+//
+
+fn calcMaxJoltage(batt)
+{
+    b1=0;
+
+    highest=0;
+    bl=batt.length;
+
+    while (b1<(bl-1))
+    {
+        b2=b1+1;
+        while (b2<bl)
+        {
+            val=batt[b1]+batt[b2];
+            iv=toInteger(val);
+            //print("testing val ",iv);
+
+            if (iv>highest)
+            {
+                highest=iv;
+            }
+
+            b2+=1;
+        }
+
+        b1+=1;
+    }
+
+    return highest;
+}
+
+fn part1(input)
+{
+    totJoltage=0;
+
+    foreach (batt in input)
+    {
+        print("Processing ",batt);
+        j=calcMaxJoltage(batt);
+        print("max joltage: ",j);
+        totJoltage+=j;
+    }
+
+
+    print(totJoltage);
+}
+
+fn calcMaxJoltageV2(batt)
+{
+    b1=0;
+    b2=0;
+    b3=0;
+    b4=0;
+    b5=0;
+    b6=0;
+    b7=0;
+    b8=0;
+    b9=0;
+    b10=0;
+    b11=0;
+    b12=0;
+
+    highest=0L;
+    bl=batt.length;
+
+    while (b1<(bl-1))
+    {
+        b2=b1+1;
+        while (b2<bl)
+        {
+            b3=b2+1;
+            while (b3<bl)
+            {
+                b4=b3+1;
+                while (b4<bl)
+                {
+                    b5=b4+1;
+                    while (b5<bl)
+                    {
+                        b6=b5+1;
+                        while (b6<bl)
+                        {
+                            b7=b6+1;
+                            while (b7<bl)
+                            {
+                                b8=b7+1;
+                                while (b8<bl)
+                                {
+                                    b9=b8+1;
+                                    while (b9<bl)
+                                    {
+                                        b10=b9+1;
+                                        while (b10<bl)
+                                        {
+                                            b11=b10+1;
+                                            while (b11<bl)
+                                            {
+                                                b12=b11+1;
+                                                while (b12<bl)
+                                                {
+                                                    val=batt[b1]+batt[b2]+batt[b3]+batt[b4]+batt[b5]+batt[b6]+batt[b7]+batt[b8]+batt[b9]+batt[b10]+batt[b11]+batt[b12];
+                                                    iv=toLong(val);
+                                                    //print("testing val ",iv);
+
+                                                    if (iv>highest)
+                                                    {
+                                                        highest=iv;
+                                                    }
+
+                                                    b12+=1;
+                                                }
+                                                b11+=1;
+                                            }
+                                            b10+=1;
+                                        }
+                                        b9+=1;
+                                    }
+                                    b8+=1;
+                                }
+                                b7+=1;
+                            }
+                            b6+=1;
+                        }
+                        b5+=1;
+                    }
+                    b4+=1;
+                }
+                b3+=1;
+            }
+            b2+=1;
+        }
+        b1+=1;
+    }
+
+    return highest;
+}
+
+fn part2(input)
+{
+    totJoltage=0L;
+
+    foreach (batt in input)
+    {
+        print("Processing ",batt);
+        j=calcMaxJoltageV2(batt);
+        print("max joltage: ",j);
+        totJoltage+=j;
+    }
+
+    print(totJoltage);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
