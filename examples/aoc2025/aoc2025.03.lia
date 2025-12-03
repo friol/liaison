@@ -149,6 +149,63 @@ fn calcMaxJoltageV2(batt)
     return highest;
 }
 
+fn findHighestNum(s,strlen)
+{
+    intofind=9;
+
+    while (true)
+    {
+        pos=s.find(toString(intofind));
+
+        if (pos==-1)
+        {
+            intofind-=1;
+        }
+        else
+        {
+            //print("num ",intofind," s len ",s.length," pos ",pos," strlen ",strlen);
+            if ((s.length-pos)>(strlen))
+            {
+                return toString(intofind);
+            }
+            else
+            {
+                intofind-=1;
+            }
+        }
+    }
+}
+
+fn getMaxJoltage(s,strlen,reclev,curstr)
+{
+    //print("Searching joltage in ",s," at reclev ",reclev," with curstr ",curstr);
+    slen=s.length;
+
+    // find highest number in s that leaves at least strlen-reclev digits after
+
+    n=findHighestNum(s,strlen-reclev);
+
+    curstr+=n;
+
+    if (reclev<strlen)
+    {
+        npos=s.find(n);
+        news=s.slice(npos+1,slen);
+        return getMaxJoltage(news,strlen,reclev+1,curstr);
+    }   
+    else
+    {
+        return curstr;
+    } 
+}
+
+fn calcMaxJoltageV3(batt)
+{
+    res=toLong(getMaxJoltage(batt,12,1,""));
+    print("max joltage:",res);
+    return res;
+}
+
 fn part2(input)
 {
     totJoltage=0L;
@@ -156,8 +213,8 @@ fn part2(input)
     foreach (batt in input)
     {
         print("Processing ",batt);
-        j=calcMaxJoltageV2(batt);
-        print("max joltage: ",j);
+        j=calcMaxJoltageV3(batt);
+        //print("max joltage: ",j);
         totJoltage+=j;
     }
 
