@@ -37,6 +37,24 @@ Liaison also has some "advanced" (let's call them this way) features, like boole
 An [example program](https://github.com/friol/liaison/blob/master/examples/test.lia) (which by the way is the official Liaison test suite) is included, among other examples (see the examples folder).<br/>
 <br/>
 
+### Various examples
+To declare a long int (64 bit):
+
+```<br/>
+longVariable=0L;
+```
+
+Various helpful functions:
+```<br/>
+anInt=toInteger(s); // converts string s to an integer
+iString=toString(i); // converts i to a string
+strarr=bigstring.split(","); // converts a comma separated string to an array of string
+longNum=toLong(s); // converts a string to a long number
+s2=s1.slice(0,2); // s2 is a substring of s1 from char 0 to char 2 excluded (?)
+
+```
+
+
 ### Compiling
 The Liaison interpreter is written in C++17. You should be able to compile it with Microsoft Visual Studio 2022.<br/>Just load the project and hit "compile solution".
 <br/><br/>
