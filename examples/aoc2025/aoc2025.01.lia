@@ -1,0 +1,131 @@
+//
+// aoc 2025 day 1
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.01.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.01.txt");
+    return sarr;
+}
+
+//
+//
+//
+
+fn calculateZeroes(dialPos,num,sign)
+{
+    //print("calczeroes ",dialPos," ",num," ",sign);
+    nz=0;
+
+    while (num>0)
+    {
+        //print("Num is ",num," dialpos is ",dialPos);
+        dialPos+=sign;
+
+        if ((sign==1)&&(dialPos==100))
+        {
+            dialPos=0;
+            nz+=1;
+        }
+
+        if ((sign==-1)&&(dialPos==-1))
+        {
+            dialPos=99;
+        }
+        else
+        {
+            if (sign==-1)
+            {
+                if (dialPos==0)
+                {
+                    nz+=1;
+                }
+            }
+        }
+
+        num-=1;
+    }
+
+    return [nz,dialPos];
+}
+
+fn part2(input)
+{
+    numOfZeroes=0;
+    dialPos=50;
+
+    foreach (l in input)
+    {
+        sign=0;
+        verse=l[0];
+        if (verse=="L")
+        {
+            sign=-1;
+        }
+        else
+        {
+            sign=1;
+        }
+
+        s=l.replace(verse,"");
+        is=toInteger(s);
+        print(l);
+
+        res=calculateZeroes(dialPos,is,sign);        
+        print(res[0]," ",res[1]);
+        
+        numOfZeroes+=res[0];
+        dialPos=res[1];
+    }
+
+    print("Touched zero ",numOfZeroes," times.");
+}
+
+fn part1(input)
+{
+    numOfZeroes=0;
+    dialPos=50;
+
+    foreach (l in input)
+    {
+        sign=0;
+        verse=l[0];
+        if (verse=="L")
+        {
+            sign=-1;
+        }
+        else
+        {
+            sign=1;
+        }
+
+        s=l.replace(verse,"");
+        is=toInteger(s);
+        print(is);
+
+        dialPos+=sign*is;
+        dialPos%=100;
+        if (dialPos<0)
+        {
+            dialPos+=100;
+        }
+
+        //print("Now points to ",dialPos);
+
+        if (dialPos==0)
+        {
+            numOfZeroes+=1;
+        }
+    }
+
+    print("Touched zero ",numOfZeroes," times.");
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}

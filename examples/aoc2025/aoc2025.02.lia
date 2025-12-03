@@ -1,0 +1,153 @@
+//
+// aoc 2025 day 2
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.02.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.02.txt");
+    return sarr;
+}
+
+//
+//
+//
+
+fn buildFullString(nplet,fslen)
+{
+    ss=nplet;
+    while (true)
+    {
+        if (ss.length>=fslen)
+        {
+            return ss;
+        }
+
+        //print("nplet is ",ss);
+
+        ss+=nplet;
+    }
+}
+
+fn isInvalidIDv2(n)
+{
+    sn=toString(n);
+
+    x=0;
+    while (x<(sn.length/2))
+    {
+        nplet=sn.slice(0,x+1);
+        //print("Testing nplet ",nplet);
+
+        fs=buildFullString(nplet,sn.length);
+
+        if (fs==sn)
+        {
+            return true;
+        }
+
+        x+=1;
+    }
+
+    return false;
+}
+
+
+fn part2(input)
+{
+    bigstring=input[0];
+    strarr=bigstring.split(",");
+
+    sumOfInvalid=0L;
+    foreach (range in strarr)
+    {
+        print("Processing range ",range);
+        r0=0L;
+        r1=0L;
+
+        rarr=range.split("-");
+        r0=toLong(rarr[0]);
+        r1=toLong(rarr[1]);
+
+        i=0L;
+        i=r0;
+        while (i<=r1)
+        {
+            //print("Examining ",i);
+
+            if (isInvalidIDv2(i))
+            {
+                print("Invalid id v2:",i);
+                sumOfInvalid+=i;
+            }
+
+            i+=1L;
+        }
+    }
+
+    print("Sum is:",sumOfInvalid);
+}
+
+
+fn isInvalidID(n)
+{
+    sn=toString(n);
+
+    if ((sn.length%2)!=0)
+    {
+        return false;
+    }
+
+    firstHalf=sn.slice(0,(sn.length/2));
+    secondHalf=sn.slice(sn.length/2,sn.length);
+
+    //print(sn,":",firstHalf," ",secondHalf);
+
+    if (firstHalf==secondHalf)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn part1(input)
+{
+    bigstring=input[0];
+    strarr=bigstring.split(",");
+
+    sumOfInvalid=0L;
+    foreach (range in strarr)
+    {
+        r0=0L;
+        r1=0L;
+
+        rarr=range.split("-");
+        r0=toLong(rarr[0]);
+        r1=toLong(rarr[1]);
+
+        i=0L;
+        i=r0;
+        while (i<=r1)
+        {
+            //print("Examining ",i);
+
+            if (isInvalidID(i))
+            {
+                sumOfInvalid+=i;
+            }
+
+            i+=1L;
+        }
+    }
+
+    print("Sum is:",sumOfInvalid);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
