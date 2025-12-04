@@ -1,0 +1,318 @@
+//
+// aoc 2025 day 4
+//
+
+glbMap=[];
+glbNumSurroundings=[];
+
+//
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.04.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.04.txt");
+    return sarr;
+}
+
+//
+//
+//
+
+fn canAccess(x,y)
+{
+    numAdj=0;
+    numRows=glbMap.length;
+    numCols=glbMap[0].length;
+
+    if (x>0) 
+    {
+        if (glbMap[y][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x>0)&&(y>0))
+    {
+        if (glbMap[y-1][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (y>0)
+    {
+        if (glbMap[y-1][x]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x<(numCols-1))&&(y>0))
+    {
+        if (glbMap[y-1][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (x<(numCols-1))
+    {
+        if (glbMap[y][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x<(numCols-1))&&(y<(numRows-1)))
+    {
+        if (glbMap[y+1][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (y<(numRows-1))
+    {
+        if (glbMap[y+1][x]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((y<(numRows-1))&&(x>0))
+    {
+        if (glbMap[y+1][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (numAdj<4)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn part1(input)
+{
+    foreach (row in input)
+    {
+        currow=[];
+        foreach (roll in row)
+        {
+            if (roll=="@")
+            {
+                currow.add(1);
+            }
+            else
+            {
+                currow.add(0);
+            }
+        }
+
+        glbMap.add(currow);
+    }
+
+    //
+
+    numForklifts=0;
+    y=0;
+    foreach (line in glbMap)
+    {
+        x=0;
+        foreach (el in line)
+        {
+            if (el==1)
+            {
+                if (canAccess(x,y))
+                {
+                    numForklifts+=1;
+                }
+            }
+
+            x+=1;
+        }
+
+        y+=1;
+    }
+
+    print(numForklifts);
+}
+
+//
+
+fn countSurroundings(x,y)
+{
+    numAdj=0;
+    numRows=glbMap.length;
+    numCols=glbMap[0].length;
+
+    if (x>0) 
+    {
+        if (glbMap[y][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x>0)&&(y>0))
+    {
+        if (glbMap[y-1][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (y>0)
+    {
+        if (glbMap[y-1][x]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x<(numCols-1))&&(y>0))
+    {
+        if (glbMap[y-1][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (x<(numCols-1))
+    {
+        if (glbMap[y][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((x<(numCols-1))&&(y<(numRows-1)))
+    {
+        if (glbMap[y+1][x+1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if (y<(numRows-1))
+    {
+        if (glbMap[y+1][x]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    if ((y<(numRows-1))&&(x>0))
+    {
+        if (glbMap[y+1][x-1]==1)
+        {
+            numAdj+=1;
+        }
+    }
+
+    return numAdj;
+}
+
+fn part2(input)
+{
+    foreach (row in input)
+    {
+        currow=[];
+        foreach (roll in row)
+        {
+            if (roll=="@")
+            {
+                currow.add(1);
+            }
+            else
+            {
+                currow.add(0);
+            }
+        }
+
+        glbMap.add(currow);
+    }
+
+    //
+
+    y=0;
+    foreach (row in glbMap)
+    {
+        x=0;
+        newrow=[];
+        foreach (roll in row)
+        {
+            if (roll==1)
+            {
+                ns=countSurroundings(x,y);
+                newrow.add(ns);
+            }
+            else
+            {
+                newrow.add(0);
+            }
+
+            x+=1;
+        }
+
+        glbNumSurroundings.add(newrow);
+        y+=1;
+    }
+
+    //print(glbNumSurroundings);
+
+    done=false;
+    totRemoved=0;
+
+    while (!done)
+    {
+        ltoremove=[];
+
+        y=0;
+        foreach (row in glbMap)
+        {
+            x=0;
+            foreach (roll in row)
+            {
+                if (roll==1)
+                {
+                    if (countSurroundings(x,y)<4)
+                    {
+                        ltoremove.add([x,y]);
+                    }
+                }
+
+                x+=1;
+            }
+
+            y+=1;
+        }
+
+        foreach (el in ltoremove)
+        {
+            glbMap[el[1]][el[0]]=0;
+        }
+
+        totRemoved+=ltoremove.length;
+        print("removed:",ltoremove.length);
+
+        if (ltoremove.length==0)
+        {
+            done=true;
+        }
+    }
+
+    print(totRemoved);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
