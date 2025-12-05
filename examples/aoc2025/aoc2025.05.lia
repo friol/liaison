@@ -1,0 +1,218 @@
+//
+// aoc 2025 day 5
+//
+
+glbRanges=[];
+glbNumbers=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.05.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.05.txt");
+    return sarr;
+}
+
+fn isFresh(n)
+{
+    foreach (range in glbRanges)
+    {
+        if ((n>=range[0])&&(n<=range[1]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn part1(input)
+{
+    foreach (el in input)
+    {
+        if (el.find("-")>0)
+        {
+            ls=el.split("-");
+            a=toLong(ls[0]);
+            b=toLong(ls[1]);
+            glbRanges.add([a,b]);
+        }
+        else
+        {
+            if (el!="")
+            {
+                glbNumbers.add(toLong(el));
+            }
+        }
+    }
+
+    //print(glbRanges);
+    //print(glbNumbers);
+
+    //
+
+    numFreshes=0;
+    foreach (num in glbNumbers)
+    {
+        if (isFresh(num))
+        {
+            numFreshes+=1;
+        }
+    }
+
+    print(numFreshes);
+}
+
+//
+
+fn overlap(r0,r1)
+{
+    //print("r0 ",r0," r1 ",r1);
+
+    if (
+        ((r0[0]>=r1[0])&&(r0[1]<=r1[1])) ||
+        ((r0[0]<=r1[0])&&(r0[1]>=r1[0])) ||
+        ((r0[0]>=r1[0])&&(r0[0]>=r1[0])) ||
+        ((r0[0]<=r1[0])&&(r0[1]>=r1[1])) )
+    {
+        //print("they overlap");
+        return true;
+    }
+
+    return false;
+}
+
+fn merge(r0,r1)
+{
+    newInt=[];
+    //print("r0 ",r0," r1 ",r1);
+
+    a=0L;
+    b=0L;
+
+    //print("1st");
+    if (r0[0]<=r1[0])
+    {
+        a=r0[0];
+    }
+    else
+    {
+        a=r1[0];
+    }
+
+    //print("2nd");
+    if (r0[1]>=r1[1])
+    {
+        b=r0[1];
+    }
+    else
+    {
+        b=r1[1];
+    }
+
+    //print("adding ",a," ",b);
+    newInt.add(a);
+    newInt.add(b);
+    //print("newint is ",newInt);
+
+    return newInt;
+}
+
+fn part2(input)
+{
+    foreach (el in input)
+    {
+        if (el.find("-")>0)
+        {
+            ls=el.split("-");
+            a=toLong(ls[0]);
+            b=toLong(ls[1]);
+            glbRanges.add([a,b]);
+        }
+    }
+
+    print(glbRanges);
+
+    //
+
+    i=0;
+    while (i<glbRanges.length)
+    {
+        j=i+1;
+        while (j<glbRanges.length)
+        {
+            if (glbRanges[i][0]>glbRanges[j][0])            
+            {
+                tmp=glbRanges[i];
+                glbRanges[i]=glbRanges[j];
+                glbRanges[j]=tmp;
+            }
+
+            j+=1;
+        }
+
+        i+=1;
+    }
+
+    print(glbRanges);
+
+    exit=false;
+    while (!exit)
+    {
+        numOverlaps=0;
+        newRanges=[];
+        i=0;
+        while (i<(glbRanges.length-1))
+        {
+            //print("Testing overlap of ",glbRanges[i]," ",glbRanges[i+1]);
+            if (overlap(glbRanges[i],glbRanges[i+1]))
+            {
+                //print("merging");
+                merged=merge(glbRanges[i],glbRanges[i+1]);
+                newRanges.add(merged);
+                //print("done");
+                numOverlaps+=1;
+                i+=2;
+            }
+            else
+            {
+                //print("adding");
+                newRanges.add(glbRanges[i]);
+
+                if (i==(glbRanges.length-2))
+                {
+                    //print("last1");
+                    newRanges.add(glbRanges[i+1]);
+                }
+                i+=1;
+            }
+        }
+
+        if (numOverlaps==0)
+        {
+            exit=true;
+        }
+        else
+        {
+            glbRanges=newRanges;
+            print(glbRanges.length);
+        }
+    }
+
+    print(glbRanges);
+    
+    total=0L;
+    foreach (r in glbRanges)
+    {
+        total+=r[1]-r[0]+1L;
+    }
+
+    print(total);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
