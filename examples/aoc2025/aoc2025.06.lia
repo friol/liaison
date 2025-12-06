@@ -1,0 +1,228 @@
+//
+// aoc 2025 day 6
+//
+
+glbNumbers=[];
+glbColNumbers=[];
+glbOperators=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.06.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.06.txt");
+    return sarr;
+}
+
+fn parseOpsRow(row)
+{
+    i=0;
+    while (i<row.length)
+    {
+        if (row[i]!=" ")
+        {
+            glbOperators.add(row[i]);
+        }
+
+        i+=1;
+    }
+}
+
+fn parseNumber(row,i)
+{
+    parsedNum="";
+    while (row[i]!=" ")
+    {
+        parsedNum+=row[i];
+
+        i+=1;
+
+        if (i==(row.length))
+        {
+            return parsedNum;
+        }
+    }
+
+    return parsedNum;
+}
+
+fn parseNumbersRow(row)
+{
+    i=0;
+    thisRow=[];
+    while (i<row.length)
+    {
+        if (row[i]!=" ")
+        {
+            num=parseNumber(row,i);
+            thisRow.add(toLong(num));
+            i+=num.length-1;
+        }
+
+        i+=1;
+    }
+
+    glbNumbers.add(thisRow);
+}
+
+fn parseInput(input)
+{
+    foreach (row in input)
+    {
+        if (row.find("*")!=-1)
+        {
+            // ops row
+            parseOpsRow(row);            
+        }
+        else
+        {
+            // numbers row
+            parseNumbersRow(row);
+        }
+    }
+}
+
+fn sumCol(col)
+{
+    tot=0L;
+    r=0;
+    while (r<glbNumbers.length)
+    {
+        tot+=glbNumbers[r][col];
+        r+=1;
+    }
+
+    return tot;
+}
+
+fn multCol(col)
+{
+    tot=1L;
+    r=0;
+    while (r<glbNumbers.length)
+    {
+        tot*=glbNumbers[r][col];
+        r+=1;
+    }
+
+    return tot;
+}
+
+fn part1(input)
+{
+    parseInput(input);
+
+    grandTotal=0L;
+
+    col=0;
+    while (col<glbNumbers[0].length)
+    {
+        if (glbOperators[col]=="+")
+        {
+            res=sumCol(col);
+            grandTotal+=res;
+        }
+        else
+        {
+            res=multCol(col);
+            grandTotal+=res;
+        }
+        col+=1;
+    }
+
+    print(grandTotal);
+}
+
+//
+
+fn parseColNumbers(input)
+{
+    curCol=[];
+
+    col=0;
+    while (col<input[0].length)
+    {
+        spaceString="";
+        curNumb="";
+        r=0;
+        while (r<(input.length-1))
+        {
+            curNumb+=input[r][col];
+            spaceString+=" ";
+            r+=1;
+        }
+
+        //print("Converting [",curNumb,"] spacestring [",spaceString,"]");
+        if (curNumb!=spaceString)
+        {
+            in=toLong(curNumb);
+            curCol.add(in);
+        }
+        else
+        {
+            glbColNumbers.add(curCol);
+            curCol=[];            
+        }
+
+        col+=1;
+
+        if (col==(input[0].length))
+        {
+            glbColNumbers.add(curCol);
+            return;
+        }
+    }
+}
+
+fn sumCol2(col)
+{
+    tot=0L;
+    foreach (num in glbColNumbers[col])
+    {
+        tot+=num;
+    }
+    return tot;
+}
+
+fn multCol2(col)
+{
+    tot=1L;
+    foreach (num in glbColNumbers[col])
+    {
+        tot*=num;
+    }
+    return tot;
+}
+
+fn part2(input)
+{
+    parseInput(input);
+    parseColNumbers(input);
+
+    grandTotal=0L;
+
+    col=0;
+    while (col<glbOperators.length)
+    {
+        if (glbOperators[col]=="+")
+        {
+            res=sumCol2(col);
+            grandTotal+=res;
+        }
+        else
+        {
+            res=multCol2(col);
+            grandTotal+=res;
+        }
+        col+=1;
+    }
+
+    print(grandTotal);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
