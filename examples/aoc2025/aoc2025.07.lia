@@ -1,0 +1,191 @@
+//
+// aoc 2025 day 7
+//
+
+glbMap=[];
+glbStart=[];
+glbSplits=0;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.07.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.07.txt");
+    return sarr;
+}
+
+fn parseInput(input)
+{
+    y=0;
+    foreach (line in input)
+    {
+        x=0;
+        curRow=[];
+        foreach (el in line)
+        {
+            if (el==".")
+            {
+                curRow.add(0);
+            }
+            if (el=="^")
+            {
+                curRow.add(1);
+            }
+            if (el=="S")
+            {
+                glbStart=[x,y];
+                curRow.add(0);
+            }
+            x+=1;
+        }
+
+        glbMap.add(curRow);
+        y+=1;
+    }
+}
+
+fn raceBeam(x,y)
+{
+    if (y==(glbMap.length-1))
+    {
+        return;
+    }
+
+    while (glbMap[y][x]==0)
+    {
+        //print("whiling ",x," ",y," ",glbMap[x][y]);
+        y+=1;
+
+        if (y==(glbMap.length-1))
+        {
+            return;
+        }
+    }
+
+    //print("done descending");
+
+    if (glbMap[y][x]==1)
+    {
+        print("splittin");
+        glbSplits+=1;
+        glbMap[y][x]=2;
+        raceBeam(x-1,y);
+        raceBeam(x+1,y);
+    }
+    else
+    {
+        print("you shall not arrive here");
+    }
+}
+
+fn part1(input)
+{
+    parseInput(input);
+
+    /*foreach (row in glbMap)
+    {
+        print(row);
+    }
+    print(glbStart);*/
+
+    raceBeam(glbStart[0],glbStart[1]);
+
+    print(glbSplits);
+}
+
+//
+
+fn coalesce(row)
+{
+    coalesced=[];
+
+    foreach (el in row)
+    {
+        found=false;
+        foundidx=-1;
+
+        idx=0;
+        foreach (cel in coalesced)
+        {
+            if ((cel[0]==el[0])&&(cel[1]==el[1]))
+            {
+                found=true;
+                foundidx=idx;
+            }
+
+            idx+=1;
+        }
+
+        if (found==true)
+        {
+            a=coalesced[foundidx][2];
+            b=el[2];
+            coalesced[foundidx][2]=a+b;
+        }
+        else
+        {
+            coalesced.add(el);
+        }
+    }
+
+    return coalesced;
+}
+
+fn advance(row,y)
+{
+    newRow=[];
+
+    y+=1;
+
+    foreach (el in row)
+    {
+        if (glbMap[y][el[0]]==0)
+        {
+            newRow.add([el[0],y,el[2]]);
+        }
+        else
+        {
+            ell=[el[0]-1,y,el[2]];
+            elr=[el[0]+1,y,el[2]];
+
+            newRow.add(ell);
+            newRow.add(elr);
+        }
+    }
+
+    // coalesce
+    newRow=coalesce(newRow);
+
+    return newRow;
+}
+
+fn part2(input)
+{
+    parseInput(input);
+
+    y=0;
+    curRow=[[glbStart[0],glbStart[1],1L]];
+
+    while (y<(glbMap.length-1))
+    {
+        print("advancing ",curRow);
+        newRow=advance(curRow,y);
+        curRow=newRow;
+        y+=1;
+    }
+
+    tot=0L;
+    foreach (el in curRow)
+    {
+        tot+=el[2];
+    }
+
+    print(tot);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
