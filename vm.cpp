@@ -287,6 +287,10 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			{
 				retvar->value = std::to_string(std::get<long long>(element.value));
 			}
+			else if (element.type == liaVariableType::string)
+			{
+				fatalError("toString argument is already a string");
+			}
 			else
 			{
 				fatalError("Unhandled toString type");
@@ -683,6 +687,11 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			liaVariable rexpr;
 			getExpressionFromCode(chunk, pos + 2 + (me+1) + bytesTot, br, &rexpr, env);
 			bytesTot += br;
+
+			if (lexpr.type != rexpr.type)
+			{
+				fatalError("Error: only math operations on values of the same type are supported.");
+			}
 
 			if (mathOpz == liaOpcode::opAdd)
 			{
@@ -1702,6 +1711,15 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 						pos += br;
 						bytesRead += br;
 					}
+					else if ((chunk.code[pos] == liaOpcode::opGetObjectLengthOfSubscript)|| (chunk.code[pos] == liaOpcode::opGetObjectLengthOfSubscriptGlobal))
+					{
+						unsigned int br = 0;
+						liaVariable v;
+						getExpressionFromCode(chunk, pos, br, &v, &runtimeEnv);
+						innerPrint(v);
+						pos += br;
+						bytesRead += br;
+					}
 					else if ((chunk.code[pos] == liaOpcode::opGetObjectLength)|| (chunk.code[pos] == liaOpcode::opGetObjectLengthGlobal))
 					{
 						unsigned int br = 0;
@@ -1989,7 +2007,10 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 		}
 		else
 		{
-			chunk.findVar(varName, varId);
+			if (!chunk.findVar(varName, varId))
+			{
+				fatalError("Undeclared variable ["+varName+"] at row "+std::to_string(theAst->line));
+			}
 			chunk.code.push_back(liaOpcode::opGetLocalVariable);
 			chunk.code.push_back(varId);
 			return chunk.basicEnv[varId].type;
@@ -2215,7 +2236,7 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 
 			if (funId == -1)
 			{
-				fatalError("Call to unknown function [" + funName + "]");
+				fatalError("Call to unknown function [" + funName + "] at line "+std::to_string(theAst->line));
 			}
 
 			chunk.code.push_back(liaOpcode::opFunctionCall);
@@ -2389,30 +2410,40 @@ void liaVM::compileFuncCallStatement(const std::shared_ptr<peg::Ast>& theAst, li
 		std::string funName = theAst->nodes[0]->token_to_string();
 		unsigned int funId = -1;
 		unsigned int idx = 0;
+		unsigned int numParams = 0;
+
 		for (auto& f : funList)
 		{
 			if (f.name == funName)
 			{
 				funId = idx;
+				numParams = (unsigned int)f.parameters.size();
 			}
 			idx += 1;
 		}
 
 		if (funId == -1)
 		{
-			fatalError("Call to unknown function [" + funName+"]");
+			fatalError("Call to unknown function [" + funName + "] at line " + std::to_string(theAst->line));
 		}
 
 		chunk.code.push_back(liaOpcode::opFunctionCall);
 		chunk.code.push_back(funId);
 
 		// args
+		unsigned int calledParams = 0;
 		if (theAst->nodes.size() > 1)
 		{
 			for (auto& arg : theAst->nodes[1]->nodes)
 			{
 				compileExpression(arg, chunk);
+				calledParams += 1;
 			}
+		}
+
+		if (calledParams != numParams)
+		{
+			fatalError("Function ["+funName+"] called with " + std::to_string(calledParams) + " parameters while it expects " + std::to_string(numParams)+" at line "+std::to_string(theAst->line));
 		}
 	}
 	else if (theAst->nodes[0]->tokenId == StdFunctionId::FunctionPrint)
