@@ -129,7 +129,7 @@ fn part1(input)
         col+=1;
     }
 
-    print(grandTotal);
+    print("Part 1: ",grandTotal," (5316572080628)");
 }
 
 //
@@ -216,13 +216,16 @@ fn part2(input)
         col+=1;
     }
 
-    print(grandTotal);
+    print("Part 2: ",grandTotal, " (11299263623062)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbNumbers=[];
+    glbColNumbers=[];
+    glbOperators=[];
     part2(input);
 }

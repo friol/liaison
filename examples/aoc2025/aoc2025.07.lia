@@ -65,15 +65,11 @@ fn raceBeam(x,y)
 
     if (glbMap[y][x]==1)
     {
-        print("splittin");
+        //print("splittin");
         glbSplits+=1;
         glbMap[y][x]=2;
         raceBeam(x-1,y);
         raceBeam(x+1,y);
-    }
-    else
-    {
-        print("you shall not arrive here");
     }
 }
 
@@ -81,15 +77,9 @@ fn part1(input)
 {
     parseInput(input);
 
-    /*foreach (row in glbMap)
-    {
-        print(row);
-    }
-    print(glbStart);*/
-
     raceBeam(glbStart[0],glbStart[1]);
 
-    print(glbSplits);
+    print("Part 1: ",glbSplits," (1628)");
 }
 
 //
@@ -167,7 +157,7 @@ fn part2(input)
 
     while (y<(glbMap.length-1))
     {
-        print("advancing ",curRow);
+        //print("advancing ",curRow);
         newRow=advance(curRow,y);
         curRow=newRow;
         y+=1;
@@ -179,13 +169,16 @@ fn part2(input)
         tot+=el[2];
     }
 
-    print(tot);
+    print("Part 2: ",tot," (27055852018812)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbMap=[];
+    glbStart=[];
+    glbSplits=0;
     part2(input);
 }
