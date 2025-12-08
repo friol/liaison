@@ -1,0 +1,366 @@
+//
+// aoc 2025 day 8
+//
+
+glbListOfPoints=[];
+glbDistances=[];
+glbCircuits=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.08.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.08.txt");
+    return sarr;
+}
+
+fn parseInput(input)
+{
+    foreach (p in input)
+    {
+        ca=p.split(",");
+        glbListOfPoints.add([toLong(ca[0]),toLong(ca[1]),toLong(ca[2])]);
+    }
+}
+
+fn calculateDistance(i,j)
+{
+    mult=100L;
+    xsq=(glbListOfPoints[i][0]-glbListOfPoints[j][0])*mult;
+    xsq*=xsq;
+
+    ysq=(glbListOfPoints[i][1]-glbListOfPoints[j][1])*mult;
+    ysq*=ysq;
+
+    zsq=(glbListOfPoints[i][2]-glbListOfPoints[j][2])*mult;
+    zsq*=zsq;
+
+    sum=xsq+ysq+zsq;
+
+    return lSqrt(sum);
+}
+
+fn equalsCheck()
+{
+    i=0;
+    while (i<glbDistances.length)
+    {
+        j=i+1;
+        while (j<glbDistances.length)
+        {
+            if (glbDistances[i][2]==glbDistances[j][2])
+            {
+                print("Equalz! ",glbDistances[i][2]," ",glbDistances[j][2]);
+            }
+
+            j+=1;
+        }
+
+        i+=1;
+    }
+}
+
+fn sortDistances(maxdist)
+{
+    tmpArr=[];
+    foreach (d in glbDistances)
+    {
+        tmpArr.add(d[2]);
+    }
+
+    tmpArr.sort();
+    //print(tmpArr);
+
+    print("real sort");
+
+    newDist=[];
+    idx=0;
+    while (idx<maxdist)
+    {
+        print("Processing idx ",idx);
+        el=tmpArr[idx];
+        j=0;
+        found=false;
+        while ((j<glbDistances.length)&&(!found))
+        {
+            if (el==glbDistances[j][2])
+            {
+                newDist.add(glbDistances[j]);
+                found=true;
+            }
+            j+=1;
+        }
+
+        idx+=1;
+    }
+
+    print("Done");
+
+    glbDistances=newDist;
+
+/*    
+    gdlen=glbDistances.length;
+    i=0;
+    while (i<gdlen)
+    {
+        j=i+1;
+        while (j<gdlen)
+        {
+            if (glbDistances[i][2]>glbDistances[j][2])
+            {
+                temp=glbDistances[i];
+                glbDistances[i]=glbDistances[j];
+                glbDistances[j]=temp;
+            }
+
+            j+=1;
+        }
+
+        i+=1;
+    }
+*/    
+}
+
+fn merge(circa,circb)
+{
+    newCirc=[];
+    circid=0;
+    foreach (circ2 in glbCircuits)
+    {
+        if ((circid!=circa)&&(circid!=circb))
+        {
+            newCirc.add(circ2);
+        }
+
+        circid+=1;
+    }
+
+    circid=0;
+    foreach (circ in glbCircuits)
+    {
+        if (circid==circa)
+        {
+            merged=circ;
+            foreach (el in glbCircuits[circb])
+            {
+                merged.add(el);
+            }
+
+            newCirc.add(merged);
+        }
+
+        circid+=1;
+    }
+
+    glbCircuits=newCirc;
+}
+
+fn addToCircuits(d)
+{
+    circa=-1;
+    circb=-1;
+
+    circid=0;
+    foreach (el in glbCircuits)
+    {
+        foreach (node in el)
+        {
+            if (d[0]==node)
+            {
+                circa=circid;
+            }
+            if (d[1]==node)
+            {
+                circb=circid;
+            }
+        }
+
+        circid+=1;
+    }
+
+    if ((circa!=-1)&&(circb!=-1))
+    {
+        if (circa!=circb)
+        {
+            // merge circa and circb
+            merge(circa,circb);
+        }
+    }
+
+    if ((circa==-1)&&(circb==-1))
+    {
+        glbCircuits.add([d[0],d[1]]);
+    }
+    else
+    {
+        if (circa==-1)
+        {
+            cb=glbCircuits[circb];
+            if (cb.find(d[0])==-1)
+            {
+                nc=glbCircuits[circb];
+                nc.add(d[0]);
+                glbCircuits[circb]=nc;
+            }
+            if (cb.find(d[1])==-1)
+            {
+                nc=glbCircuits[circb];
+                nc.add(d[1]);
+                glbCircuits[circb]=nc;
+            }
+        }
+        if (circb==-1)
+        {
+            cb=glbCircuits[circa];
+            if (cb.find(d[0])==-1)
+            {
+                nc=glbCircuits[circa];
+                nc.add(d[0]);
+                glbCircuits[circa]=nc;
+            }
+            if (cb.find(d[1])==-1)
+            {
+                nc=glbCircuits[circa];
+                nc.add(d[1]);
+                glbCircuits[circa]=nc;
+            }
+        }
+    }
+}
+
+fn part1(input)
+{
+    print("parsing input");
+    parseInput(input);    
+
+    print("creating distance list");
+    // create distance list
+    i=0;
+    while (i<glbListOfPoints.length)
+    {
+        j=i+1;
+        while (j<glbListOfPoints.length)
+        {
+            dist=calculateDistance(i,j);
+
+            glbDistances.add([i,j,dist]);
+
+            j+=1;
+        }
+
+        i+=1;
+    }
+
+    numDist=1000;
+
+    // sort them
+    print("sorting distance list");
+    sortDistances(numDist);
+
+    // equal d check
+    print("equals check");
+    equalsCheck();
+
+    // build circuits
+    nconn=0;
+    while (nconn<numDist)
+    {
+        dst=glbDistances[nconn];
+        print("Processing ",dst);
+        addToCircuits(dst);
+        print(glbCircuits);
+        nconn+=1;
+    }
+
+    circLens=[];
+    foreach (si in glbCircuits)
+    {
+        circLens.add(si.length);
+    }
+    circLens.sort();
+
+    print(circLens);
+    print(circLens[circLens.length-1]*circLens[circLens.length-2]*circLens[circLens.length-3]);
+}
+
+fn findNextDistance(dzt)
+{
+    foreach (d in glbDistances)
+    {
+        if (dzt==d[2])
+        {
+            return d;
+        }
+    }
+
+    print("this should not happah");
+    return [];
+}
+
+fn part2(input)
+{
+    print("parsing input");
+    parseInput(input);    
+
+    print("creating distance list");
+    // create distance list
+    i=0;
+    while (i<glbListOfPoints.length)
+    {
+        j=i+1;
+        while (j<glbListOfPoints.length)
+        {
+            dist=calculateDistance(i,j);
+
+            glbDistances.add([i,j,dist]);
+
+            j+=1;
+        }
+
+        i+=1;
+    }
+
+    distanceArr=[];
+    foreach (d in glbDistances)
+    {
+        distanceArr.add(d[2]);
+    }
+
+    distanceArr.sort();
+    //print(distanceArr);
+
+    pt=0;
+    while (pt<glbListOfPoints.length)
+    {
+        glbCircuits.add([pt]);
+        pt+=1;
+    }
+
+    print("bending spoons");
+    // build circuits
+    dstNum=0;
+    while (glbCircuits.length!=1)
+    {
+        dst=findNextDistance(distanceArr[dstNum]);
+        print("Processing ",dst);
+        addToCircuits(dst);
+        //print("circuits len ",glbCircuits.length);
+        
+        dstNum+=1;
+
+        if (glbCircuits.length==1)
+        {
+            x0=glbListOfPoints[dst[0]];
+            x1=glbListOfPoints[dst[1]];
+            print(x0," ",x1);
+        }
+    }
+
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
