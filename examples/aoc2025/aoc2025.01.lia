@@ -70,16 +70,16 @@ fn part2(input)
 
         s=l.replace(verse,"");
         is=toInteger(s);
-        print(l);
+        //print(l);
 
         res=calculateZeroes(dialPos,is,sign);        
-        print(res[0]," ",res[1]);
+        //print(res[0]," ",res[1]);
         
         numOfZeroes+=res[0];
         dialPos=res[1];
     }
 
-    print("Touched zero ",numOfZeroes," times.");
+    print("Part 2: ",numOfZeroes," (5941)");
 }
 
 fn part1(input)
@@ -102,7 +102,7 @@ fn part1(input)
 
         s=l.replace(verse,"");
         is=toInteger(s);
-        print(is);
+        //print(is);
 
         dialPos+=sign*is;
         dialPos%=100;
@@ -119,13 +119,13 @@ fn part1(input)
         }
     }
 
-    print("Touched zero ",numOfZeroes," times.");
+    print("Part 1: ",numOfZeroes," (989)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
     part2(input);
 }

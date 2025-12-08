@@ -139,7 +139,7 @@ fn part1(input)
         y+=1;
     }
 
-    print(numForklifts);
+    print("Part 1: ",numForklifts," (1626)");
 }
 
 //
@@ -219,10 +219,10 @@ fn countSurroundings(x,y)
 
 fn part2(input)
 {
-    foreach (row in input)
+    foreach (row2 in input)
     {
         currow=[];
-        foreach (roll in row)
+        foreach (roll in row2)
         {
             if (roll=="@")
             {
@@ -244,9 +244,9 @@ fn part2(input)
     {
         x=0;
         newrow=[];
-        foreach (roll in row)
+        foreach (rollz in row)
         {
-            if (roll==1)
+            if (rollz==1)
             {
                 ns=countSurroundings(x,y);
                 newrow.add(ns);
@@ -273,12 +273,12 @@ fn part2(input)
         ltoremove=[];
 
         y=0;
-        foreach (row in glbMap)
+        foreach (row3 in glbMap)
         {
             x=0;
-            foreach (roll in row)
+            foreach (rolly in row3)
             {
-                if (roll==1)
+                if (rolly==1)
                 {
                     if (countSurroundings(x,y)<4)
                     {
@@ -298,7 +298,7 @@ fn part2(input)
         }
 
         totRemoved+=ltoremove.length;
-        print("removed:",ltoremove.length);
+        //print("removed:",ltoremove.length);
 
         if (ltoremove.length==0)
         {
@@ -306,13 +306,15 @@ fn part2(input)
         }
     }
 
-    print(totRemoved);
+    print("Part 2: ",totRemoved," (9173)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbMap=[];
+    glbNumSurroundings=[];
     part2(input);
 }

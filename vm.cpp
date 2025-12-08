@@ -28,6 +28,17 @@ void liaVM::fatalError(std::string err)
 	throw vmException();
 }
 
+void liaVM::replaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+	if (from.empty()) return;
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+	{
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length();
+	}
+}
+
 void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigned int& bytesRead, liaVariable* retvar,std::vector<liaVariable>* env)
 {
 	if (chunk.code[pos] == liaOpcode::opConstant)
@@ -506,6 +517,44 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				return;
 			}
 		}
+		else if (funId == libMethodId::MethodReplace)
+		{
+			liaVariable what, withwhat;
+			unsigned int br = 0;
+			unsigned totbytes = 0;
+			getExpressionFromCode(chunk, pos + 3, br, &what, env);
+			totbytes += br;
+			getExpressionFromCode(chunk, pos + 3 + br, br, &withwhat, env);
+			totbytes += br;
+
+			std::string swhat = std::get<std::string>(what.value);
+			std::string swithwath = std::get<std::string>(withwhat.value);
+
+			if (pVariable->type == liaVariableType::string)
+			{
+				std::string s = std::get<std::string>(pVariable->value);
+
+				if (s.size() == 0)
+				{
+					retvar->type = liaVariableType::string;
+					retvar->value = s;
+					bytesRead = 3 + totbytes;
+					return;
+				}
+
+				replaceAll(s, swhat, swithwath);
+
+				retvar->type = liaVariableType::string;
+				retvar->value = s;
+				bytesRead = 3 + totbytes;
+				return;
+			}
+			else
+			{
+				fatalError("Unsupported variable type in replace function");
+				return;
+			}
+		}
 		else
 		{
 			fatalError("Unknown lib method called "+std::to_string(funId));
@@ -657,7 +706,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op +");
+					fatalError("Unsupported type in math op + [" + std::to_string(lexpr.type) + "]");
 				}
 			}
 			else if (mathOpz == liaOpcode::opSubtract)
@@ -680,7 +729,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op -");
+					fatalError("Unsupported type in math op - [" + std::to_string(lexpr.type) + "]");
 				}
 			}
 			else if (mathOpz == liaOpcode::opMultiply)
@@ -703,7 +752,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op *");
+					fatalError("Unsupported type in math op * ["+std::to_string(lexpr.type)+"]");
 				}
 			}
 			else if (mathOpz == liaOpcode::opDivide)
@@ -726,7 +775,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op /");
+					fatalError("Unsupported type in math op / [" + std::to_string(lexpr.type) + "]");
 				}
 			}
 			else if (mathOpz == liaOpcode::opModulo)
@@ -749,7 +798,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op %");
+					fatalError("Unsupported type in math op % [" + std::to_string(lexpr.type) + "]");
 				}
 
 			}
@@ -773,7 +822,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 				}
 				else
 				{
-					fatalError("Unsupported type in math op ^");
+					fatalError("Unsupported type in math op ^ [" + std::to_string(lexpr.type) + "]");
 				}
 
 			}
@@ -1653,7 +1702,7 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 						pos += br;
 						bytesRead += br;
 					}
-					else if (chunk.code[pos] == liaOpcode::opGetObjectLength)
+					else if ((chunk.code[pos] == liaOpcode::opGetObjectLength)|| (chunk.code[pos] == liaOpcode::opGetObjectLengthGlobal))
 					{
 						unsigned int br = 0;
 						liaVariable v;
@@ -2082,6 +2131,16 @@ liaVariableType liaVM::compileExpression(const std::shared_ptr<peg::Ast>& theAst
 			compileExpression(theAst->nodes[2]->nodes[0], chunk);
 			compileExpression(theAst->nodes[2]->nodes[1], chunk);
 			return liaVariableType::string; // TODO: can be string or array
+		}
+		else if (funId == libMethodId::MethodReplace)
+		{
+			if (!varIsGlobal) chunk.code.push_back(liaOpcode::opVarFunctionCall);
+			else chunk.code.push_back(liaOpcode::opVarFunctionCallGlobal);
+			chunk.code.push_back(varId);
+			chunk.code.push_back(funId);
+			compileExpression(theAst->nodes[2]->nodes[0], chunk);
+			compileExpression(theAst->nodes[2]->nodes[1], chunk);
+			return liaVariableType::string;
 		}
 		else
 		{

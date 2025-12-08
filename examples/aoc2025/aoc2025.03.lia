@@ -49,14 +49,13 @@ fn part1(input)
 
     foreach (batt in input)
     {
-        print("Processing ",batt);
+        //print("Processing ",batt);
         j=calcMaxJoltage(batt);
-        print("max joltage: ",j);
+        //print("max joltage: ",j);
         totJoltage+=j;
     }
 
-
-    print(totJoltage);
+    print("Part 1: ",totJoltage," (17100)");
 }
 
 fn calcMaxJoltageV2(batt)
@@ -202,7 +201,7 @@ fn getMaxJoltage(s,strlen,reclev,curstr)
 fn calcMaxJoltageV3(batt)
 {
     res=toLong(getMaxJoltage(batt,12,1,""));
-    print("max joltage:",res);
+    //print("max joltage:",res);
     return res;
 }
 
@@ -212,19 +211,19 @@ fn part2(input)
 
     foreach (batt in input)
     {
-        print("Processing ",batt);
+        //print("Processing ",batt);
         j=calcMaxJoltageV3(batt);
         //print("max joltage: ",j);
         totJoltage+=j;
     }
 
-    print(totJoltage);
+    print("Part 2:",totJoltage," (170418192256861)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
     part2(input);
 }

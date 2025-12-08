@@ -128,6 +128,7 @@ private:
 	std::vector<liaVariable> globalEnv;
 
 	void fatalError(std::string err);
+	void replaceAll(std::string& str, const std::string& from, const std::string& to);
 
 	unsigned int findOrAddConstantToConstantPool(liaVariable& constz);
 	inline bool findGlobalVariable(std::string& vname, unsigned int& varId);

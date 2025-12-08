@@ -20,7 +20,7 @@
 //
 //
 
-const std::string appVersion = "0.8";
+const std::string appVersion = "0.8.1";
 
 void usage()
 {
@@ -44,12 +44,12 @@ int main(int argc,char** argv)
 	}
 	else
 	{
+		sourceFileName = "d:\\prova\\liaison\\examples\\aoc2025\\aoc2025.05.lia";
 		//sourceFileName = "d:\\prova\\aoc2023.17.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
 		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
-		//sourceFileName = "d:\\prova\\liaison\\examples\\aoc2024\\aoc01.2024.lia";
-		//sourceFileName = "d:\\prova\\liaPrograms\\test.lia";
-		sourceFileName = "d:\\prova\\liaPrograms\\vmtest.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\test.replace.lia";
+		//sourceFileName = "d:\\prova\\liaPrograms\\vmtest.lia";
 	}
 
 	std::ifstream infile(sourceFileName);

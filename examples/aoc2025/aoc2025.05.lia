@@ -59,7 +59,7 @@ fn part1(input)
         }
     }
 
-    print(numFreshes);
+    print("Part 1: ",numFreshes," (643)");
 }
 
 //
@@ -130,7 +130,7 @@ fn part2(input)
         }
     }
 
-    print(glbRanges);
+    //print(glbRanges);
 
     //
 
@@ -153,7 +153,7 @@ fn part2(input)
         i+=1;
     }
 
-    print(glbRanges);
+    //print(glbRanges);
 
     exit=false;
     while (!exit)
@@ -194,11 +194,11 @@ fn part2(input)
         else
         {
             glbRanges=newRanges;
-            print(glbRanges.length);
+            //print(glbRanges.length);
         }
     }
 
-    print(glbRanges);
+    //print(glbRanges);
     
     total=0L;
     foreach (r in glbRanges)
@@ -206,13 +206,15 @@ fn part2(input)
         total+=r[1]-r[0]+1L;
     }
 
-    print(total);
+    print("Part 2: ",total," (342018167474526)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbRanges=[];
+    glbNumbers=[];
     part2(input);
 }

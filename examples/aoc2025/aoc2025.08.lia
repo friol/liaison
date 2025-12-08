@@ -341,20 +341,18 @@ fn part2(input)
     while (glbCircuits.length!=1)
     {
         dst=findNextDistance(distanceArr[dstNum]);
-        print("Processing ",dst);
+        print("Processed ",dst," circuit len ",glbCircuits.length);
         addToCircuits(dst);
-        //print("circuits len ",glbCircuits.length);
         
         dstNum+=1;
 
         if (glbCircuits.length==1)
         {
-            x0=glbListOfPoints[dst[0]];
-            x1=glbListOfPoints[dst[1]];
-            print(x0," ",x1);
+            x0=glbListOfPoints[dst[0]][0];
+            x1=glbListOfPoints[dst[1]][0];
+            print(x0*x1);
         }
     }
-
 }
 
 fn main(params)

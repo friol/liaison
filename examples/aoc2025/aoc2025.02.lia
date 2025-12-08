@@ -61,7 +61,7 @@ fn part2(input)
     sumOfInvalid=0L;
     foreach (range in strarr)
     {
-        print("Processing range ",range);
+        //print("Processing range ",range);
         r0=0L;
         r1=0L;
 
@@ -77,7 +77,7 @@ fn part2(input)
 
             if (isInvalidIDv2(i))
             {
-                print("Invalid id v2:",i);
+                //print("Invalid id v2:",i);
                 sumOfInvalid+=i;
             }
 
@@ -85,7 +85,7 @@ fn part2(input)
         }
     }
 
-    print("Sum is:",sumOfInvalid);
+    print("Part 2:",sumOfInvalid," (53481866137)");
 }
 
 
@@ -141,13 +141,13 @@ fn part1(input)
         }
     }
 
-    print("Sum is:",sumOfInvalid);
+    print("Part 1:",sumOfInvalid," (44487518055)");
 }
 
 fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
     part2(input);
 }
