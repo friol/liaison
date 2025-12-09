@@ -1,0 +1,526 @@
+//
+// aoc 2025 day 9
+//
+
+glbListOfRedTiles=[];
+glbListOfAreas=[];
+glbMinx=999999L;
+glbMiny=999999L;
+glbMaxx=-999999L;
+glbMaxy=-999999L;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.09.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.09.txt");
+    return sarr;
+}
+
+fn parseInput(input)
+{
+    foreach (c in input)
+    {
+        sa=c.split(",");
+        glbListOfRedTiles.add([toLong(sa[0]),toLong(sa[1])]);
+    }
+}
+
+fn calcArea(i,j)
+{
+    lx=glbListOfRedTiles[i][0]-glbListOfRedTiles[j][0]+1L;
+    ly=glbListOfRedTiles[i][1]-glbListOfRedTiles[j][1]+1L;
+
+    a=lx*ly;
+
+    if (a<0L)
+    {
+        return -1L*a;
+    }
+
+    return a;
+}
+
+fn part1(input)
+{
+    parseInput(input);    
+
+    //print(glbListOfRedTiles);
+
+    maxArea=0L;
+
+    i=0;
+    while (i<glbListOfRedTiles.length)
+    {
+        j=i+1;
+        while (j<glbListOfRedTiles.length)
+        {
+            //print("rect of ",glbListOfRedTiles[i]," and ",glbListOfRedTiles[j]);
+            a=calcArea(i,j);
+            if (a>maxArea)
+            {
+                maxArea=a;
+            }
+            j+=1;
+        }
+
+        i+=1;
+    }
+
+
+    print("Part 1: ",maxArea," (4764078684)");
+}
+
+fn hasRedTilesInside(p0,p1)
+{
+    foreach (t in glbListOfRedTiles)
+    {
+        if ((t[0]>p0[0])&&(t[1]>p0[1])&&(t[0]<p1[0])&&(t[1]<p1[1]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn intersectsVerticalSpan(s0,s1,p0,p1)
+{
+    if (s0[1]<s1[1])
+    {
+        tmp=s0;
+        s0=s1;
+        s1=tmp;
+    }
+
+    if ((p0[0]<s0[0])&&(p1[0]>s0[0]))
+    {
+        if ((s0[1]<=p0[1])&&(s1[1]>=p1[1]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn intersectsHorizontalSpan(s0,s1,p0,p1)
+{
+    //print("Checking intersection of ",p0," ",p1," with span ",s0," ",s1);
+    if (s0[0]>s1[0])
+    {
+        tmp=s0;
+        s0=s1;
+        s1=tmp;
+    }
+
+    if ((p0[1]<s0[1])&&(p1[1]>s0[1]))
+    {
+        if ((s0[0]<=p0[0])&&(s1[0]>=p1[0]))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn intersectsSpans(p0,p1)
+{
+    s=0;
+    while (s<glbListOfRedTiles.length)
+    {
+        t0=glbListOfRedTiles[s];
+
+        if (s<(glbListOfRedTiles.length-1))
+        {
+            t1=glbListOfRedTiles[s+1];
+        }
+        else
+        {
+            t1=glbListOfRedTiles[0];
+        }
+
+        if (t0[0]==t1[0])
+        {
+            // vert span
+            if (intersectsVerticalSpan(t0,t1,p0,p1))
+            {
+                return true;
+            }
+        }
+        else
+        {
+            // horz span
+            if (intersectsHorizontalSpan(t0,t1,p0,p1))
+            {
+                return true;
+            }
+        }
+
+        s+=1;
+    }
+
+    return false;
+}
+
+fn hits(s0,s1)
+{
+    //print("checking if ",s0," hits ",s1);
+
+    if ( ((s0[0][0]==s0[1][0])) && ((s1[0][0]==s1[1][0])) )
+    {
+        return false;
+    }
+
+    if ( ((s0[0][1]==s0[1][1])) && ((s1[0][1]==s1[1][1])) )
+    {
+        return false;
+    }
+
+    if ((s0[0][0]==s0[1][0]))
+    {
+        if (s1[0][1]>s1[1][1])
+        {
+            tmp=s0;
+            s0=s1;
+            s1=tmp;
+        }
+
+        // vert
+        if ((s1[0][0]<=s0[0][0])&&(s1[1][0]>=s0[0][0]))        
+        {
+            if ((s1[0][1]>=s0[0][1])&&(s1[1][1]<=s0[1][1]))
+            {
+                //print("hit vert!");
+                return true;
+            }
+        }
+    }
+
+    if ((s0[0][1]==s0[1][1]))
+    {
+        if (s1[0][0]>s1[1][0])
+        {
+            tmp=s0;
+            s0=s1;
+            s1=tmp;
+        }
+
+        // horz
+        if ((s1[0][1]<=s0[0][1])&&(s1[1][1]>=s0[0][1]))        
+        {
+            if ((s1[0][0]>=s0[0][0])&&(s1[1][0]<=s0[1][0]))
+            {
+                //print("hit horz!");
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+fn hitsPolygonsEdge(seg)
+{
+    i=0;
+    while (i<glbListOfRedTiles.length)    
+    {
+        p0=glbListOfRedTiles[i];
+        if (i<(glbListOfRedTiles.length-1))
+        {
+            p1=glbListOfRedTiles[i+1];
+        }
+        else
+        {
+            p1=glbListOfRedTiles[0];
+        }
+
+        if ((p0[0]==p1[0])&&(p0[1]>p1[1]))
+        {
+            tmp=p0;
+            p0=p1;
+            p1=tmp;
+        }
+
+        if ((p0[1]==p1[1])&&(p0[0]>p1[0]))
+        {
+            tmp=p0;
+            p0=p1;
+            p1=tmp;
+        }
+
+        if (hits(seg,[p0,p1]))
+        {
+            //print(seg," hits ",[p0,p1]);
+            return true;
+        }
+
+        i+=1;
+    }
+
+    return false;
+}
+
+fn isOutsidePolygon(p)
+{
+    segarr=[];
+    segarr.add([p,[p[0],glbMiny]]);
+    segarr.add([p,[glbMaxx,p[1]]]);
+    segarr.add([p,[p[0],glbMaxy]]);
+    segarr.add([p,[glbMinx,p[1]]]);
+
+    //print("segarr ",segarr);
+
+    nhit=0;
+    foreach (seg in segarr)
+    {
+        //print("checking if ",seg," hits poly's edges");
+
+        if (seg[0][0]==seg[1][0])
+        {
+            if (seg[0][1]>seg[1][1])
+            {
+                tmp=seg[0];
+                seg[0]=seg[1];
+                seg[1]=tmp;
+            }
+        }
+
+        if (seg[0][1]==seg[1][1])
+        {
+            if (seg[0][0]>seg[1][0])
+            {
+                tmp=seg[0];
+                seg[0]=seg[1];
+                seg[1]=tmp;
+            }
+        }
+
+        if (hitsPolygonsEdge(seg))
+        {
+            nhit+=1;
+        }
+    }
+
+    if (nhit!=4)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn isOnSegment(p)
+{
+    i=0;
+    while (i<glbListOfRedTiles.length)    
+    {
+        p0=glbListOfRedTiles[i];
+        if (i<(glbListOfRedTiles.length-1))
+        {
+            p1=glbListOfRedTiles[i+1];
+        }
+        else
+        {
+            p1=glbListOfRedTiles[0];
+        }
+
+        if ((p0[0]==p1[0])&&(p[0]==p0[0]))
+        {
+            if (p0[1]>p1[1])
+            {
+                tmp=p1;
+                p1=p0;
+                p0=tmp;
+            }
+
+            if ((p[1]>=p0[1])&&(p[1]<=p1[1]))
+            {
+                //print("point ",p," is on segment ",p0," ",p1);
+                return true;
+            }
+        }
+        if ((p0[1]==p1[1])&&(p[1]==p0[1]))
+        {
+            if (p0[0]>p1[0])
+            {
+                tmp=p1;
+                p1=p0;
+                p0=tmp;
+            }
+
+            if ((p[0]>=p0[0])&&(p[0]<=p1[0]))
+            {
+                //print("point ",p," is on segment ",p0," ",p1);
+                return true;
+            }
+        }
+
+        i+=1;
+    }
+
+    return false;
+}
+
+fn rectIsOutsidePolygon(p0,p3)
+{
+    p1=[p3[0],p0[1]];
+    p2=[p0[0],p3[1]];
+
+    parr=[];
+    parr.add(p0);
+    parr.add(p1);
+    parr.add(p2);
+    parr.add(p3);
+
+    print(parr);
+
+    foreach (point in parr)
+    {
+        if (!isOnSegment(point))
+        {
+            if (isOutsidePolygon(point))
+            {
+                //print("point ",point," is outside poly");
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+fn isValidRectangle(a)
+{
+    //print("finding areas with area ",a);
+    foreach (area in glbListOfAreas)
+    {
+        //print(area);
+        if (area[0]==a)
+        {
+            //print("Cur area ",area);
+            p0=glbListOfRedTiles[area[1]];
+            p1=glbListOfRedTiles[area[2]];
+
+            if (p0[0]>p1[0])
+            {
+                tmp=p0;
+                p0=p1;
+                p1=tmp;
+            }
+
+            if (p0[1]>p1[1])
+            {
+                tmp=p0[1];
+                p0[1]=p1[1];
+                p1[1]=tmp;
+            }
+
+            b=p1[0]-p0[0]+1L;
+            h=p1[1]-p0[1]+1L;
+            print("Examining rectangle ",p0," ",p1," with area ",b*h);
+
+            // check if there are red tiles inside the rect
+            if (!hasRedTilesInside(p0,p1))
+            {
+                // check if horz or vert spans hit the sides of the rectangle
+                if (!intersectsSpans(p0,p1))
+                {
+                    if (!rectIsOutsidePolygon(p0,p1))
+                    {
+                        print("we've found it");
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+fn calcBoundaries()
+{
+    foreach (t in glbListOfRedTiles)
+    {
+        if (t[0]<glbMinx)
+        {
+            glbMinx=t[0];
+        }
+
+        if (t[0]>glbMaxx)
+        {
+            glbMaxx=t[0];
+        }
+
+        if (t[1]<glbMiny)
+        {
+            glbMiny=t[1];
+        }
+
+        if (t[1]>glbMaxy)
+        {
+            glbMaxy=t[1];
+        }
+    }
+
+    glbMinx-=1L;
+    glbMiny-=1L;
+    glbMaxx+=1L;
+    glbMaxy+=1L;
+}
+
+fn part2(input)
+{
+    parseInput(input);
+
+    calcBoundaries();
+    print(glbMinx," ",glbMaxx," ",glbMiny," ",glbMaxy);
+
+    listOfAreas=[];
+
+    i=0;
+    while (i<glbListOfRedTiles.length)
+    {
+        j=i+1;
+        while (j<glbListOfRedTiles.length)
+        {
+            //print("rect of ",glbListOfRedTiles[i]," and ",glbListOfRedTiles[j]);
+            if ((glbListOfRedTiles[i][0]!=glbListOfRedTiles[j][0])&&(glbListOfRedTiles[i][1]!=glbListOfRedTiles[j][1]))
+            {
+                a=calcArea(i,j);
+                listOfAreas.add(a);
+                glbListOfAreas.add([a,i,j]);
+            }
+            j+=1;
+        }
+
+        i+=1;
+    }
+
+    listOfAreas.sort();
+    //print(glbListOfAreas);
+
+    found=false;
+    cura=listOfAreas.length-1;
+    while (!found)
+    {
+        if (isValidRectangle(listOfAreas[cura]))
+        {
+            found=true;
+        }
+
+        cura-=1;
+    }
+
+    //isValidRectangle(1652307770L);
+}
+
+// I'm surprised this (barely) works
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}

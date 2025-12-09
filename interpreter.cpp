@@ -529,6 +529,10 @@ void liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>&
 			{
 				std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareIntVars);
 			}
+			else if (pvarValue->vlist[0].type == liaVariableType::longint)
+			{
+				std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareLongVars);
+			}
 			else if (pvarValue->vlist[0].type == liaVariableType::string)
 			{
 				std::sort(pvarValue->vlist.begin(), pvarValue->vlist.end(), compareStringVars);
@@ -536,6 +540,7 @@ void liaInterpreter::exeCuteMethodCallStatement(const std::shared_ptr<peg::Ast>&
 			else
 			{
 				// TODO: unsupported type in sort
+				fatalError("Unsupported type in sort");
 			}
 		}
 	}

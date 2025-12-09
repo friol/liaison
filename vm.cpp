@@ -5,6 +5,7 @@
 	TODO's:
 	- maps // DONE
 	- solve two sequential foreaches // errr... DONE
+	- adding a int to a long with += fails
 
 */
 
@@ -320,7 +321,7 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			else
 			{
 				std::string err;
-				err += "Could not open file [" + std::get<std::string>(fname.value) + ".Terminating.";
+				err += "Could not open file [" + std::get<std::string>(fname.value) + "].Terminating.";
 				fatalError(err);
 			}
 
@@ -1295,6 +1296,11 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			if (incType == liaVariableType::integer)
 			{
+				if (incType != runtimeEnv[varId].type)
+				{
+					fatalError("Trying to increment with value of different type.");
+				}
+
 				if (opcode == liaOpcode::opPostIncrement)
 				{
 					int val = std::get<int>(runtimeEnv[varId].value);
@@ -1310,6 +1316,11 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			}
 			else if (incType == liaVariableType::longint)
 			{
+				if (incType != runtimeEnv[varId].type)
+				{
+					fatalError("Trying to increment with value of different type.");
+				}
+
 				if (opcode == liaOpcode::opPostIncrement)
 				{
 					long long val = std::get<long long>(runtimeEnv[varId].value);
@@ -1325,6 +1336,11 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			}
 			else if (incType == liaVariableType::string)
 			{
+				if (incType != runtimeEnv[varId].type)
+				{
+					fatalError("Trying to increment with value of different type.");
+				}
+
 				if (opcode == liaOpcode::opPostIncrement)
 				{
 					std::string val = std::get<std::string>(runtimeEnv[varId].value);
