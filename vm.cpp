@@ -5,7 +5,10 @@
 	TODO's:
 	- maps // DONE
 	- solve two sequential foreaches // errr... DONE
-	- adding a int to a long with += fails
+	- adding a int to a long with += fails // DONE
+	- comparison == between arrays // DONE
+	- printing a dictionary
+	- assigning an int to a long
 
 */
 
@@ -970,6 +973,25 @@ void liaVM::getExpressionFromCode(liaCodeChunk& chunk, unsigned int pos, unsigne
 			bool cond = std::get<std::string>(lexpr.value) == std::get<std::string>(rexpr.value);
 			retvar->value = cond;
 		}
+		else if (lexpr.type == liaVariableType::array)
+		{
+			if (lexpr.vlist.size() != rexpr.vlist.size())
+			{
+				retvar->value = false;
+			}
+			else
+			{
+				retvar->value = true;
+				for (unsigned int i = 0;i < lexpr.vlist.size();i++)
+				{
+					if (lexpr.vlist[i].value != rexpr.vlist[i].value)
+					{
+						retvar->value = false;
+					}
+				}
+
+			}
+		}
 		else
 		{
 			fatalError("Unsupported comparison type ["+std::to_string(lexpr.type)+"] for ==");
@@ -1296,9 +1318,12 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 
 			if (incType == liaVariableType::integer)
 			{
-				if (incType != runtimeEnv[varId].type)
+				if (opcode == liaOpcode::opPostIncrement)
 				{
-					fatalError("Trying to increment with value of different type.");
+					if (incType != runtimeEnv[varId].type)
+					{
+						fatalError("Trying to increment with value of different type.");
+					}
 				}
 
 				if (opcode == liaOpcode::opPostIncrement)
@@ -1316,9 +1341,12 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			}
 			else if (incType == liaVariableType::longint)
 			{
-				if (incType != runtimeEnv[varId].type)
+				if (opcode == liaOpcode::opPostIncrement)
 				{
-					fatalError("Trying to increment with value of different type.");
+					if (incType != runtimeEnv[varId].type)
+					{
+						fatalError("Trying to increment with value of different type.");
+					}
 				}
 
 				if (opcode == liaOpcode::opPostIncrement)
@@ -1336,9 +1364,12 @@ void liaVM::executeChunk(liaCodeChunk& chunk, liaVariable& retval,
 			}
 			else if (incType == liaVariableType::string)
 			{
-				if (incType != runtimeEnv[varId].type)
+				if (opcode == liaOpcode::opPostIncrement)
 				{
-					fatalError("Trying to increment with value of different type.");
+					if (incType != runtimeEnv[varId].type)
+					{
+						fatalError("Trying to increment with value of different type.");
+					}
 				}
 
 				if (opcode == liaOpcode::opPostIncrement)

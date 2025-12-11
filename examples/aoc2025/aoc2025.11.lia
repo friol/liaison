@@ -1,0 +1,240 @@
+//
+// aoc 2025 day 11
+//
+
+glbConnMap={};
+glbNumPaths=0L;
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.11.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.11.txt");
+    return sarr;
+}
+
+fn findNumPaths(node)
+{
+    if (node=="out")
+    {
+        glbNumPaths+=1L;
+        return;
+    }
+
+    a=glbConnMap[node];
+
+    foreach (n in a)
+    {
+        findNumPaths(n);
+    }
+}
+
+fn part1(input)
+{
+    foreach (line in input)
+    {
+        larr=line.split(": ");
+        
+        na=larr[1];
+        glbConnMap[larr[0]]=na.split(" ");
+    }
+
+    //print(glbConnMap);
+
+    findNumPaths("you");
+    print(glbNumPaths);
+}
+
+fn findNumPaths2(node,node2,path)
+{
+    if (node==node2)
+    {
+        //print(path);
+        glbNumPaths+=1L;
+        return;
+    }
+
+    if (node=="out")
+    {
+        return;
+    }
+
+    a=glbConnMap[node];
+
+    foreach (n in a)
+    {
+        np=path;
+        np.add(n);
+        findNumPaths2(n,node2,np);
+    }
+}
+
+fn findPathsBackwards(startNode,endNode,path)
+{
+    ancestors=[];
+
+    foreach (conn in glbConnMap.keys)
+    {
+        desc=glbConnMap[conn];
+        if (desc.find(path[0])!=-1)
+        {
+            ancestors.add(conn);
+        }
+    }
+
+    if (ancestors.find(startNode)!=-1)
+    {
+        //print("Found! ",path);
+        glbNumPaths+=1L;
+        return;
+    }
+
+    foreach (an in ancestors)
+    {
+        p2=[an];
+        foreach (node in path)
+        {
+            p2.add(node);
+        }
+        findPathsBackwards(startNode,endNode,p2);
+    }
+}
+
+fn exploreParents(p,n)
+{
+    pts=p[n];
+    print(pts.length);
+
+    foreach (par in p[n])
+    {
+        print(par);
+        exploreParents(p,par);
+    }
+}
+
+fn bfsSearch(nodefrom,nodeto)
+{
+    visited={};
+    parents={};
+    q=[];
+
+    foreach (k in glbConnMap.keys)
+    {
+        parents[k]=[];
+        visited[k]=false;
+    }
+    parents["out"]=[];
+    visited["out"]=false;
+
+    q.add(nodefrom);
+    visited[nodefrom]=true;
+
+    while (q.length!=0)
+    {
+        v=q[0];
+        if (v==nodeto)
+        {
+            //print("Fount! ",parents[nodeto]);
+            exploreParents(parents,nodeto);
+            return;
+        }
+        q2=[];
+        idx=1;
+        while (idx<q.length)
+        {
+            q2.add(q[idx]);
+            idx+=1;
+        }
+        q=q2;
+
+        foreach (w in glbConnMap[v])
+        {
+            if (visited[w]==false)
+            {
+                visited[w]=true;
+                arr=parents[w];
+                if (arr.find(v)==-1)
+                {
+                    arr.add(v);
+                }
+                parents[w]=arr;
+                q.add(w);
+            }
+        }
+    }
+
+
+}
+
+glbMemo={};
+
+fn dfsSearch(start,end)
+{
+    paths = 0L;
+
+    if (start == end)
+    {
+        return 1L;
+    }
+    
+    if (start == "out")
+    {
+        return 0L;
+    }
+    
+    foreach (w in glbConnMap[start])
+    {
+        concat=w+end;
+        k=glbMemo.keys;
+        if (k.find(concat)!=-1)
+        {
+            paths+=glbMemo[concat];
+        }
+        else
+        {
+            rez=dfsSearch(w, end);
+            glbMemo[concat]=rez;
+            paths+=rez;
+        }
+    }
+
+    return paths;
+}
+
+fn part2(input)
+{
+    foreach (line in input)
+    {
+        larr=line.split(": ");
+        
+        na=larr[1];
+        glbConnMap[larr[0]]=na.split(" ");
+    }
+
+    totPaths=1L;
+
+    print("from dac to out:");
+    findNumPaths2("dac","out",["dac"]);
+    print(glbNumPaths);
+    totPaths*=glbNumPaths;
+
+    print("from svr to fft");
+    glbNumPaths=0L;
+    findPathsBackwards("svr","fft",["fft"]);
+    print(glbNumPaths);
+    totPaths*=glbNumPaths;
+
+    print("from fft to dac");
+    numPaths=dfsSearch("fft","dac");
+    print(numPaths);
+    totPaths*=numPaths;
+
+    print("Part 2: ",totPaths," (358458157650450)");
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}

@@ -44,10 +44,10 @@ int main(int argc,char** argv)
 	}
 	else
 	{
-		//sourceFileName = "d:\\prova\\liaison\\examples\\aoc2025\\aoc2025.09.lia";
+		sourceFileName = "d:\\prova\\liaison\\examples\\aoc2025\\aoc2025.11.lia";
 		//sourceFileName = "d:\\prova\\aoc2023.17.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\aoc03.2015.lia"; // performance test // res is 2360, elapsed: 4.8s in Debug
-		sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
+		//sourceFileName = "d:\\prova\\liaison\\examples\\test.lia"; // test suite
 		//sourceFileName = "d:\\prova\\liaPrograms\\test.replace.lia";
 		//sourceFileName = "d:\\prova\\liaPrograms\\vmtest.lia";
 	}

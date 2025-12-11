@@ -719,7 +719,7 @@ void inline liaInterpreter::evaluateExpression(const std::shared_ptr<peg::Ast>& 
 			if (pVar->vMap.find(key) == pVar->vMap.end())
 			{
 				std::string err;
-				err += "Key " + key + " not found in dictionary. ";
+				err += "Key " + key + " not found in dictionary at line " + std::to_string(theAst->line) + ".";
 				err += "Terminating.";
 				fatalError(err);
 			}

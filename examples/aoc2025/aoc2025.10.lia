@@ -1,0 +1,329 @@
+//
+// aoc 2025 day 10
+//
+
+glbTargetConfigurations=[];
+glbListsOfButtons=[];
+glbMinSeqLen=999999;
+glbJoltageLevels=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.10.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.10.txt");
+    return sarr;
+}
+
+fn parseButtons(la)
+{
+    lbutt=[];
+
+    i=1;
+    while (i<(la.length-1))
+    {
+        curbutt=[];
+        butt=la[i];
+        butt=butt.replace("(","");
+        butt=butt.replace(")","");
+        
+        arr=butt.split(",");
+        foreach (el in arr)
+        {
+            curbutt.add(toInteger(el));
+        }
+
+        lbutt.add(curbutt);
+
+        i+=1;
+    }
+
+    glbListsOfButtons.add(lbutt);
+}
+
+fn parseLightsConf(c)
+{
+    c=c.replace("[","");
+    c=c.replace("]","");
+    lc=[];
+    foreach (ch in c)
+    {
+        if (ch==".")
+        {
+            lc.add(0);
+        }
+        else
+        {
+            lc.add(1);
+        }
+    }
+
+    glbTargetConfigurations.add(lc);
+}
+
+fn parseJoltageLevels(j)
+{
+    j=j.replace("{","");
+    j=j.replace("}","");
+    jentry=[];
+    arr=j.split(",");
+    foreach (lev in arr)
+    {
+        jentry.add(toInteger(lev));
+    }
+    glbJoltageLevels.add(jentry);
+}
+
+fn parseInput(input)
+{
+    foreach (line in input)
+    {
+        larr=line.split(" ");
+        parseLightsConf(larr[0]);
+        parseButtons(larr);
+        parseJoltageLevels(larr[larr.length-1]);
+    }
+
+    //print(glbTargetConfigurations);
+    //print(glbListsOfButtons);
+}
+
+fn applyPress(p,st)
+{
+    foreach (wire in p)
+    {
+        if (st[wire]==0)
+        {
+            st[wire]=1;
+        }
+        else
+        {
+            st[wire]=0;
+        }
+    }
+
+    return st;
+}
+
+fn testConfig(curconf,cnum)
+{
+    targetConf=glbTargetConfigurations[cnum];
+    //print("Target conf is ",targetConf);
+
+    curState=[];
+    foreach (el in targetConf)
+    {
+        curState.add(0);
+    }
+
+    foreach (buttPress in curconf)
+    {
+        //print("Pressing button ",buttPress," with conf ",glbListsOfButtons[cnum][buttPress]);
+        rez=applyPress(glbListsOfButtons[cnum][buttPress],curState);
+        //print("Result is ",rez);
+        curState=rez;
+    }
+
+    //print("Final state: ",curState);
+
+    if (curState==targetConf)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn generateAndTestConfigs(confNum,reclev,curconf)
+{
+    if (curconf.length>glbMinSeqLen)
+    {
+        return;
+    }
+
+    //print(curconf);
+    if (testConfig(curconf,confNum))
+    {
+        if (curconf.length<glbMinSeqLen)
+        {
+            print("found ok sequence with size ",curconf.length);
+            glbMinSeqLen=curconf.length;
+            return;
+        }
+    }
+
+    if (reclev>6)
+    {
+        return;
+    }
+
+    i=0;
+    while (i<glbListsOfButtons[confNum].length)
+    {
+        thisconf=curconf;
+        thisconf.add(i);
+        generateAndTestConfigs(confNum,reclev+1,thisconf);
+        i+=1;
+    }
+}
+
+fn findFewestPresses(c)
+{
+    glbMinSeqLen=999999;    
+    generateAndTestConfigs(c,0,[]);
+
+    return 0;
+}
+
+fn part1(input)
+{
+    parseInput(input);
+
+    totalPresses=0;
+    c=0;
+    foreach (lineconf in glbTargetConfigurations)
+    {
+        print("Processing light conf ",c);
+        findFewestPresses(c);
+        if (glbMinSeqLen>1000)
+        {
+            print("Insufficient privileges");
+            return;
+        }
+        totalPresses+=glbMinSeqLen;
+        c+=1;
+    }
+    //findFewestPresses(0);
+
+    print(totalPresses);
+}
+
+fn applyCombination(comb,c)
+{
+    rez=[];
+    foreach (el in glbJoltageLevels[c])
+    {
+        rez.add(0);
+    }
+
+    b=0;
+    foreach (numPresses in comb)
+    {
+        foreach (num in glbListsOfButtons[c][b])
+        {
+            rez[num]+=numPresses;
+        }
+
+        b+=1;
+    }
+
+    //print("Applying comb ",comb," produces: ",rez);
+
+    return rez;
+}
+
+fn testPressesCombinations(maxPressesArr,c,reclev,curcomb,totalPrezzez)
+{
+    if (curcomb.length==glbListsOfButtons[c].length)
+    {
+        // apply combination and see if it matches the jolt levels
+        //print(curcomb);
+        res=applyCombination(curcomb,c);
+        if (res==glbJoltageLevels[c])
+        {
+            print("matccchhhh! ",curcomb," ",res);
+            totPresses=0;
+            foreach (prs in curcomb)
+            {
+                totPresses+=prs;
+            }
+            
+            print("With ",totPresses," presses");
+            if (totPresses<glbMinSeqLen)
+            {
+                glbMinSeqLen=totPresses;
+            }
+        }
+        return;
+    }
+
+    minz=999999;
+    foreach (jl in glbJoltageLevels[c])
+    {
+        if (jl<minz)
+        {
+            minz=jl;
+        }
+    }
+    if (totalPrezzez>=minz)
+    {
+        //print("bailing out");
+        return;
+    }
+
+    i=0;
+    while (i<maxPressesArr[reclev])
+    {
+        newcomb=curcomb;
+        newcomb.add(i);
+        testPressesCombinations(maxPressesArr,c,reclev+1,newcomb,totalPrezzez+i);
+        i+=1;
+    }
+
+}
+
+fn findFewestPresses2(c)
+{
+    maxPressesArr=[];
+
+    foreach (butt in glbListsOfButtons[c])
+    {
+        maxPress=999999;
+        foreach (jid in butt)
+        {
+            target=glbJoltageLevels[c][jid];
+            if (target<maxPress)
+            {
+                maxPress=target+1;
+            }
+        }
+
+        maxPressesArr.add(maxPress);
+    }
+
+    print(maxPressesArr);
+
+    testPressesCombinations(maxPressesArr,c,0,[],0);
+}
+
+fn part2(input)
+{
+    parseInput(input);
+
+    totalPresses=0;
+    c=0;
+    foreach (levcombination in glbJoltageLevels)
+    {
+        print("Processing target joltage ",c);
+
+        glbMinSeqLen=999999;
+        findFewestPresses2(c);
+        print(glbMinSeqLen);
+        totalPresses+=glbMinSeqLen;
+
+        c+=1;
+    }
+
+    //glbMinSeqLen=999999;
+    //findFewestPresses2(2);
+    //print(glbMinSeqLen);
+
+    print(totalPresses);
+}
+
+fn main(params)
+{
+    input=readInput();
+
+    //part1(input);
+    part2(input);
+}
