@@ -2,7 +2,7 @@
 
 ### 2025 Update!
 
-Solved the entire  [AoC 2024](https://adventofcode.com/2025) in Liaison. You can find all the solutions in the [examples/aoc2025](https://github.com/friol/liaison/tree/master/examples/aoc2025) folder.
+Solved the entire  [AoC 2025](https://adventofcode.com/2025) in Liaison. You can find all the solutions in the [examples/aoc2025](https://github.com/friol/liaison/tree/master/examples/aoc2025) folder.
 <br/>
 
 ### 2024 Update!
