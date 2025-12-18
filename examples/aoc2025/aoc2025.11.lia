@@ -41,7 +41,7 @@ fn part1(input)
     //print(glbConnMap);
 
     findNumPaths("you");
-    print(glbNumPaths);
+    print("Part 1: ",glbNumPaths," (431)");
 }
 
 fn findNumPaths2(node,node2,path)
@@ -212,20 +212,20 @@ fn part2(input)
 
     totPaths=1L;
 
-    print("from dac to out:");
+    //print("from dac to out:");
     findNumPaths2("dac","out",["dac"]);
-    print(glbNumPaths);
+    //print(glbNumPaths);
     totPaths*=glbNumPaths;
 
-    print("from svr to fft");
+    //print("from svr to fft");
     glbNumPaths=0L;
     findPathsBackwards("svr","fft",["fft"]);
-    print(glbNumPaths);
+    //print(glbNumPaths);
     totPaths*=glbNumPaths;
 
-    print("from fft to dac");
+    //print("from fft to dac");
     numPaths=dfsSearch("fft","dac");
-    print(numPaths);
+    //print(numPaths);
     totPaths*=numPaths;
 
     print("Part 2: ",totPaths," (358458157650450)");
@@ -235,6 +235,8 @@ fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbConnMap={};
+    glbNumPaths=0L;
     part2(input);
 }

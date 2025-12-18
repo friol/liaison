@@ -49,7 +49,7 @@ fn equalsCheck()
         {
             if (glbDistances[i][2]==glbDistances[j][2])
             {
-                print("Equalz! ",glbDistances[i][2]," ",glbDistances[j][2]);
+                //print("Equalz! ",glbDistances[i][2]," ",glbDistances[j][2]);
             }
 
             j+=1;
@@ -70,13 +70,13 @@ fn sortDistances(maxdist)
     tmpArr.sort();
     //print(tmpArr);
 
-    print("real sort");
+    //print("real sort");
 
     newDist=[];
     idx=0;
     while (idx<maxdist)
     {
-        print("Processing idx ",idx);
+        //print("Processing idx ",idx);
         el=tmpArr[idx];
         j=0;
         found=false;
@@ -93,7 +93,7 @@ fn sortDistances(maxdist)
         idx+=1;
     }
 
-    print("Done");
+    //print("Done");
 
     glbDistances=newDist;
 
@@ -229,10 +229,10 @@ fn addToCircuits(d)
 
 fn part1(input)
 {
-    print("parsing input");
+    //print("parsing input");
     parseInput(input);    
 
-    print("creating distance list");
+    //print("creating distance list");
     // create distance list
     i=0;
     while (i<glbListOfPoints.length)
@@ -253,11 +253,11 @@ fn part1(input)
     numDist=1000;
 
     // sort them
-    print("sorting distance list");
+    //print("sorting distance list");
     sortDistances(numDist);
 
     // equal d check
-    print("equals check");
+    //print("equals check");
     equalsCheck();
 
     // build circuits
@@ -265,9 +265,9 @@ fn part1(input)
     while (nconn<numDist)
     {
         dst=glbDistances[nconn];
-        print("Processing ",dst);
+        //print("Processing ",dst);
         addToCircuits(dst);
-        print(glbCircuits);
+        //print(glbCircuits);
         nconn+=1;
     }
 
@@ -278,8 +278,8 @@ fn part1(input)
     }
     circLens.sort();
 
-    print(circLens);
-    print(circLens[circLens.length-1]*circLens[circLens.length-2]*circLens[circLens.length-3]);
+    //print(circLens);
+    print("Part 1:",circLens[circLens.length-1]*circLens[circLens.length-2]*circLens[circLens.length-3], " (57970)");
 }
 
 fn findNextDistance(dzt)
@@ -298,10 +298,10 @@ fn findNextDistance(dzt)
 
 fn part2(input)
 {
-    print("parsing input");
+    //print("parsing input");
     parseInput(input);    
 
-    print("creating distance list");
+    //print("creating distance list");
     // create distance list
     i=0;
     while (i<glbListOfPoints.length)
@@ -335,13 +335,13 @@ fn part2(input)
         pt+=1;
     }
 
-    print("bending spoons");
+    //print("bending spoons");
     // build circuits
     dstNum=0;
     while (glbCircuits.length!=1)
     {
         dst=findNextDistance(distanceArr[dstNum]);
-        print("Processed ",dst," circuit len ",glbCircuits.length);
+        //print("Processed ",dst," circuit len ",glbCircuits.length);
         addToCircuits(dst);
         
         dstNum+=1;
@@ -350,7 +350,7 @@ fn part2(input)
         {
             x0=glbListOfPoints[dst[0]][0];
             x1=glbListOfPoints[dst[1]][0];
-            print(x0*x1);
+            print("Part 2:",x0*x1," (8520040659)");
         }
     }
 }
@@ -359,6 +359,9 @@ fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+    glbListOfPoints=[];
+    glbDistances=[];
+    glbCircuits=[];
     part2(input);
 }

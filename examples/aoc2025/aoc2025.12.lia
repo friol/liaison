@@ -64,7 +64,7 @@ fn part1(input)
 {
     parseInput(input);
 
-    print(glbGridData);
+    //print(glbGridData);
     //print(glbShapes);
 
     numCanFit=0;
@@ -83,7 +83,7 @@ fn part1(input)
             estSpace+=num*shapeArea;
             shapeId+=1;
         }
-        print("grid area:",gridArea," est. space:",estSpace);
+        //print("grid area:",gridArea," est. space:",estSpace);
 
         if (estSpace<=gridArea)
         {
@@ -93,7 +93,7 @@ fn part1(input)
         idx+=1;
     }
 
-    print(numCanFit);
+    print("Part 1:",numCanFit," (595)");
 }
 
 
@@ -102,5 +102,4 @@ fn main(params)
     input=readInput();
 
     part1(input);
-    //part2(input);
 }

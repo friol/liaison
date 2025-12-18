@@ -418,7 +418,7 @@ fn isValidRectangle(a)
 
             b=p1[0]-p0[0]+1L;
             h=p1[1]-p0[1]+1L;
-            print("Examining rectangle ",p0," ",p1," with area ",b*h);
+            //print("Examining rectangle ",p0," ",p1," with area ",b*h);
 
             // check if there are red tiles inside the rect
             if (!hasRedTilesInside(p0,p1))
@@ -428,7 +428,7 @@ fn isValidRectangle(a)
                 {
                     if (!rectIsOutsidePolygon(p0,p1))
                     {
-                        print("we've found it");
+                        //print("we've found it");
                         return true;
                     }
                 }
@@ -475,7 +475,7 @@ fn part2(input)
     parseInput(input);
 
     calcBoundaries();
-    print(glbMinx," ",glbMaxx," ",glbMiny," ",glbMaxy);
+    //print(glbMinx," ",glbMaxx," ",glbMiny," ",glbMaxy);
 
     listOfAreas=[];
 
@@ -508,12 +508,12 @@ fn part2(input)
         if (isValidRectangle(listOfAreas[cura]))
         {
             found=true;
+            print("Part 2:",listOfAreas[cura]," (1652344888)");
         }
 
         cura-=1;
     }
 
-    //isValidRectangle(1652307770L);
 }
 
 // I'm surprised this (barely) works
@@ -521,6 +521,14 @@ fn main(params)
 {
     input=readInput();
 
-    //part1(input);
+    part1(input);
+
+    glbListOfRedTiles=[];
+    glbListOfAreas=[];
+    glbMinx=999999L;
+    glbMiny=999999L;
+    glbMaxx=-999999L;
+    glbMaxy=-999999L;
+
     part2(input);
 }
