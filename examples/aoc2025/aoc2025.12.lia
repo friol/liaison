@@ -1,0 +1,106 @@
+//
+// aoc 2025 day 12
+//
+
+glbGridData=[];
+glbShapes=[];
+
+fn readInput()
+{
+    //sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.12.example.txt");
+    sarr=readTextFileLineByLine("d:\prova\liaPrograms\aoc.2025.12.txt");
+    return sarr;
+}
+
+fn parseInput(input)
+{
+    shapeDimx=0;
+    shapeDimy=0;
+
+    foreach (line in input)
+    {
+        if (line.find("x")!=-1)
+        {
+            dataLine=[];
+            arr=line.split(": ");
+            a0=arr[0];
+            dims=a0.split("x");
+
+            dataLine.add([toInteger(dims[0]),toInteger(dims[1])]);
+
+            a1=arr[1];
+            shapes=a1.split(" ");
+
+            ls=[];
+            foreach (el in shapes)
+            {
+                ls.add(toInteger(el));
+            }
+            dataLine.add(ls);
+            glbGridData.add(dataLine);
+        }
+        else
+        {
+            if (line=="")
+            {
+                glbShapes.add([shapeDimx,shapeDimy]);
+                shapeDimx=0;
+                shapeDimy=0;                
+            }
+            else
+            {
+                if ((line.find("#")!=-1)||(line.find(".")!=-1))
+                {
+                    shapeDimy+=1;
+                    shapeDimx=line.length;
+                }
+            }
+        }
+
+    }
+}
+
+fn part1(input)
+{
+    parseInput(input);
+
+    print(glbGridData);
+    //print(glbShapes);
+
+    numCanFit=0;
+    idx=0;
+    while (idx<glbGridData.length)
+    {
+        xs=glbGridData[idx][0][0];
+        ys=glbGridData[idx][0][1];
+        gridArea=xs*ys;
+
+        estSpace=0;
+        shapeId=0;
+        foreach (num in glbGridData[idx][1])
+        {
+            shapeArea=glbShapes[shapeId][0]*glbShapes[shapeId][1];
+            estSpace+=num*shapeArea;
+            shapeId+=1;
+        }
+        print("grid area:",gridArea," est. space:",estSpace);
+
+        if (estSpace<=gridArea)
+        {
+            numCanFit+=1;
+        }
+
+        idx+=1;
+    }
+
+    print(numCanFit);
+}
+
+
+fn main(params)
+{
+    input=readInput();
+
+    part1(input);
+    //part2(input);
+}

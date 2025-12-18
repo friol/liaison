@@ -1451,7 +1451,7 @@ void liaInterpreter::exeCuteVarDeclStatement(const std::shared_ptr<peg::Ast>& th
 
 	liaVariable theVar;
 	std::string vname;
-	size_t curLine=0;
+	size_t curLine=theAst->line;
 	
 	vname += theAst->nodes[0]->token;
 	evaluateExpression(theAst->nodes[1], env, theVar);
@@ -2094,6 +2094,13 @@ void liaInterpreter::addvarOrUpdateEnvironment(liaVariable* v, liaEnvironment* e
 
 	// updating the var value
 	// TODO handle other types
+
+	// check if we are changing the type of the variable
+	if (v->type != pVar->type)
+	{
+		fatalError("Trying to assign a different type to a variable at " + std::to_string(curLine));
+	}
+
 	if (v->type == liaVariableType::integer)
 	{
 		pVar->value = v->value;

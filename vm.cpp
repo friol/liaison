@@ -7,8 +7,8 @@
 	- solve two sequential foreaches // errr... DONE
 	- adding a int to a long with += fails // DONE
 	- comparison == between arrays // DONE
-	- printing a dictionary
-	- assigning an int to a long
+	- assigning an int to a long should fail (vm only)
+	- printing a dictionary // DONE
 
 */
 
@@ -1189,6 +1189,23 @@ void liaVM::innerPrint(liaVariable& var)
 			first = false;
 		}
 		std::cout << "]";
+	}
+	else if (var.type == liaVariableType::dictionary)
+	{
+		bool first = true;
+		std::cout << "{";
+
+		for (const auto& myPair : var.vMap)
+		{
+			if (!first) std::cout << ",";
+			std::cout << "\"" << myPair.first << "\"" << ":";
+
+			liaVariable v2p = myPair.second;
+			innerPrint(v2p); // std::get<int>(myPair.second.value);
+
+			first = false;
+		}
+		std::cout << "} ";
 	}
 	else if (var.type == liaVariableType::boolean)
 	{

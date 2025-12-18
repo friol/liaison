@@ -6,6 +6,8 @@ glbTargetConfigurations=[];
 glbListsOfButtons=[];
 glbMinSeqLen=999999;
 glbJoltageLevels=[];
+glbCombos=[];
+glbMemo={};
 
 fn readInput()
 {
@@ -295,6 +297,223 @@ fn findFewestPresses2(c)
     testPressesCombinations(maxPressesArr,c,0,[],0);
 }
 
+fn comboProducesLightPattern(combo,lightPattern,c)
+{
+    target=[];
+    foreach (el in lightPattern)
+    {
+        target.add(0);
+    }
+
+    foreach (buttpress in combo)
+    {
+        target=applyPress(glbListsOfButtons[c][buttpress],target);
+    }
+
+    if (target==lightPattern)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+fn findCombosToReachLightPattern(lightPattern,c)
+{
+    theCombos=[];
+
+    numButtons=glbListsOfButtons[c].length;
+    numCombinations=2;
+    idx=0;
+    while (idx<(numButtons-1))
+    {
+        numCombinations*=2;
+        idx+=1;
+    }
+    //print("Num combos max ",numCombinations);
+
+    idx=0;
+    while (idx<numCombinations)
+    {
+        combo=[];
+        p=0;
+        while (p<numButtons)
+        {
+            k=idx;
+            k>>=p;
+            //k&=1;
+            k=k%2;
+            if (k!=0)
+            {
+                combo.add(p);
+            }
+            p+=1;
+        }
+
+        //print(combo);
+
+        if (comboProducesLightPattern(combo,lightPattern,c))
+        {
+            theCombos.add(combo);
+        }
+
+        idx+=1;
+    }
+
+    return theCombos;
+}
+
+fn allZeroes(jlev)
+{
+    allz=true;
+    foreach (lev in jlev)
+    {
+        if (lev!=0)
+        {
+            allz=false;
+        }
+    }
+
+    return allz;
+}
+
+fn minimum(l)
+{
+    minz=999999;
+    foreach (el in l)
+    {
+        if (el<minz)
+        {
+            minz=el;
+        }
+    }
+    return minz;
+}
+
+fn containsNegatives(j)
+{
+    foreach (el in j)
+    {
+        if (el<0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+fn hash(joltage)
+{
+    //print("Performing hash of ",joltage);
+    res="";
+    foreach(el in joltage)
+    {
+        res+=toString(el)+"_";
+    }
+    return res;
+}
+
+fn findMinButtpressesForJoltage(jlevs,c)
+{
+    //print("Processing joltage ",jlevs);
+    /*if (containsNegatives(jlevs))
+    {
+        return -1;
+    }*/
+    foreach (jll in jlevs)
+    {
+        if (jll<0)
+        {
+            return -1;
+        }
+    }
+
+    if (allZeroes(jlevs))
+    {
+        //print("done1!");
+        return 0;
+    }
+
+    // find light pattern
+    lightPattern=[];
+    foreach (j in jlevs)
+    {
+        lightPattern.add(j%2);
+        /*if ((j%2)==0)
+        {
+            lightPattern.add(0);
+        }
+        else
+        {
+            lightPattern.add(1);
+        }*/
+    }
+
+    //print(lightPattern);
+
+    // find combos to reach light pattern
+    combos=findCombosToReachLightPattern(lightPattern,c);
+    //print("combos for ",lightPattern,":",combos);
+
+    if (combos.length==0)
+    {
+        return -1;
+    }
+
+    lofPresses=[];
+    foreach (combo in combos)
+    {
+        numCurPresses=combo.length;
+        jlevz=jlevs;
+
+        foreach (bpress in combo)
+        {
+            buttSwitches=glbListsOfButtons[c][bpress];
+
+            foreach (sw in buttSwitches)
+            {
+                jlevz[sw]=jlevz[sw]-1;
+            }
+        }
+
+        idx=0;
+        foreach (lev in jlevz)
+        {
+            jlevz[idx]=jlevz[idx]/2;
+            idx+=1;
+        }
+
+        myHash=hash(jlevz);
+        retVal=-1;
+        kz=glbMemo.keys;
+        if (kz.find(myHash)!=-1)
+        {
+            retVal=glbMemo[myHash];
+        }
+        else
+        {
+            retVal=findMinButtpressesForJoltage(jlevz,c);
+            glbMemo[myHash]=retVal;
+        }
+
+        if (retVal!=-1)
+        {
+            numCurPresses+=2*retVal;
+            lofPresses.add(numCurPresses);
+        }
+    }
+
+    if (lofPresses.length==0)
+    {
+        return -1;
+    }
+
+    m=minimum(lofPresses);
+    //print("Min presses for ",jlevs,":",m);
+    return m;
+}
+
 fn part2(input)
 {
     parseInput(input);
@@ -303,19 +522,13 @@ fn part2(input)
     c=0;
     foreach (levcombination in glbJoltageLevels)
     {
-        print("Processing target joltage ",c);
-
-        glbMinSeqLen=999999;
-        findFewestPresses2(c);
-        print(glbMinSeqLen);
-        totalPresses+=glbMinSeqLen;
-
+        print("Processing target joltage ",c," ",levcombination," ",glbListsOfButtons[c]);
+        glbMemo={};
+        rez=findMinButtpressesForJoltage(levcombination,c);
+        print("*** Min presses to reach joltage: ",rez);
+        totalPresses+=rez;
         c+=1;
     }
-
-    //glbMinSeqLen=999999;
-    //findFewestPresses2(2);
-    //print(glbMinSeqLen);
 
     print(totalPresses);
 }
